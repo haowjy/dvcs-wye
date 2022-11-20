@@ -1,9 +1,11 @@
 mod ui;
 
+mod dsr;
+
 mod cmd_function;
 
 mod cmd_interface;
-pub use cmd_interface::{createonly, read_write,readonly};
+pub use cmd_interface::{createonly, readwrite, readonly};
 
 fn main() {
     println!("Hello, world!");

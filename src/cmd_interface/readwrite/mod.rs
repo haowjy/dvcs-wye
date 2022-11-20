@@ -2,11 +2,11 @@ pub struct RevDiff {
     // TODO
 }
 
-pub fn diff<'a>(rev1_id:Option<&'a str>, rev2_id:&'a str) -> Result<RevDiff, &'a str>{
+pub fn diff<'a>(rev1_id:&'a str, rev2_id:&'a str) -> Result<RevDiff, &'a str>{
     unimplemented!(); //TODO
 }
 
-pub fn cat<'a>(rev_id:Option<&'a str>, path:&'a str) -> Result<&'a str, &'a str>{
+pub fn cat<'a>(rev_id:&'a str, path:&'a str) -> Result<&'a str, &'a str>{
     unimplemented!(); //TODO
 }
 
