@@ -5,12 +5,22 @@ use crate::cmd_function;
 use crate::cmd_interface::{createonly, read_write, readonly};
 use crate::cmd_interface::read_write::RevDiff;
 
+pub fn receive_input_command_test() ->io::Result<()>{
+    let mut buffer=String::new();
+    let stdin=io::stdin();
+    stdin.read_line(&mut buffer);
+    println!("input {}",buffer);
+    let mut command: Command<&str> = Command{path: "111",command_input: "input_test.clone()" };
+    //self.commands.push(Command{path: input_test.clone(),command_input: "input_test.clone()" });
+    UserInterface::match_command(Command{path: command.path,command_input: "input_test.clone()" });
+    Ok(())
+}
 //type input=fn()->String;
-struct Command<T>{
+pub struct Command<T>{
     path: T,
     command_input:&'static str
 }
-struct UserInterface<T>{
+pub(crate) struct UserInterface<T>{
     commands: Vec<Command<T>>
 }
 
@@ -19,12 +29,27 @@ impl<T: Clone> UserInterface<T> {
         Self{commands:vec![]}
     }
     pub fn receive_input_command(&mut self,input_test: T) ->io::Result<()>{
+        let mut buffer=String::new();
+        let stdin=io::stdin();
+        stdin.read_line(&mut buffer);
+        println!("input {}",buffer);
         self.commands.push(Command{path: input_test.clone(),command_input: "input_test.clone()" });
         Self::match_command(Command{path: input_test.clone(),command_input: "input_test.clone()" });
         Ok(())
     }
 
-    pub fn match_command(input:Command<T>)->String{
+    pub fn receive_input_command_test_inside() ->io::Result<()>{
+        let mut buffer=String::new();
+        let stdin=io::stdin();
+        stdin.read_line(&mut buffer);
+        println!("input {}",buffer);
+        let mut command: Command<&str> = Command{path: "111",command_input: "input_test.clone()" };
+        //self.commands.push(Command{path: input_test.clone(),command_input: "input_test.clone()" });
+        UserInterface::match_command(Command{path: command.path,command_input: "input_test.clone()" });
+        Ok(())
+    }
+
+    pub fn match_command(input:Command<T>){//old:->String, new no return
         //input.path
         let mut res:Result<&str,&str>=Err("1");
         let mut res_diff:Result<RevDiff,&str>=Err("1");
@@ -46,9 +71,13 @@ impl<T: Clone> UserInterface<T> {
             _ => {}
         }
         if res!=Err("1")
-        {Self::input_handling(res);}
-        else {Self::input_handling_special(res_diff);}
-        unimplemented!();
+        {
+            Self::input_handling(res);
+        }
+        else {
+            Self::input_handling_special(res_diff);
+        }
+        //unimplemented!();
     }
 
     fn input_handling(return_result:Result<&str,&str>){
@@ -56,7 +85,8 @@ impl<T: Clone> UserInterface<T> {
     }
 
     fn input_handling_special(return_result:Result<RevDiff,&str>){
-        unimplemented!();
+        //unimplemented!();
+        println!("{:?}","return_result")
     }
 
     fn input_handling_backup<E: std::fmt::Debug>(return_result:Result<(), E>){
