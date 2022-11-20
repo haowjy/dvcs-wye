@@ -49,7 +49,7 @@ impl<T: Clone> UserInterface<T> {
         Ok(())
     }
 
-    pub fn match_command(input:Command<T>){//old:->String, new no return
+    fn match_command(input:Command<T>){//old:->String, new no return
         //input.path
         let mut res:Result<&str,&str>=Err("1");
         let mut res_diff:Result<RevDiff,&str>=Err("1");
