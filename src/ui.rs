@@ -2,7 +2,7 @@ use std::io;
 use std::path::Path;
 
 use crate::cmd_function;
-use crate::cmd_interface::{createonly, read_write};
+use crate::cmd_interface::{createonly, read_write, readonly};
 use crate::cmd_interface::read_write::RevDiff;
 
 //type input=fn()->String;
@@ -35,10 +35,14 @@ impl<T: Clone> UserInterface<T> {
             "merge" => {res=crate::cmd_interface::read_write::merge("input.path");}//4
             "diff" => {res_diff=crate::cmd_interface::read_write::diff(Some("input.path"),"input.path");}//5
             "cat" => {res=crate::cmd_interface::read_write::cat(Some("input.path"),"input.path");}//6
-            "status" => {res=crate::cmd_interface::read_write::add("input.path");}//status1
-            "log" => {res=crate::cmd_interface::read_write::commit("input.path");}//log2
-            "heads" => {res=crate::cmd_interface::read_write::merge("input.path");}//heads3
-            "clone" => {res=crate::cmd_interface::createonly::clone("input.path","input.path");}
+            "status" => {res=crate::cmd_interface::readonly::status("input.path");}//status1
+            "log" => {res=crate::cmd_interface::readonly::log("input.path");}//log2
+            "heads" => {res=crate::cmd_interface::readonly::heads("input.path");}//heads3
+            "clone" => {res=crate::cmd_interface::createonly::clone("input.path","input.path");}//1
+            "checkout" => {res=crate::cmd_interface::createonly::checkout("input.path","input.path");}//2
+            "pull" => {res=crate::cmd_interface::createonly::pull("input.path","input.path",Some("input.path"));}//3
+            "push" => {res=crate::cmd_interface::createonly::push("input.path","input.path",Some("input.path"));}//4
+            "init" => {res=Ok("init here")}//1
             _ => {}
         }
         if res!=Err("1")
