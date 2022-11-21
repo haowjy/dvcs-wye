@@ -1,4 +1,4 @@
-use std::{fs, io};
+use std::{fs, io, env};
 use std::path::Path;
 
 // 3. Create a directory and directory within recursively if missing
@@ -48,7 +48,6 @@ pub fn clear_dir(path: &str, ignore: Vec<&str>) -> io::Result<()> {
         let entry_path = entry.path();
         let entry_name = entry.file_name();
         let raw_path = entry_path.to_str().unwrap();
-        println!("{:?}, {:?}", entry_name, raw_path);
         if !ignore.contains(&entry_name.to_str().unwrap()) {
             if entry_path.is_dir() {
                 delete_dir(raw_path)?;
@@ -110,4 +109,10 @@ pub fn is_path_valid(path: &str) -> bool {
 pub fn make_wd(rev: &str) -> io::Result<()> {
     
     Ok(())
+}
+
+// 15. Returns a string to the current working directory
+// USEAGE: get_wd_path()
+pub fn get_wd_path() -> String {
+    env::current_dir().unwrap().into_os_string().into_string().unwrap()
 }
