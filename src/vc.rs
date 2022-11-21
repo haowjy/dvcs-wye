@@ -42,7 +42,7 @@ mod Repository {
 
     impl Repo {
         pub fn init() -> Repo { // Result<(),()>{ // error handling to be impl
-            let WD = get_WD_path();
+            let WD = get_wd_path();
             let paths = RepoPaths::new(WD);
             // ***** error handling needed *****
             create_dir(&paths.files); // root .dvcs automatically added
