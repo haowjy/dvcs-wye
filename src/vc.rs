@@ -1,6 +1,10 @@
 use std::collections::HashMap;
 use std::time::SystemTime;
 use std::path::PathBuf; // needs to be moved to DSR
+
+// external crates:
+use petgraph::graphmap::UnGraphMap;
+
 // use serde::{Serialize, Deserialize};
 
 mod dsr;
@@ -11,10 +15,11 @@ mod Repository {
         current_head: Option<&str>, // sha_rev_id 
         branch_heads: Option<Hashmap<&str, &str>>, // <K=alias, V=sha_rev_id>
         paths: &RepoPaths,
+        revs: DiGraphMap<
     }
 
     // #[derive(Serialize, Deserialize, Debug)]
-    struct RepoPaths { 
+    pub(crate) struct RepoPaths { 
         // wd: &str,// inconsistent types for paths, might need better type representation
         wd: String,
         root: String,
@@ -41,45 +46,47 @@ mod Repository {
     }
 
     impl Repo {
-        pub fn init() -> Repo { // Result<(),()>{ // error handling to be impl
-            let WD = get_wd_path();
-            let paths = RepoPaths::new(WD);
-            // ***** error handling needed *****
-            create_dir(&paths.files); // root .dvcs automatically added
-            create_dir(&paths.revs);
-            // create_file(&paths.branch_heads); 
-            // create_file(&paths.head);
-            let new_repo = Repo {
-                current_head: None,
-                branch_heads: None,
-                paths: &paths,
-            }
-            new_repo.save();
-            return new_repo;
-        }
-        
-        pub fn load(WD: &str) -> Repo { // Result<Repo, ()>
-            let paths = RepoPaths::new(WD);
-            let load_repo = Repo {
-                current_head: read_file(paths.head), //?
-                branch_heads: read_file(paths.branch_heads), //?
-                paths: &paths,
-            }
-            return load_repo;
-        } 
-
         fn save(&self) -> () { // Result<(), ()> { 
             write_file(self.paths.head, serialize(self.current_head));
             write_file(self.paths.branch_heads, serialize(self.branch_heads));
             // additional writing operations possible
         }
     }
+
+    pub fn init() -> Repo { // Result<(),()>{ // error handling to be impl
+        let WD = get_wd_path();
+        let paths = RepoPaths::new(WD);
+        // ***** error handling needed *****
+        // esp: handle running init again with existing repo
+        create_dir(&paths.files); // root .dvcs automatically added
+        create_dir(&paths.revs);
+        // create_file(&paths.branch_heads); 
+        // create_file(&paths.head);
+        let new_repo = Repo {
+            current_head: None,
+            branch_heads: None,
+            paths: &paths,
+        }
+        new_repo.save();
+        return new_repo;
+    }
+
+    pub fn load(WD: &str) -> Repo { // Result<Repo, ()>
+        let paths = RepoPaths::new(WD);
+        let load_repo = Repo {
+            current_head: read_file(paths.head), //?
+            branch_heads: read_file(paths.branch_heads), //?
+            paths: &paths,
+        }
+        return load_repo;
+    }
 }
 
 
-// mod Revision {
+mod Revision {
 
-// }
+
+}
 
 // mod FileInfo {
 
