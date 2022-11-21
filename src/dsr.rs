@@ -48,7 +48,6 @@ pub fn clear_dir(path: &str, ignore: Vec<&str>) -> io::Result<()> {
         let entry_path = entry.path();
         let entry_name = entry.file_name();
         let raw_path = entry_path.to_str().unwrap();
-        println!("{:?}, {:?}", entry_name, raw_path);
         if !ignore.contains(&entry_name.to_str().unwrap()) {
             if entry_path.is_dir() {
                 delete_dir(raw_path)?;
