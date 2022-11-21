@@ -1,4 +1,4 @@
-use std::{fs, io};
+use std::{fs, io, env};
 use std::path::Path;
 
 // 3. Create a directory and directory within recursively if missing
@@ -110,4 +110,10 @@ pub fn is_path_valid(path: &str) -> bool {
 pub fn make_wd(rev: &str) -> io::Result<()> {
     
     Ok(())
+}
+
+// 15. Returns a string to the current working directory
+// USEAGE: get_wd_path()
+pub fn get_wd_path() -> String {
+    env::current_dir().unwrap().into_os_string().into_string().unwrap()
 }
