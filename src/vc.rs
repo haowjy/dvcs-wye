@@ -3,22 +3,23 @@ use std::time::SystemTime;
 use std::path::PathBuf; // needs to be moved to DSR
 
 // external crates:
-use petgraph::graphmap::UnGraphMap;
-
+use petgraph::graphmap::DiGraphMap;
+use sha2::{Sha256, Digest};
 // use serde::{Serialize, Deserialize};
 
 mod dsr;
 use crate::dsr::*; //not working?
 
 mod Repository {
+    #[derive(Debug)] 
     pub struct Repo {
         current_head: Option<&str>, // sha_rev_id 
         branch_heads: Option<Hashmap<&str, &str>>, // <K=alias, V=sha_rev_id>
-        paths: &RepoPaths,
-        revs: DiGraphMap<
+        paths: RepoPaths,
+        revs: DiGraphMap<_, _>,
     }
 
-    // #[derive(Serialize, Deserialize, Debug)]
+    #[derive(Debug)] 
     pub(crate) struct RepoPaths { 
         // wd: &str,// inconsistent types for paths, might need better type representation
         wd: String,
@@ -39,13 +40,14 @@ mod Repository {
                 root: root.clone(),
                 files: path_compose(root, "files"),
                 revs: path_compose(root, "revs"),
-                head: paths_compose(root, "head"),
-                branch_heads: paths_compose(root, "branches"),
+                head: path_compose(root, "head"),
+                branch_heads: path_compose(root, "branches"),
             }
         }
     }
 
     impl Repo {
+
         fn save(&self) -> () { // Result<(), ()> { 
             write_file(self.paths.head, serialize(self.current_head));
             write_file(self.paths.branch_heads, serialize(self.branch_heads));
@@ -65,7 +67,7 @@ mod Repository {
         let new_repo = Repo {
             current_head: None,
             branch_heads: None,
-            paths: &paths,
+            paths: paths,
         }
         new_repo.save();
         return new_repo;
@@ -76,19 +78,63 @@ mod Repository {
         let load_repo = Repo {
             current_head: read_file(paths.head), //?
             branch_heads: read_file(paths.branch_heads), //?
-            paths: &paths,
+            paths: paths,
         }
         return load_repo;
     }
+
+    pub (crate) fn sha<T: AsRef<[u8]> + ?Sized> (data: &T) -> String {
+        format!("{:x}", Sha256::digest(data))
+    }
+    
+    // preliminary fn might change later or make a trait
+    pub (crate) fn sha_match<'a, T: Clone + Iterator + Iterator<Item=&'a String>> (sha: &'a String, pool: T) -> Vec<&'a String> {
+        let sha_len = sha.len();
+        pool.filter(|v| {
+            if v.len() < sha_len {
+                false
+            } else {
+                v[0..sha_len] == *sha
+            }
+        }).clone().collect::<Vec<_>>()
+}
+    // resolving sha conflict
+    // pub (crate) fn sha_resolve(sha: &str, pool: ) -> 
 }
 
 
 mod Revision {
+    pub struct Rev {
+        manifest: HashMap<&str, FileInfo>,  //<K: wd_relative_path, V: FileInfo: file content id and metadata id
+        user_id: Option<String>,
+        time_stamp: SystemTime,
+        
+        
+
+    }
+
+    impl Rev {
+
+    }
 
 
 }
 
-// mod FileInfo {
+mod File {
+    #[derive(Debug, Serialize, Deserialize)] 
+    pub struct FileInfo {
+        wd_loc: String, 
+        content: String, // sha_id
+        metadata: FileMetaData, //or String //sha_id?
+    }
 
-// }
+    #[derive(Debug, Serialize, Deserialize)] 
+    struct FileMetaData {
+
+    }
+
+    impl FileInfo {
+        fn ()
+    }
+}
 
