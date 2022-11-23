@@ -28,6 +28,7 @@ mod Repository {
         revs: String,
         head: String, // THE current head
         branch_heads: String,
+        stage: String,
     }
     
     impl RepoPaths {
@@ -42,6 +43,7 @@ mod Repository {
                 revs: path_compose(root, "revs"),
                 head: path_compose(root, "head"),
                 branch_heads: path_compose(root, "branches"),
+                stage: path_compose(root, "stage"),
             }
         }
     }
@@ -49,8 +51,10 @@ mod Repository {
     impl Repo {
 
         fn commit(&self) -> Self {
-            Rev::
+            let staged = Rev::from(self.paths.stage);
+            self.revs
         }
+
         fn save(&self) -> () { // Result<(), ()> { 
             write_file(self.paths.head, serialize(self.current_head));
             write_file(self.paths.branch_heads, serialize(self.branch_heads));
@@ -90,8 +94,6 @@ mod Repository {
         return load_repo;
     }
 
-    pub fn 
-
     pub (crate) fn sha<T: AsRef<[u8]> + ?Sized> (data: &T) -> String {
         format!("{:x}", Sha256::digest(data))
     }
@@ -115,9 +117,10 @@ mod Repository {
 mod Revision {
     #[derive(Debug, Clone, Serialize, Deserialize)] 
     pub struct Rev {
-        manifest: HashMap<&str, FileInfo>,,  // Hashmap<K: wd_relative_path, V: FileInfo: file content id and metadata id
+        rev_id: Option<String>,
         user_id: Option<String>,
         time_stamp: SystemTime,
+        manifest: HashMap<&str, FileInfo>,  // Hashmap<K: wd_relative_path, V: FileInfo: file content id and metadata id
     }
 
 
@@ -129,7 +132,15 @@ mod Revision {
                 Err() => Err("error loading the stage") // might need wrapping
             }
         }
-
+        fn save(&self) -> io::Result() {
+            gen_id()
+            write_file(serialize(&self.clone()));
+        }
+        
+        }
+        
+        fn gen_id(&self) -> String {
+            &self
     //     pub fn add_file(&mut self, wd_file_path: &str) -> Self {
     //         self.manifest
     //     }
@@ -138,7 +149,7 @@ mod Revision {
 
     //     }
 
-}
+    }
 
 mod File {
     #[derive(Debug, Serialize, Deserialize)] 
