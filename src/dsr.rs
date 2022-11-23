@@ -1,3 +1,4 @@
+use std::fmt::format;
 use std::{fs, io, env};
 use std::path::Path;
 
@@ -115,4 +116,10 @@ pub fn make_wd(rev: &str) -> io::Result<()> {
 // USEAGE: get_wd_path()
 pub fn get_wd_path() -> String {
     env::current_dir().unwrap().into_os_string().into_string().unwrap()
+}
+
+// 16.
+pub fn path_compose(path1: &str, path2: &str) -> String {
+    let path = format!("{}{}", path1, path2);
+    path
 }
