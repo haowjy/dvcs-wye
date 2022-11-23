@@ -1,6 +1,8 @@
 use crate::cmd_function::file_diff;
-
+//use crate::vc;
 pub fn heads<'a>(wd:&'a str)->Result<&'a str,&'a str>{
+    //get VC::Repo::load
+    let head="VC::Repository::get_current_head()";
     /*
     //return revision_id according to diff command line
     VC::Repo::load
@@ -9,9 +11,10 @@ pub fn heads<'a>(wd:&'a str)->Result<&'a str,&'a str>{
     //for heads -all with Result<Vec<&Revision>>)
     head
     */
-    unimplemented!();
+    Ok(head)
 }
 pub fn log<'a>(wd:&'a str)->Result<&'a str,&'a str>{
+    //let version=vc::Repository::load();
     /*
     VC::Repository::load()
     let log=VC::Repository::get_log()
@@ -19,7 +22,8 @@ pub fn log<'a>(wd:&'a str)->Result<&'a str,&'a str>{
     log
 
     */
-    unimplemented!();
+    let log="000000";
+    Ok(log)
 }
 pub fn status<'a>(wd:&'a str)->Result<&'a str,&'a str>{
     /*VC::from_stage();

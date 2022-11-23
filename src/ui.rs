@@ -2,6 +2,7 @@ use std::io;
 use std::path::Path;
 
 use crate::cmd_function;
+use crate::dsr;
 use crate::cmd_interface::{createonly, readwrite, readonly};
 use crate::cmd_interface::readwrite::RevDiff;
 
@@ -19,8 +20,9 @@ use crate::cmd_interface::readwrite::RevDiff;
 }*/
 //type input=fn()->String;
 pub struct Command<T>{
-    path: T,
-    command_input:String
+    path: String,
+    command_input:String,
+    temp: T
 }
 pub(crate) struct UserInterface<T>{
     commands: Vec<Command<T>>
@@ -30,24 +32,27 @@ impl<T: Clone> UserInterface<T> {
     fn new()-> Self{
         Self{commands:vec![]}
     }
-    pub fn receive_input_command(&mut self,input_test: T) ->io::Result<()>{
+    /*pub fn receive_input_command(&mut self,input_test: T) ->io::Result<()>{
         let mut buffer=String::new();
         let stdin=io::stdin();
         stdin.read_line(&mut buffer);
         println!("input {}",buffer);
-        self.commands.push(Command{path: input_test.clone(),command_input: buffer.clone() });
-        Self::match_command(Command{path: input_test.clone(),command_input: buffer });
+        let path=dsr::get_wd_path();
+        self.commands.push(Command{path: path.clone(),command_input: buffer.clone(), temp:input_test.clone() });
+        Self::match_command(Command{path,command_input: buffer, temp: input_test.clone() });
         Ok(())
-    }
+    }*/
 
-    pub fn receive_input_command_test_inside() ->io::Result<()>{
+    pub fn receive_input_command_test_inside() ->io::Result<()>{//start here temporary
         let mut buffer=String::new();
         let stdin=io::stdin();
         stdin.read_line(&mut buffer);
         println!("input {}",buffer);
-        let mut command: Command<&str> = Command{path: "111",command_input: buffer };
+        let path=dsr::get_wd_path();
+        println!("path {}",path);
+        let mut command: Command<&str> = Command{path,command_input: buffer, temp: "111" };
         //self.commands.push(Command{path: input_test.clone(),command_input: "input_test.clone()" });
-        UserInterface::match_command(Command{path: command.path,command_input: command.command_input });
+        UserInterface::match_command(Command{path: command.path,command_input: command.command_input, temp: () });
         Ok(())
     }
 
@@ -57,10 +62,14 @@ impl<T: Clone> UserInterface<T> {
         let mut res_diff:Result<RevDiff,&str>=Err("1");
         let mut arg= input.command_input.split_whitespace();
         //println!("input {:?}",arg.next());
-        match arg.next(){
+        let input_1=arg.next();
+        let input_2=arg.next();
+        let file=dsr::read_file_as_string(input_2.unwrap());//add D://ur//test.txt
+        println!("file content:{}",file.unwrap());//just test read file
+        match input_1{
             Some("add") => {
                 println!("add");
-                res=crate::cmd_interface::readwrite::add("input.path");
+                res=crate::cmd_interface::readwrite::add(&*input.path);
             }//1
             Some("remove")=> {res=crate::cmd_interface::readwrite::remove("input.path");}//2
             Some("commit") => {res=crate::cmd_interface::readwrite::commit("input.path");}//3
