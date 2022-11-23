@@ -48,11 +48,15 @@ mod Repository {
 
     impl Repo {
 
+        fn commit(&self) -> Self {
+            Rev::
+        }
         fn save(&self) -> () { // Result<(), ()> { 
             write_file(self.paths.head, serialize(self.current_head));
             write_file(self.paths.branch_heads, serialize(self.branch_heads));
             // additional writing operations possible
         }
+
     }
 
     pub fn init() -> Repo { // Result<(),()>{ // error handling to be impl
@@ -60,6 +64,9 @@ mod Repository {
         let paths = RepoPaths::new(WD);
         // ***** error handling needed *****
         // esp: handle running init again with existing repo
+        // try loading existing repo first 
+        // match let new_repo = load():
+        
         create_dir(&paths.files); // root .dvcs automatically added
         create_dir(&paths.revs);
         // create_file(&paths.branch_heads); 
@@ -73,7 +80,7 @@ mod Repository {
         return new_repo;
     }
 
-    pub fn load(WD: &str) -> Repo { // Result<Repo, ()>
+    pub fn load() -> Repo { // Result<Repo, ()>
         let paths = RepoPaths::new(WD);
         let load_repo = Repo {
             current_head: read_file(paths.head), //?
@@ -82,6 +89,8 @@ mod Repository {
         }
         return load_repo;
     }
+
+    pub fn 
 
     pub (crate) fn sha<T: AsRef<[u8]> + ?Sized> (data: &T) -> String {
         format!("{:x}", Sha256::digest(data))
@@ -104,28 +113,39 @@ mod Repository {
 
 
 mod Revision {
+    #[derive(Debug, Clone, Serialize, Deserialize)] 
     pub struct Rev {
-        manifest: HashMap<&str, FileInfo>,  //<K: wd_relative_path, V: FileInfo: file content id and metadata id
+        manifest: HashMap<&str, FileInfo>,,  // Hashmap<K: wd_relative_path, V: FileInfo: file content id and metadata id
         user_id: Option<String>,
         time_stamp: SystemTime,
-        
-        
-
     }
+
 
     impl Rev {
+        pub fn from(path_stage: &str) -> Result<Rev> {
+            let rev = deserialize(read_file(path_stage));
+            match rev {
+                Ok() => Ok(Rev),
+                Err() => Err("error loading the stage") // might need wrapping
+            }
+        }
 
-    }
+    //     pub fn add_file(&mut self, wd_file_path: &str) -> Self {
+    //         self.manifest
+    //     }
+    // }
+    //     pub fn remove_file(&mut self, wd_file_path:&str) -> Self {
 
+    //     }
 
 }
 
 mod File {
     #[derive(Debug, Serialize, Deserialize)] 
     pub struct FileInfo {
-        wd_loc: String, 
-        content: String, // sha_id
-        metadata: FileMetaData, //or String //sha_id?
+        loc_in_wd: String, // wd relative path
+        content_id: String, // sha_id
+        metadata: FileMetaData,
     }
 
     #[derive(Debug, Serialize, Deserialize)] 
@@ -134,7 +154,16 @@ mod File {
     }
 
     impl FileInfo {
-        fn ()
+        pub (crate) fn read_content(&self, repo_path:&str) -> io::Result() {
+            let path_to_file = path_compose(repo_path, self.content_id);
+            read_file_as_string(&path_to_file)
+        }
+
+        pub (crate) fn make_file(&self, &wd:&str) -> io::Result() {
+            let path_to_file = path_compose(wd, self.loc_in_wd);
+            copy_file()
+            write_file(path_to_file, )
+        }
     }
 }
 
