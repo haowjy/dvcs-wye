@@ -1,6 +1,6 @@
 use std::fmt::format;
 use std::{fs, io, env};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 // 3. Create a directory and directory within recursively if missing
 //     If you would like to create a hidden folder, add a . in front
@@ -120,6 +120,11 @@ pub fn get_wd_path() -> String {
 
 // 16.
 pub fn path_compose(path1: &str, path2: &str) -> String {
-    let path = format!("{}{}", path1, path2);
-    path
+    //let path = format!("{}{}", path1, path2);
+    //path
+    let mut path = PathBuf::new();
+    path.push(path1);
+    path.push(path2); 
+    path.into_os_string().into_string().unwrap()
 }
+
