@@ -1,18 +1,85 @@
-use std::fmt::format;
+use std::io::{Error, ErrorKind};
 use std::{fs, io, env};
 use std::path::{Path, PathBuf};
+
+// ==================================
+//        PRIVATE FUNCTIONS
+// ==================================
+
+// get the last portion of a path, e.g ".git/a/b/c" => "c"
+fn get_name(path: &str) -> Option<String> {
+    let mut pieces = path.rsplit('/');
+    match pieces.next() {
+        Some(p) => {
+            let rt: String = p.to_string();
+            return Some(rt)
+        } None => {
+            eprintln!("ERR<DSR-01>: Invalid Path");
+            return None
+        },
+    }
+}
+
+// check if the file/dir name contains forbidden character(s)
+fn is_name_valid(name: &str) -> bool {
+    let os = env::consts::OS;
+    match os {
+        "linux" => {
+            if name.contains('/') {
+                eprintln!("ERR<DSR-02>: Name({}) contains forbidden ASCII character(s)", name);
+                return false
+            }
+        }, "macos" => {
+            if name.contains(':') {
+                eprintln!("ERR<DSR-03>: Name({}) contains forbidden ASCII character(s)", name);
+                return false
+            }
+        }, "windows" => {
+            if name.contains('<') || name.contains('>') || name.contains(':') ||
+               name.contains('"') || name.contains('/') || name.contains('\\') ||
+               name.contains('|') || name.contains('?') || name.contains('*') {
+                eprintln!("ERR<DSR-04>: Name({}) contains forbidden ASCII character(s)", name);
+                return false
+            }
+        }, _ => {
+            //eprintln!("WARN<DSR-01>: Operating System: <{}> is not supported", os);
+            return true
+        },
+    };
+    true
+}
+
+// ==================================
+//        PUBLIC FUNCTIONS
+// ==================================
+
+// 1. Serialize
+
+// 2. Deserialize
 
 // 3. Create a directory and directory within recursively if missing
 //     If you would like to create a hidden folder, add a . in front
 //      of the folder name, i.e. "folder1/folder2/.git"
 // USEAGE: create_dir("folder1/folder2/folder3/.hidden_folder");
 pub fn create_dir(path: &str) -> io::Result<()> {
+    let folder_name = get_name(path).unwrap();
+    if is_path_valid(path) {
+        eprintln!("WARN<DSR-02>: Directory <{}> has already created", folder_name);
+    } else if !is_name_valid(&folder_name) {
+        return Err(Error::new(ErrorKind::Unsupported, "ERR: Invalid directory name format"));
+    }
     fs::create_dir_all(path)
 }
 
 // 4. Remove a directory at this path, after removing all its contents.
 // USEAGE: delete_dir("folder1/will_delete");
 pub fn delete_dir(path: &str) -> io::Result<()> {
+    let folder_name = get_name(path).unwrap();
+    if !is_path_valid(path) {
+        eprintln!("WARN<DSR-03>: Directory <{}> has already deleted", folder_name);
+    } else if !is_name_valid(&folder_name) {
+        return Err(Error::new(ErrorKind::Unsupported, "ERR: Invalid directory name format"));
+    }
     fs::remove_dir_all(path)
 }
 
@@ -105,12 +172,21 @@ pub fn is_path_valid(path: &str) -> bool {
     false
 }
 
-// 14.
-// USEAGE: 
-pub fn make_wd(rev: &str) -> io::Result<()> {
-    
-    Ok(())
+// 14. Takes in Revision struct (vc/revision.rs/Rev), copy
+//      its contents to the current working directory
+/* ===================== PSEUDOCODE =====================
+pub fn make_wd(rev: &Rev) -> io::Result<()> {
+    clear_dir(wd)
+    for each F in Rev.manifest {
+        path = F.key
+        info = F.value
+
+        create_file(path)
+        content = info.get_content() from vc/file.rs
+        write_file(&path, &content)
+    }
 }
+======================== PSEUDOCODE ===================== */
 
 // 15. Returns a string to the current working directory
 // USEAGE: get_wd_path()
