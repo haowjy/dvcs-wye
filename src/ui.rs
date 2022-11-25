@@ -64,8 +64,8 @@ impl<T: Clone> UserInterface<T> {
         //println!("input {:?}",arg.next());
         let input_1=arg.next();
         let input_2=arg.next();
-        let file=dsr::read_file_as_string(input_2.unwrap());//add D://ur//test.txt
-        println!("file content:{}",file.unwrap());//just test read file
+        let file=dsr::read_file_as_string(input_2.unwrap_or("1"));//add D://ur//test.txt
+        //println!("file content:{}",file.unwrap());//just test read file
         match input_1{
             Some("add") => {
                 println!("add");
@@ -85,7 +85,8 @@ impl<T: Clone> UserInterface<T> {
             Some("checkout") => {res=crate::cmd_interface::createonly::checkout("input.path","input.path");}//2
             Some("pull") => {res=crate::cmd_interface::createonly::pull("input.path","input.path",Some("input.path"));}//3
             Some("push") => {res=crate::cmd_interface::createonly::push("input.path","input.path",Some("input.path"));}//4
-            Some("init") => {res=Ok("init here")}//1
+            Some("init") => {let init=crate::vc::repository::init();
+                res=Ok("init here")}//1
             _ => {}
         }
         if res!=Err("1")
