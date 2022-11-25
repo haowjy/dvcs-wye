@@ -32,15 +32,11 @@ impl UserInterface {
         let main_window = WindowDesc::new(Self::build_root_widget)
             .title(WINDOW_TITLE)
             .window_size((400.0, 400.0));
-
-        // create the initial app state
         let initial_state = Command {
             path: "".to_string(),
             res: "".to_string(),
             command_input: "".into(),
         };
-
-        // start the application
         AppLauncher::with_window(main_window)
             .launch(initial_state)
             .expect("Failed to launch application");
@@ -70,7 +66,6 @@ impl UserInterface {
             .lens(Command::command_input);
         let label2 = Label::new(|data: &Command, _env: &Env| format!("Response {}!", data.res));
 
-        // arrange the two widgets vertically, with some padding
         let layout = Flex::column()
             .with_spacer(VERTICAL_WIDGET_SPACING)
             .with_child(textbox)
@@ -78,7 +73,6 @@ impl UserInterface {
             .with_child(label)
             .with_child(label2);
 
-        // center the two widgets in the available space
         Align::centered(layout)
     }
 
