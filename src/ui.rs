@@ -5,6 +5,8 @@ use crate::cmd_function;
 use crate::dsr;
 use crate::cmd_interface::{createonly, readwrite, readonly};
 use crate::cmd_interface::readwrite::RevDiff;
+use crate::cmd_function::FileDiff;
+use crate::vc::repository::{Repo};
 
 /*pub fn receive_input_command_test() ->io::Result<()>{
     let mut buffer=String::new();
@@ -59,7 +61,8 @@ impl<T: Clone> UserInterface<T> {
     fn match_command(input:Command<T>){//old:->String, new no return
         //input.path
         let mut res:Result<&str,&str>=Err("1");
-        let mut res_diff:Result<RevDiff,&str>=Err("1");
+        let mut res_diff:Result<RevDiff,&str>=Err("2");
+        let mut res_file_diff:Result<FileDiff,&str>=Err("3");
         let mut arg= input.command_input.split_whitespace();
         //println!("input {:?}",arg.next());
         let input_1=arg.next();
@@ -76,7 +79,7 @@ impl<T: Clone> UserInterface<T> {
             Some("merge") => {res=crate::cmd_interface::readwrite::merge("input.path");}//4
             Some("diff") => {res_diff=crate::cmd_interface::readwrite::diff("input.path","input.path");}//5
             Some("cat") => {res=crate::cmd_interface::readwrite::cat("input.path","input.path");}//6
-            Some("status") => {res=crate::cmd_interface::readonly::status("input.path");}//status1
+            Some("status") => {res_file_diff=crate::cmd_interface::readonly::status("input.path");}//status1
             Some("log") => {
                 println!("log");
                 res=crate::cmd_interface::readonly::log("input.path");}//log2
@@ -85,16 +88,20 @@ impl<T: Clone> UserInterface<T> {
             Some("checkout") => {res=crate::cmd_interface::createonly::checkout("input.path","input.path");}//2
             Some("pull") => {res=crate::cmd_interface::createonly::pull("input.path","input.path",Some("input.path"));}//3
             Some("push") => {res=crate::cmd_interface::createonly::push("input.path","input.path",Some("input.path"));}//4
-            Some("init") => {let init=crate::vc::repository::init();
-                res=Ok("init here")}//1
+            Some("init") => {let init:Repo=crate::vc::repository::init();let paths=dsr::get_wd_path();
+                println!("{:?}",paths);
+                res=Ok("&paths")}//1
             _ => {}
         }
         if res!=Err("1")
         {
             Self::input_handling(res);
         }
-        else {
+        else if res!=Err("2"){
             Self::input_handling_special(res_diff);
+        }
+        else{
+            Self::input_handling_special_file(res_file_diff);
         }
         //unimplemented!();
     }
@@ -104,6 +111,10 @@ impl<T: Clone> UserInterface<T> {
     }
 
     fn input_handling_special(return_result:Result<RevDiff,&str>){
+        //unimplemented!();
+        println!("{:?}","return_result")
+    }
+    fn input_handling_special_file(return_result:Result<FileDiff,&str>){
         //unimplemented!();
         println!("{:?}","return_result")
     }

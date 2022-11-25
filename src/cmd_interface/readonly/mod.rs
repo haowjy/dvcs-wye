@@ -1,5 +1,6 @@
-use crate::cmd_function::file_diff;
-//use crate::vc;
+use crate::cmd_function::{file_diff, FileDiff};
+use crate::vc::*;
+use crate::vc::repository::Repo;
 pub fn heads<'a>(wd:&'a str)->Result<&'a str,&'a str>{
     //get VC::Repo::load
     let head="VC::Repository::get_current_head()";
@@ -20,12 +21,11 @@ pub fn log<'a>(wd:&'a str)->Result<&'a str,&'a str>{
     let log=VC::Repository::get_log()
     VC::Revision::parent()
     log
-
     */
-    let log="000000";
+    let log="log information, information";
     Ok(log)
 }
-pub fn status<'a>(wd:&'a str)->Result<&'a str,&'a str>{
+pub fn status<'a>(wd:&'a str)->Result<FileDiff,&'a str>{
     /*VC::from_stage();
     VC::Repo::load();
     VC::Repo::get_rev();//old_revision: &str
@@ -34,7 +34,7 @@ pub fn status<'a>(wd:&'a str)->Result<&'a str,&'a str>{
     diff*/
     let diff=file_diff("content1", "content2");
     //diff
-    unimplemented!();
+    Ok(diff)
 }
 
 /*#[cfg(test)]

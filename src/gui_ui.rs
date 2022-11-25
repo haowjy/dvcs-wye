@@ -7,6 +7,9 @@ use crate::cmd_interface::{createonly, readwrite, readonly};
 use crate::cmd_interface::readwrite::RevDiff;
 use druid::widget::{Align, Flex, Label, TextBox, Button};
 use druid::{AppLauncher, Data, Env, Lens, LocalizedString, Widget, WindowDesc, WidgetExt};
+use crate::cmd_function::FileDiff;
+use crate::vc::repository::Repo;
+use std::ptr::null;
 
 const VERTICAL_WIDGET_SPACING: f64 = 20.0;
 const TEXT_BOX_WIDTH: f64 = 300.0;
@@ -92,13 +95,15 @@ impl UserInterface {
     fn match_command(mut input:Command)->String{//old:->String, new no return
         //input.path
         let mut res:Result<&str,&str>=Err("1");
-        let mut res_diff:Result<RevDiff,&str>=Err("1");
+        let mut res_diff:Result<RevDiff,&str>=Err("2");
+        let mut res_file_diff:Result<FileDiff,&str>=Err("3");
         let mut arg= input.command_input.split_whitespace();
         //println!("input {:?}",arg.next());
         let input_1=arg.next();
         let input_2=arg.next();
         let file=dsr::read_file_as_string(input_2.unwrap_or("1"));//add D://ur//test.txt
-        //println!("file content:{}",file.unwrap());//just test read file
+        if input_2!=None{
+        println!("file content:{}",file.unwrap());}//just test read file
         match input_1{
             Some("add") => {
                 println!("add");
@@ -109,7 +114,7 @@ impl UserInterface {
             Some("merge") => {res=crate::cmd_interface::readwrite::merge("input.path");}//4
             Some("diff") => {res_diff=crate::cmd_interface::readwrite::diff("input.path","input.path");}//5
             Some("cat") => {res=crate::cmd_interface::readwrite::cat("input.path","input.path");}//6
-            Some("status") => {res=crate::cmd_interface::readonly::status("input.path");}//status1
+            Some("status") => {res_file_diff=crate::cmd_interface::readonly::status("input.path");}//status1
             Some("log") => {
                 println!("log");
                 res=crate::cmd_interface::readonly::log("input.path");}//log2
@@ -118,8 +123,10 @@ impl UserInterface {
             Some("checkout") => {res=crate::cmd_interface::createonly::checkout("input.path","input.path");}//2
             Some("pull") => {res=crate::cmd_interface::createonly::pull("input.path","input.path",Some("input.path"));}//3
             Some("push") => {res=crate::cmd_interface::createonly::push("input.path","input.path",Some("input.path"));}//4
-            Some("init") => {let init=crate::vc::repository::init();
-                res=Ok("init here")}//1
+            Some("init") => {let init:Repo=crate::vc::repository::init();
+                let paths=dsr::get_wd_path();
+                println!("{:?}",paths);
+                res=Ok("&*paths")}//1
             _ => {}
         }
         if res!=Err("1")
@@ -127,9 +134,13 @@ impl UserInterface {
             Self::input_handling(res);
             input.res=res.unwrap().to_string();
         }
-        else {
+        else if res!=Err("2"){
             Self::input_handling_special(res_diff);
             input.res= "res_diff.unwrap()".parse().unwrap();
+        }
+        else{
+            Self::input_handling_special_file(res_file_diff);
+            input.res="res_file_diff.unwrap()".parse().unwrap();
         }
         return input.res;
     }
@@ -142,7 +153,10 @@ impl UserInterface {
         //unimplemented!();
         println!("{:?}","return_result")
     }
-
+    fn input_handling_special_file(return_result:Result<FileDiff,&str>){
+        //unimplemented!();
+        println!("{:?}","return_result")
+    }
     fn input_handling_backup<E: std::fmt::Debug>(return_result:Result<(), E>){
         println!("{:?}",return_result)
     }
