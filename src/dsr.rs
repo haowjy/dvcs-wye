@@ -1,5 +1,6 @@
-use std::io::{Error, ErrorKind};
 use std::{fs, io, env};
+use std::fs::Metadata;
+use std::io::{Error, ErrorKind};
 use std::path::{Path, PathBuf};
 
 // ==================================
@@ -200,4 +201,7 @@ pub fn get_name(path: &str) -> Option<String> {
 }
 
 // 18. returns existing std::fs::Metadata struct
-// pub get_metadata(path: &str) -> io::Result<Metadata>
+pub fn get_metadata(path: &str) -> io::Result<Metadata> {
+    let attr = fs::metadata(path)?;
+    return Ok(attr)
+}
