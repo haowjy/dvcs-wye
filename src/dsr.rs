@@ -6,20 +6,6 @@ use std::path::{Path, PathBuf};
 //        PRIVATE FUNCTIONS
 // ==================================
 
-// get the last portion of a path, e.g ".git/a/b/c" => "c"
-fn get_name(path: &str) -> Option<String> {
-    let mut pieces = path.rsplit('/');
-    match pieces.next() {
-        Some(p) => {
-            let rt: String = p.to_string();
-            return Some(rt)
-        } None => {
-            eprintln!("ERR<DSR-01>: Invalid Path");
-            return None
-        },
-    }
-}
-
 // check if the file/dir name contains forbidden character(s)
 fn is_name_valid(name: &str) -> bool {
     let os = env::consts::OS;
@@ -76,7 +62,8 @@ pub fn create_dir(path: &str) -> io::Result<()> {
 pub fn delete_dir(path: &str) -> io::Result<()> {
     let folder_name = get_name(path).unwrap();
     if !is_path_valid(path) {
-        eprintln!("WARN<DSR-03>: Directory <{}> has already deleted", folder_name);
+        eprintln!("ERR<DSR-05>: Directory <{}> has already deleted", folder_name);
+        return Err(Error::new(ErrorKind::Unsupported, "ERR: Directory does not exists"));
     } else if !is_name_valid(&folder_name) {
         return Err(Error::new(ErrorKind::Unsupported, "ERR: Invalid directory name format"));
     }
@@ -204,3 +191,16 @@ pub fn path_compose(path1: &str, path2: &str) -> String {
     path.into_os_string().into_string().unwrap()
 }
 
+// 17. get the last portion of a path, e.g ".git/a/b/c" => "c"
+pub fn get_name(path: &str) -> Option<String> {
+    let mut pieces = path.rsplit('/');
+    match pieces.next() {
+        Some(p) => {
+            let rt: String = p.to_string();
+            return Some(rt)
+        } None => {
+            eprintln!("ERR<DSR-01>: Invalid Path");
+            return None
+        },
+    }
+}
