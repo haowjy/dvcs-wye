@@ -63,7 +63,7 @@ pub fn delete_dir(path: &str) -> io::Result<()> {
     let folder_name = get_name(path).unwrap();
     if !is_path_valid(path) {
         eprintln!("ERR<DSR-05>: Directory <{}> has already deleted", folder_name);
-        return Err(Error::new(ErrorKind::Unsupported, "ERR: Directory does not exists"));
+        return Err(Error::new(ErrorKind::Unsupported, "ERR: Directory does not exist"));
     } else if !is_name_valid(&folder_name) {
         return Err(Error::new(ErrorKind::Unsupported, "ERR: Invalid directory name format"));
     }
@@ -193,14 +193,11 @@ pub fn path_compose(path1: &str, path2: &str) -> String {
 
 // 17. get the last portion of a path, e.g ".git/a/b/c" => "c"
 pub fn get_name(path: &str) -> Option<String> {
-    let mut pieces = path.rsplit('/');
-    match pieces.next() {
-        Some(p) => {
-            let rt: String = p.to_string();
-            return Some(rt)
-        } None => {
-            eprintln!("ERR<DSR-01>: Invalid Path");
-            return None
-        },
-    }
+    let path = Path::new(path); 
+    let name = path.file_name();
+    let name_to_string = name.unwrap().to_owned().into_string().unwrap();
+    return Some(name_to_string)
 }
+
+// 18. returns existing std::fs::Metadata struct
+// pub get_metadata(path: &str) -> io::Result<Metadata>
