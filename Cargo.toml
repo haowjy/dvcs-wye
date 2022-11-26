@@ -11,3 +11,4 @@ petgraph = "0.6.2"
 sha2 = "0.10.6"
 serde = { version = "1.0", features = ["derive"] }
 # druid = { version = "0.6.0", features = ["im", "svg", "image"] }
+log = { version = "0.4", features = ["std", "serde"] }

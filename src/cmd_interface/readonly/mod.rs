@@ -7,8 +7,8 @@ pub fn heads<'a>(wd:&'a str)->Result<&'a str,&'a str>{
     //use get_heads to load.current_head;
     let head="VC::Repository::get_current_head()";
     /*
-    //return revision_id according to diff command line
-    VC::Repo::load
+    return revision_id according to diff command line
+    VC::Repo::load;
     let head=VC::Repository::get_current_head();//for heads
     (let head=VC::Repository::get_heads();
     //for heads -all with Result<Vec<&Revision>>)
@@ -18,6 +18,7 @@ pub fn heads<'a>(wd:&'a str)->Result<&'a str,&'a str>{
 }
 pub fn log<'a>(wd:&'a str)->Result<&'a str,&'a str>{
     let load=crate::vc::repository::load(wd);//got Repo
+    //load.get_log();
     //let version=vc::Repository::load();
     /*
     VC::Repository::load()
