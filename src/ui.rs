@@ -7,19 +7,8 @@ use crate::cmd_interface::{createonly, readwrite, readonly};
 use crate::cmd_interface::readwrite::RevDiff;
 use crate::cmd_function::FileDiff;
 use crate::vc::repository::{Repo};
+use std::io::{stdout, Write};
 
-/*pub fn receive_input_command_test() ->io::Result<()>{
-    let mut buffer=String::new();
-    let stdin=io::stdin();
-    stdin.read_line(&mut buffer);
-    println!("input {}",buffer);
-    let mut arg= buffer.split_whitespace();
-    println!("input {:?}",arg.next());
-    let mut command: Command<&str> = Command{path: "111",command_input: "input_test.clone()" };
-    //self.commands.push(Command{path: input_test.clone(),command_input: "input_test.clone()" });
-    UserInterface::match_command(Command{path: command.path,command_input: "input_test.clone()" });
-    Ok(())
-}*/
 //type input=fn()->String;
 pub struct Command<T>{
     path: String,
@@ -44,6 +33,27 @@ impl<T: Clone> UserInterface<T> {
         Self::match_command(Command{path,command_input: buffer, temp: input_test.clone() });
         Ok(())
     }*/
+    pub fn receive_input_command_loop() ->io::Result<()>{//start here temporary
+        print!("input q to quit");
+        loop {
+            print!("dvcs command>: ");
+            stdout().flush().unwrap();
+            let mut buffer=String::new();
+            let stdin=io::stdin();
+            stdin.read_line(&mut buffer);
+            if buffer=="q\n".to_string(){
+                println!("quit!");
+                break;
+            }
+            println!("input {}",buffer);
+            let path=dsr::get_wd_path();
+            println!("path {}",path);
+            let mut command: Command<&str> = Command{path,command_input: buffer, temp: "111" };
+            //self.commands.push(Command{path: input_test.clone(),command_input: "input_test.clone()" });
+            UserInterface::match_command(Command{path: command.path,command_input: command.command_input, temp: () });
+        }
+        Ok(())
+    }
 
     pub fn receive_input_command_test_inside() ->io::Result<()>{//start here temporary
         let mut buffer=String::new();

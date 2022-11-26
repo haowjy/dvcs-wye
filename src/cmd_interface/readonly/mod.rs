@@ -1,8 +1,10 @@
 use crate::cmd_function::{file_diff, FileDiff};
-use crate::vc::*;
-use crate::vc::repository::Repo;
+use crate::vc::{file, repository, revision};
+
 pub fn heads<'a>(wd:&'a str)->Result<&'a str,&'a str>{
     //get VC::Repo::load
+    let load=crate::vc::repository::load(wd);//Repo
+    //use get_heads to load.current_head;
     let head="VC::Repository::get_current_head()";
     /*
     //return revision_id according to diff command line
@@ -15,6 +17,7 @@ pub fn heads<'a>(wd:&'a str)->Result<&'a str,&'a str>{
     Ok(head)
 }
 pub fn log<'a>(wd:&'a str)->Result<&'a str,&'a str>{
+    let load=crate::vc::repository::load(wd);//Repo
     //let version=vc::Repository::load();
     /*
     VC::Repository::load()
@@ -22,6 +25,7 @@ pub fn log<'a>(wd:&'a str)->Result<&'a str,&'a str>{
     VC::Revision::parent()
     log
     */
+    //add log here
     let log="log information, information";
     Ok(log)
 }
@@ -33,6 +37,7 @@ pub fn status<'a>(wd:&'a str)->Result<FileDiff,&'a str>{
     let diff=CF::file_diff(content1, content2);
     diff*/
     let diff=file_diff("content1", "content2");
+    print!("{:?}",diff);
     //diff
     Ok(diff)
 }

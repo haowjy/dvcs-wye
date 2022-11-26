@@ -105,12 +105,14 @@ impl UserInterface {
         if input_2!=None{
         println!("file content:{}",file.unwrap());}//just test read file
         match input_1{
+            //if want to display something, prehaps can write a fake return in command Interface
+            //add log or not, rust logger
             Some("add") => {
                 println!("add");
                 res=crate::cmd_interface::readwrite::add(&*input.path);
             }//1
             Some("remove")=> {res=crate::cmd_interface::readwrite::remove("input.path");}//2
-            Some("commit") => {res=crate::cmd_interface::readwrite::commit("input.path");}//3
+            Some("commit") => {res=crate::cmd_interface::readwrite::commit("message");}//3
             Some("merge") => {res=crate::cmd_interface::readwrite::merge("input.path");}//4
             Some("diff") => {res_diff=crate::cmd_interface::readwrite::diff("input.path","input.path");}//5
             Some("cat") => {res=crate::cmd_interface::readwrite::cat("input.path","input.path");}//6
