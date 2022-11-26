@@ -17,7 +17,7 @@ pub fn heads<'a>(wd:&'a str)->Result<&'a str,&'a str>{
     Ok(head)
 }
 pub fn log<'a>(wd:&'a str)->Result<&'a str,&'a str>{
-    let load=crate::vc::repository::load(wd);//Repo
+    let load=crate::vc::repository::load(wd);//got Repo
     //let version=vc::Repository::load();
     /*
     VC::Repository::load()
@@ -26,7 +26,7 @@ pub fn log<'a>(wd:&'a str)->Result<&'a str,&'a str>{
     log
     */
     //add log here
-    let log="log information, information";
+    let log="load.crate::vc::repository:get_log(),log information, information";
     Ok(log)
 }
 pub fn status<'a>(wd:&'a str)->Result<FileDiff,&'a str>{
@@ -36,6 +36,9 @@ pub fn status<'a>(wd:&'a str)->Result<FileDiff,&'a str>{
     VC::Rev::new();
     let diff=CF::file_diff(content1, content2);
     diff*/
+    let load=crate::vc::repository::load(wd);//got Repo
+   /* let w=load.get_rev();
+    print!("{:?}",w);*/
     let diff=file_diff("content1", "content2");
     print!("{:?}",diff);
     //diff

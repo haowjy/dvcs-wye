@@ -100,7 +100,7 @@ impl<T: Clone> UserInterface<T> {
             Some("push") => {res=crate::cmd_interface::createonly::push("input.path","input.path",Some("input.path"));}//4
             Some("init") => {let init:Repo=crate::vc::repository::init();let paths=dsr::get_wd_path();
                 println!("{:?}",paths);
-                res=Ok("&paths")}//1
+                res=Ok("init successfully")}//1
             _ => {}
         }
         if res!=Err("1")

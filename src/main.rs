@@ -6,7 +6,6 @@ mod cmd_function;
 
 mod cmd_interface;
 mod vc;
-mod gui_ui;
 
 pub use cmd_interface::{createonly, readwrite, readonly};
 
