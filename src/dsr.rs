@@ -167,7 +167,7 @@ pub fn is_path_valid(path: &str) -> bool {
 /* ===================== EXPERIMENTAL - UNKNOWN BEHAVIOUR ===================== */
 pub fn make_wd(rev: &Rev) -> io::Result<()> {
     let wd_path = get_wd_path();
-    clear_dir(&wd_path, vec![])?;
+    clear_dir(&wd_path, vec![".git"])?;
     for (path, item) in rev.get_files() {
         create_file(path)?;
         let content = item.get_content();
@@ -214,5 +214,20 @@ pub fn get_parent_name(path: &str) -> Option<String> {
     match rt {
         Ok(p) => return Some(p),
         Err(_) => return None,
+    }
+}
+
+
+#[cfg(test)]
+mod tests_dsr {
+    use crate::dsr::*;
+
+    #[test]
+    fn test_get_parent() {
+        let path = "this/that/those/test/hello_world.txt";
+        let parent = get_parent_name(&path);
+        println!("Parent Name {:?}", parent);
+        let parent = get_parent_name(&parent.unwrap());
+        println!("Parent Name {:?}", parent);
     }
 }
