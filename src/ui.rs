@@ -9,6 +9,7 @@ use crate::cmd_function::FileDiff;
 use crate::vc::repository::{Repo};
 use std::io::{stdout, Write};
 use log::{info, warn};
+use log4rs;
 pub trait Log {
     fn log_for_dev(&self);
 }
@@ -60,6 +61,7 @@ impl UserInterface {
         Ok(())
     }*/
     pub fn receive_input_command_loop() ->io::Result<()>{//start here temporary
+        log4rs::init_file("src/log4rs.yml", Default::default()).unwrap();
         print!("input q to quit");
         loop{
             print!("dvcs command>: ");
@@ -110,38 +112,41 @@ impl UserInterface {
                 println!("add");
                 res=readwrite::add(&*input.path);
             }//1
-            Some("remove")=> {res=readwrite::remove("input.path");
+            Some("remove")=> {res=readwrite::remove(&*input.path);
                 input.temp= "ok".parse().unwrap();
                 input.log_for_dev();
             }//2
-            Some("commit") => {res=readwrite::commit("input.path");}//3
+            Some("commit") => {res=readwrite::commit(input_2.unwrap());}//3
             Some("merge") => {res=readwrite::merge("input.path");}//4
             Some("diff") => {res_diff=readwrite::diff("input.path","input.path");
                 res=Err("2");}//5
-            Some("cat") => {res=readwrite::cat("input.path","input.path");}//6
+            Some("cat") => {res=readwrite::cat("input.path",&*input.path);}//6
             Some("status") => {res_file_diff=readonly::status("input.path");
                 res=Err("3");}//status1
             Some("log") => {
                 res=readonly::log("input.path");}//log2
             Some("heads") => {res=readonly::heads("input.path");}//heads3
-            Some("clone") => {res=createonly::clone("input.path1","input.path");}//1
+            Some("clone") => {res=createonly::clone("input.path1",input_2.unwrap());}//1
             Some("checkout") => {res=createonly::checkout("input.path","input.path");}//2
             Some("pull") => {res=createonly::pull("input.path","input.path",Some("input.path"));}//3
             Some("push") => {res=createonly::push("input.path","input.path",Some("input.path"));}//4
-            Some("init") => {let init:Repo=crate::vc::repository::init();/*let paths=dsr::get_wd_path();
-                println!("{:?}",paths); waiting for get_XXX method*/
+            Some("init") => {
+                let init:Repo=crate::vc::repository::init();
                 res=Ok("init successfully")}//1
-            _ => {warn!(target: "a","{} update {}", "command line","wrong");}
+            _ => {warn!(target: "aaaaaa","{} update {}", "command line","wrong");}
         }
         if res!=Err("1") && res!=Err("2") && res!=Err("3")
         {
             Self::input_handling(res);
+            info!(target: "a","{} update {}", "command line","b");
         }
         else if res==Err("2"){
             Self::input_handling_special(res_diff);
+            info!(target: "a","{} update {}", "command line","b");
         }
         else  if res==Err("3"){
             Self::input_handling_special_file(res_file_diff);
+            info!(target: "a","{} update {}", "command line","b");
         }
     }
 
@@ -152,13 +157,15 @@ impl UserInterface {
 
     fn input_handling_special(return_result:Result<RevDiff,&str>){
         //waiting structure inside RevDiff, similar with FileDiff
-        println!("{:?}","return_result")
+        println!("{:?}","return_result");
+        info!(target: "a","{} update {}", "command line","b");
     }
     fn input_handling_special_file(return_result:Result<FileDiff,&str>){
         let flag=return_result.clone().unwrap().is_diff;
         if flag==true {let d=return_result.clone().unwrap().patch;
             println!("{}",d); }
         else { println!("No difference, same");}
+        info!(target: "a","{} update {}", "command line","b");
     }
 
     /*fn input_handling_backup<E: std::fmt::Debug>(return_result:Result<(), E>){

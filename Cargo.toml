@@ -13,3 +13,4 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"  # temporary in place for serialize/desirialize
 # druid = { version = "0.6.0", features = ["im", "svg", "image"] }
 log = { version = "0.4", features = ["std", "serde"] }
+log4rs = "0.10.0"
