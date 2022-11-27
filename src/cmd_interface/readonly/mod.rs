@@ -3,8 +3,8 @@ use crate::vc::{file, repository, revision};
 
 pub fn heads<'a>(wd:&'a str)->Result<&'a str,&'a str>{
     //get VC::Repo::load
-    let load=crate::vc::repository::load(wd);//Repo
-    //use get_heads to load.current_head;
+    let load=crate::vc::repository::load(wd);//get Repo
+    //use get_heads to let head=load.current_head();
     let head="VC::Repository::get_current_head()";
     /*
     return revision_id according to diff command line
@@ -18,7 +18,7 @@ pub fn heads<'a>(wd:&'a str)->Result<&'a str,&'a str>{
 }
 pub fn log<'a>(wd:&'a str)->Result<&'a str,&'a str>{
     let load=crate::vc::repository::load(wd);//got Repo
-    //load.get_log();
+    //let log= load.get_log();
     //let version=vc::Repository::load();
     /*
     VC::Repository::load()
@@ -41,7 +41,6 @@ pub fn status<'a>(wd:&'a str)->Result<FileDiff,&'a str>{
    /* let w=load.get_rev();
     print!("{:?}",w);*/
     let diff=file_diff("content1", "content2");
-    print!("{:?}",diff);
     //diff
     Ok(diff)
 }
