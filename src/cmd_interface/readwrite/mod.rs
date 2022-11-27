@@ -21,16 +21,27 @@ pub fn cat<'a>(rev_id:&'a str, path:&'a str) -> Result<&'a str, &'a str>{
 
 pub fn add<'a>(path:&'a str) -> Result<&'a str, &'a str>{
     // add the file temporarily to the index branch (not committed yet)
+    // just call repo.add by obtaining absolute path
+    // if pwd is /Users/jimmyyao/gitrepos/dvcs-wyesrc/cmd_function
+    // git add mod.rs
+
+    // get split based on /Users/jimmyyao/gitrepos/dvcs-wye
+    // /Users/jimmyyao/gitrepos/dvcs-wye/src/cmd_function/mod.rs -> 
+    // pass rel path (src/cmd_function/mod.rs)
     unimplemented!(); //TODO
 }
 
 pub fn remove<'a>(path:&'a str) -> Result<&'a str, &'a str>{
     // remove the file temporarily to the index branch by acting as if we have deleted the file (not committed yet)
+    // just call repo.remove by obtaining absolute path
     unimplemented!(); //TODO
 }
 
 pub fn commit<'a>(message:&'a str) -> Result<&'a str, &'a str>{
     // commit the index branch to the head branch, create a new revision and update the head
+    // write to log -> where would this be?
+
+    // return a RevDiff if successful
     unimplemented!(); //TODO
 }
 

@@ -7,28 +7,34 @@ use diffy::{create_patch, Patch, merge};
 pub struct FileDiff<'a> {
     origin_content:&'a str,
     mod_content:&'a str,
-    pub patch: Patch<'a, str>,
-    pub is_diff: bool,
+    patch: Patch<'a, str>,
+    is_diff: bool,
+}
+
+impl <'a> FileDiff<'a> {
+    pub fn new(origin_content:&'a str, mod_content:&'a str) -> Self {
+        let patch = create_patch(origin_content, mod_content);
+        let is_diff = origin_content == mod_content;
+        Self {
+            origin_content,
+            mod_content,
+            patch,
+            is_diff,
+        }
+    }
+
+    pub fn get_patch(&self) -> &Patch<'a, str> {
+        &self.patch
+    }
+
+    pub fn is_diff(&self) -> bool {
+        self.is_diff
+    }
 }
 
 // result: ok -> no diff, err -> diff
 pub fn file_diff<'a>(origin_content:&'a str, mod_content:&'a str) -> FileDiff<'a> {
-
-    let patch = create_patch(origin_content, mod_content);
-    match origin_content == mod_content {
-        true => FileDiff {
-            origin_content,
-            mod_content,
-            patch,
-            is_diff: false,
-        },
-        false => FileDiff {
-            origin_content,
-            mod_content,
-            patch,
-            is_diff: true,
-        },
-    }
+    FileDiff::new(origin_content, mod_content)
 }
 
 #[derive(PartialEq,Debug,Clone)]
@@ -40,32 +46,42 @@ pub struct FileConflict<'a> {
     pub is_conflict: bool,
 }
 
+impl <'a> FileConflict<'a> {
+    pub fn new(diff1: &'a FileDiff<'a>, diff2: &'a FileDiff<'a>) -> Self {
+
+        let merge_res = merge(diff1.origin_content, diff1.mod_content, diff2.mod_content);
+        let is_conflict = merge_res.is_err();
+        
+        let merged_content = match merge_res {
+            Ok(merged_content) => merged_content,
+            Err(merged_content) => merged_content,
+        };
+
+        Self {
+            origin_content: diff1.origin_content,
+            diff1,
+            diff2,
+            merged_content: merged_content,
+            is_conflict,
+        }
+    }
+
+    pub fn get_content(&self) -> &str {
+        self.merged_content.as_str()
+    }
+
+    pub fn is_conflict(&self) -> bool {
+        self.is_conflict
+    }
+}
+
 // results: Ok is running fine -> error -> conflict, ok -> no conflict
 // first error is failed to run conflict_find 
 pub fn conflict_find<'a>(diff1:&'a FileDiff, diff2:&'a FileDiff) -> Result<FileConflict<'a>, &'a str> {
     if diff1.origin_content != diff2.origin_content { // not same origin
         return Err("conflict_find: diff1 and diff2 have different original files");
     }
-    let merge_res = merge(diff1.origin_content, diff1.mod_content, diff2.mod_content);
-    
-    match merge_res {
-        Ok(_) => Ok(FileConflict{
-            origin_content: diff1.origin_content,
-            diff1: diff1,
-            diff2: diff2,
-            merged_content: merge_res.unwrap(),
-            is_conflict: false,
-        }),
-        Err(_) => Ok(FileConflict{
-            origin_content: diff1.origin_content,
-            diff1: diff1,
-            diff2: diff2,
-            merged_content: merge_res.unwrap_err(),
-            is_conflict: true,
-        }),
-    }
-
-    // return Some(Err("conflict found"));
+    Ok(FileConflict::new(diff1, diff2))
 }
 
 #[cfg(test)]

@@ -161,9 +161,12 @@ impl UserInterface {
         info!(target: "a","{} update {}", "command line","b");
     }
     fn input_handling_special_file(return_result:Result<FileDiff,&str>){
-        let flag=return_result.clone().unwrap().is_diff;
-        if flag==true {let d=return_result.clone().unwrap().patch;
-            println!("{}",d); }
+        let fd = return_result.unwrap();
+        let flag= fd.is_diff();
+        if flag==true {
+            let d= fd.get_patch();
+            println!("{}",d); 
+        }
         else { println!("No difference, same");}
         info!(target: "a","{} update {}", "command line","b");
     }
