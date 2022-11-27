@@ -7,8 +7,8 @@ use diffy::{create_patch, Patch, merge};
 pub struct FileDiff<'a> {
     origin_content:&'a str,
     mod_content:&'a str,
-    patch: Patch<'a, str>,
-    is_diff: bool,
+    pub patch: Patch<'a, str>,
+    pub is_diff: bool,
 }
 
 // result: ok -> no diff, err -> diff
@@ -36,8 +36,8 @@ pub struct FileConflict<'a> {
     origin_content:&'a str,
     diff1: &'a FileDiff<'a>,
     diff2: &'a FileDiff<'a>,
-    merged_content: String,
-    is_conflict: bool,
+    pub merged_content: String,
+    pub is_conflict: bool,
 }
 
 // results: Ok is running fine -> error -> conflict, ok -> no conflict
@@ -76,8 +76,8 @@ mod tests {
     fn test_file_diff() {
         let diff1 = file_diff("Some line of text\nSecond line", "Some line of text\nSecond line\nin a file");
         assert_eq!(diff1.is_diff, true); // diff's is_diff is true
-        let diff = file_diff("Some line of text\nSecond line", "Some line of text\nSecond line");
-        assert_eq!(diff.is_diff, false); //diff;s is_diff is false
+        let diff2 = file_diff("Some line of text\nSecond line", "Some line of text\nSecond line");
+        assert_eq!(diff2.is_diff, false); //diff;s is_diff is false
 
 
         let diff = file_diff("Some line of text\nSecond line", "Some line of text\nSecond line\n");
