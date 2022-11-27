@@ -3,7 +3,7 @@ use crate::vc::{file, repository, revision};
 
 pub fn heads<'a>(wd:&'a str)->Result<&'a str,&'a str>{
     //get VC::Repo::load
-    let load=crate::vc::repository::load(wd);//get Repo
+    let load=repository::load(wd);//get Repo
     //use get_heads to let head=load.current_head();
     let head="VC::Repository::get_current_head()";
     /*
@@ -17,7 +17,7 @@ pub fn heads<'a>(wd:&'a str)->Result<&'a str,&'a str>{
     Ok(head)
 }
 pub fn log<'a>(wd:&'a str)->Result<&'a str,&'a str>{
-    let load=crate::vc::repository::load(wd);//got Repo
+    let load=repository::load(wd);//got Repo
     //let log= load.get_log();
     //let version=vc::Repository::load();
     /*
@@ -37,7 +37,7 @@ pub fn status<'a>(wd:&'a str)->Result<FileDiff,&'a str>{
     VC::Rev::new();
     let diff=CF::file_diff(content1, content2);
     diff*/
-    let load=crate::vc::repository::load(wd);//got Repo
+    let load=repository::load(wd);//got Repo
    /* let w=load.get_rev();
     print!("{:?}",w);*/
     let diff=file_diff("content1", "content2");
@@ -45,7 +45,26 @@ pub fn status<'a>(wd:&'a str)->Result<FileDiff,&'a str>{
     Ok(diff)
 }
 
-/*#[cfg(test)]
+#[cfg(test)]
 mod test{
     use super::*;
-}*/
+    #[test]
+    fn test_heads(){
+        let wd="remoterepo/remote/.dvcs/HEAD";
+        let res=heads(wd);
+        assert_eq!(res.unwrap(),"VC::Repository::get_current_head()");
+    }
+    #[test]
+    fn test_logs(){
+        let wd="remoterepo/remote/.dvcs/HEAD";
+        let res=log(wd);
+        assert_eq!(res.unwrap(),"load.crate::vc::repository:get_log(),log information, information");
+    }
+    #[test]
+    fn test_status(){
+        let wd="remoterepo/remote/.dvcs/HEAD";
+        let res=status(wd);
+        println!("{}",res.as_ref().unwrap().is_diff);
+        println!("{}",res.as_ref().unwrap().patch);
+    }
+}
