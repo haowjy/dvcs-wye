@@ -76,8 +76,8 @@ mod tests {
     fn test_file_diff() {
         let diff1 = file_diff("Some line of text\nSecond line", "Some line of text\nSecond line\nin a file");
         assert_eq!(diff1.is_diff, true); // diff's is_diff is true
-        let diff = file_diff("Some line of text\nSecond line", "Some line of text\nSecond line");
-        assert_eq!(diff.is_diff, false); //diff;s is_diff is false
+        let diff2 = file_diff("Some line of text\nSecond line", "Some line of text\nSecond line");
+        assert_eq!(diff2.is_diff, false); //diff;s is_diff is false
 
 
         let diff = file_diff("Some line of text\nSecond line", "Some line of text\nSecond line\n");
