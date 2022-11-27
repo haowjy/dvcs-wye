@@ -110,13 +110,15 @@ impl UserInterface {
         match input_1{
             Some("add") => {
                 println!("add");
-                res=readwrite::add(&*input.path);
+                if Self::check_file_path_valid(input_2)
+                {res=readwrite::add(input_2.unwrap());}
+                else { res=Err("error file path or unreadable file path"); }
             }//1
             Some("remove")=> {res=readwrite::remove(&*input.path);
                 input.temp= "ok".parse().unwrap();
                 input.log_for_dev();
             }//2
-            Some("commit") => {res=readwrite::commit(input_2.unwrap());}//3
+            Some("commit") => {res=readwrite::commit(input_2.unwrap_or(""));}//3
             Some("merge") => {res=readwrite::merge("input.path");}//4
             Some("diff") => {res_diff=readwrite::diff("input.path","input.path");
                 res=Err("2");}//5
@@ -165,10 +167,20 @@ impl UserInterface {
         let flag= fd.is_diff();
         if flag==true {
             let d= fd.get_patch();
-            println!("{}",d); 
+            println!("{}",d);
         }
         else { println!("No difference, same");}
         info!(target: "a","{} update {}", "command line","b");
+    }
+    fn check_file_path_valid(input_2:Option<&str>) ->bool{
+        let file=dsr::read_file_as_string(input_2.unwrap_or("1"));//add D://ur//test.txt
+        if file.is_err()
+        {
+            false
+        }
+        else {
+            true
+        }
     }
 
     /*fn input_handling_backup<E: std::fmt::Debug>(return_result:Result<(), E>){
