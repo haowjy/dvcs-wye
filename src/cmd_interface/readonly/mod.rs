@@ -64,7 +64,7 @@ mod test{
     fn test_status(){
         let wd="remoterepo/remote/.dvcs/HEAD";
         let res=status(wd);
-        println!("{}",res.as_ref().unwrap().is_diff);
-        println!("{}",res.as_ref().unwrap().patch);
+        println!("{}",res.as_ref().unwrap().is_diff());
+        println!("{}",res.as_ref().unwrap().get_patch());
     }
 }
