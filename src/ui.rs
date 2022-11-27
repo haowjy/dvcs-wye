@@ -16,7 +16,6 @@ pub trait Log {
 impl Log for FileDiff<'_> {
      fn log_for_dev(&self){
         info!(target: "a","Difference between File {} and {}", "a","b");
-        //info!(target: "a","Difference between {} and {}", diff.patch(get));
     }
 }
 impl Log for Repo {
@@ -50,16 +49,6 @@ impl UserInterface {
     fn new()-> Self{
         Self{commands:vec![]}
     }
-    /*pub fn receive_input_command(&mut self,input_test: T) ->io::Result<()>{
-        let mut buffer=String::new();
-        let stdin=io::stdin();
-        stdin.read_line(&mut buffer);
-        println!("input {}",buffer);
-        let path=dsr::get_wd_path();
-        self.commands.push(Command{path: path.clone(),command_input: buffer.clone(), temp:input_test.clone() });
-        Self::match_command(Command{path,command_input: buffer, temp: input_test.clone() });
-        Ok(())
-    }*/
     pub fn receive_input_command_loop() ->io::Result<()>{//start here temporary
         log4rs::init_file("src/log4rs.yml", Default::default()).unwrap();
         print!("input q to quit");
@@ -83,19 +72,6 @@ impl UserInterface {
         Ok(())
     }
 
-    /*pub fn receive_input_command_test_inside() ->io::Result<()>{//start here temporary
-        let mut buffer=String::new();
-        let stdin=io::stdin();
-        stdin.read_line(&mut buffer);
-        println!("input {}",buffer);
-        let path=dsr::get_wd_path();
-        println!("path {}",path);
-        let mut command: Command = Command{path,command_input: buffer, temp: "111".parse().unwrap() };
-        //self.commands.push(Command{path: input_test.clone(),command_input: "input_test.clone()" });
-        UserInterface::match_command(Command{path: command.path,command_input: command.command_input, temp: "111".parse().unwrap() });
-        Ok(())
-    }*/
-
     fn match_command(mut input:Command){//old:->String, new no return
         //input.path
         let mut res:Result<&str,&str>=Err("1");
@@ -109,7 +85,7 @@ impl UserInterface {
         //println!("file content:{}",file.unwrap());//just test read file
         match input_1{
             Some("add") => {
-                println!("add");
+                //println!("add");
                 if Self::check_file_path_valid(input_2)
                 {res=readwrite::add(input_2.unwrap());}
                 else { res=Err("error file path or unreadable file path"); }
