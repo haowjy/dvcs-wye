@@ -21,7 +21,7 @@ pub struct ItemInfo {
     name: Option<String>, // last component of path. Can be directory?
     loc_in_wd: Option<String>, // wd RELATIVE path
     content_id: Option<String>, // sha_id, only make an id when cached in repos (usually via commit)
-    entry_type: EntryType
+    entry_type: EntryType,
     // metadata: Option<FileMetaData>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, Hash)] 
@@ -50,30 +50,32 @@ pub enum EntryType {
 // }
 
 impl ItemInfo {
-    pub fn get_content(&self) -> Option<String> { // get cached content
-        match &self.content_id { 
-            Some(id) => read_file_as_string(path_compose(STORAGE_DIR, id).as_str()).ok(),
-            None => None
-        }
-        
-    }
+    // MOVED TO Repo!
+    // pub fn get_content(&self) -> Option<String> { // get cached content
+    //     match &self.content_id { 
+    //         Some(id) => read_file_as_string(path_compose(STORAGE_DIR, id).as_str()).ok(),
+    //         None => None
+    //     }
+    // }
 
     pub fn get_file_wd_path(&self) -> Option<String> {
         self.loc_in_wd.clone()
     }
 
-    pub fn get_cached_metadata(&self) -> Option<fs::Metadata> {
-        match &self.content_id { 
-            Some(id) => get_metadata(path_compose(STORAGE_DIR, id).as_str()).ok(),
-            None => None
-        }
-    }
-
-    // pub (crate) fn make_file(&self, &wd:&str) -> io::Result() {
-    //     let path_to_file = path_compose(wd, self.loc_in_wd);
-    //     copy_file()
-    //     write_file(path_to_file, )
+    // pub fn get_cached_metadata(&self) -> Option<fs::Metadata> {
+    //     match &self.content_id { 
+    //         Some(id) => get_metadata(path_compose(STORAGE_DIR, id).as_str()).ok(),
+    //         None => None
+    //     }
     // }
+
+    // new pub fn, assisting make_wd
+    // trial only, might move to repos
+    pub fn make_file(&self, wd:&str) -> Option<()> {
+        let wd_file_path = path_compose(wd, &self.loc_in_wd.as_ref()?);
+        let repo_storage_path = path_compose(wd, self.content_id.as_ref()?);
+        copy_file(&repo_storage_path, &wd_file_path).ok()
+    }
 }
 
 pub (crate) fn retrieve_info(wd_path: &str) -> Option<ItemInfo> {
@@ -103,7 +105,6 @@ pub (crate) fn retrieve_info(wd_path: &str) -> Option<ItemInfo> {
 mod tests {
     use super::*;
 
-
     #[test]
     fn serialization() {
         let info = retrieve_info("/Users/yiyangw/Documents/dvcs_test/folder2"); // external file, only works on dev local machine 
@@ -112,7 +113,6 @@ mod tests {
     }
 
     #[test]
-
     fn relative_path_info_retrieval() {
         let info = retrieve_info("./src/vc/file.rs").unwrap();
         assert_eq!(&info.name.unwrap(), "file.rs");

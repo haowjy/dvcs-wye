@@ -23,22 +23,27 @@ pub struct Rev {
     user_id: Option<String>,
     time_stamp: SystemTime,
     manifest: HashMap<String, ItemInfo>,  // Hashmap<K: wd_relative_path, V: FileInfo: file content id and metadata id
+    // path_self: String,
 }
 
-// *** deserialize not implemented, comment out for compiler check
-// pub fn from(path_to_stage: &str) -> Option<Rev> {
-//     deserialize(read_file_as_string(path_stage)).ok()?
-// }
 
-// // *** serialize not implemented, comment out for compiler check
-// fn save(rev: Rev) -> Option<()> {
-//     match &rev.rev_id {
-//         Some(id) => write_file(path_compose(REV_DIR, id).as_str(), serialize(rev)).ok(),
-//         None => None
-//     }
-// }
 
 impl Rev {
+    // *** deserialize not implemented, use serde_json for now
+    pub fn from(path: &str) -> Option<Rev> {
+        serde_json::from_str(&read_file_as_string(path).ok()?).ok()
+        // rev.path_self = path.to_string();
+        // Some(rev)
+    }
+
+    // *** serialize not implemented, use serde_json for now
+    pub (crate) fn save(&self) -> Option<()> { //need to figure out destructor
+        match &self.rev_id {
+            Some(id) => write_file(&path_compose(REV_DIR, &id), &serde_json::to_string(&self).ok()?).ok(),
+            None => None
+        }
+    }
+
     fn new() -> Rev {
         Rev {
             rev_id: None,
@@ -63,7 +68,7 @@ impl Rev {
         }
     }
     
-    pub fn get_files(&self) -> &HashMap<String, ItemInfo> {
+    pub fn get_manifest(&self) -> &HashMap<String, ItemInfo> {
         &self.manifest
     }
 
@@ -77,21 +82,31 @@ impl Rev {
         return Some(());
     }
 
-    fn update_time(&mut self) -> &Self {
+    pub (super) fn update_time(&mut self) -> &Self {
         self.time_stamp = SystemTime::now();
         self
+    }
+
+    pub fn store_files(&mut self, path: &str) -> Option<()> {// *** to be implemented
+        None
+    //     self.manifest.iter_mut().for_each(|_path, info| {
+    //         info.update_id();
+    //         
+    //     })
+    }
+
+    pub (crate) fn gen_id(&mut self) -> Option<String> {
+        let id = sha(&serde_json::to_string(&self.clone()).ok()?);
+        self.rev_id = Some(id.clone());
+        Some(id)
     }
 }
 
 
-// fn gen_id(&self) -> String {
-//     sha(serialize(&self.clone()))
-//     pub fn add_file(&mut self, wd_file_path: &str) -> Self {
-//         self.manifest
-//     }
-// }
 //     pub fn remove_file(&mut self, wd_file_path:&str) -> Self {
-
+    // pub fn add_file(&mut self, wd_file_path: &str) -> Self {
+        // self.manifest
+    // }
 //     }
     
 
@@ -137,3 +152,4 @@ mod tests {
         assert_eq!(add_result2, None);
     }
 }
+
