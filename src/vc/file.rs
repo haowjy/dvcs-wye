@@ -11,20 +11,25 @@ use crate::dsr::*;
 
 static STORAGE_DIR: &str =".dvcs/files"; //relative path hard coded, might change to use lazy_static macro 
 
-
 // trait Info {
 //     loc_in_wd: String,
 //     content_id: String,
 // }
 
-#[derive(Debug, Serialize, Deserialize)] 
-pub struct FileInfo {
-    file_name: Option<String>, // last component of path. Can be directory?
-    loc_in_wd: Option<String>, // wd relative path
+#[derive(Debug, Clone, Serialize, Deserialize, Hash)] 
+pub struct ItemInfo {
+    name: Option<String>, // last component of path. Can be directory?
+    loc_in_wd: Option<String>, // wd RELATIVE path
     content_id: Option<String>, // sha_id, only make an id when cached in repos (usually via commit)
+    entry_type: EntryType
     // metadata: Option<FileMetaData>,
 }
-
+#[derive(Debug, Clone, Serialize, Deserialize, Hash)] 
+pub enum EntryType {
+    Afile,
+    Dir, 
+    Other 
+}
 
 
 // #[derive(Debug, Serialize, Deserialize)] 
@@ -44,7 +49,7 @@ pub struct FileInfo {
 //     }
 // }
 
-impl FileInfo {
+impl ItemInfo {
     pub fn get_content(&self) -> Option<String> { // get cached content
         match &self.content_id { 
             Some(id) => read_file_as_string(path_compose(STORAGE_DIR, id).as_str()).ok(),
@@ -64,10 +69,6 @@ impl FileInfo {
         }
     }
 
-
-
-
-    // pub fn get
     // pub (crate) fn make_file(&self, &wd:&str) -> io::Result() {
     //     let path_to_file = path_compose(wd, self.loc_in_wd);
     //     copy_file()
@@ -75,39 +76,45 @@ impl FileInfo {
     // }
 }
 
-pub (super) fn retrieve_info(wd_file_path: &str) -> Option<FileInfo> {
-    if !is_path_valid(wd_file_path) {
-        return None
-    };
-
-    let info = FileInfo {
-        file_name: get_name(wd_file_path),
-        loc_in_wd: Some(wd_file_path.to_string()),
+pub (crate) fn retrieve_info(wd_path: &str) -> Option<ItemInfo> {
+    if !is_path_valid(wd_path) {
+        println!("invalid path");
+        return None;
+    }
+    let meta = get_metadata(wd_path).ok()?; // *** ERROR HANDLING LATER
+    let mut t = EntryType::Other;
+    if meta.is_dir() {
+        t = EntryType::Dir;
+    }
+    else if meta.is_file() {
+        t = EntryType::Afile;
+    }
+        
+    let info = ItemInfo {
+        name: get_name(wd_path),
+        loc_in_wd: Some(wd_path.to_string()),
         content_id: None,
+        entry_type: t,
     };
 
     Some(info)
-
-    // let content_id match read_file_as_string(&wd_file_path).ok() {
-    //     Some(x) => sha(x), 
-    //     None => None
-    // };
-    // let metadata = FileMetadata {
-        
-    // }
-    // FileInfo {
-    //     loc_in_wd: wd_file_path.to_string();
-    //     content_id: content_id,
-    //     metadata: fs::metadata(wd_file_path),
-    // }
-
 }
-
 #[cfg(test)]
 mod tests {
-    
-    // #[test]
-    // fn test_get_content(&self) -> {
-    //     FileInfo
-    // }
+    use super::*;
+
+
+    #[test]
+    fn serialization() {
+        let info = retrieve_info("/Users/yiyangw/Documents/dvcs_test/folder2"); // external file, only works on dev local machine 
+        let json_str = serde_json::to_string(&info).unwrap();
+        println!("{}", json_str)
+    }
+
+    #[test]
+
+    fn relative_path_info_retrieval() {
+        let info = retrieve_info("./src/vc/file.rs").unwrap();
+        assert_eq!(&info.name.unwrap(), "file.rs");
+    }
 }

@@ -1,15 +1,14 @@
 #[allow(dead_code)]
 #[allow(unused_imports)]
-pub use std::collections::HashMap;
-pub use std::time::SystemTime;
-// pub use std::io;
-// external crates:
-pub use petgraph::graphmap::DiGraphMap;
-pub use sha2::{Sha256, Digest};
-pub use serde::{Serialize, Deserialize};
+use std::collections::HashMap;
+use std::time::SystemTime;
 
-// mod dsr;
-pub use crate::dsr::*; //not working?
+// external crates:
+use petgraph::graphmap::DiGraphMap;
+use sha2::{Sha256, Digest};
+use serde::{Serialize, Deserialize};
+
+use crate::dsr::*;
 
 
 #[derive(Debug)] 
@@ -25,20 +24,35 @@ pub (super) struct RepoPaths {
     // wd: &str,// inconsistent types for paths, might need better type representation
     wd: String,
     root: String,
-    files: String,
-    revs: String,
+    pub files: String,
+    pub revs: String,
     head: String, // THE current head
     branch_heads: String,
     stage: String,
 }
 
 impl RepoPaths {
-    fn new(wd: &str) -> RepoPaths {
-        // let root = WD.clone().push(".dvcs"); // better to be wrapped in DSR like:
-        let root = path_compose(wd, ".dvcs");
+    pub (super) fn new(wd: &str) -> RepoPaths { // absolute path config
+        let root = path_compose(wd, ".dvcs"); 
+        //experiment with relative path
+        // let root = path_compose(".", ".dvcs");
         RepoPaths {
             wd: wd.to_string(),
-            root: root.to_string(),
+            root: root.clone(),
+            files: path_compose(&root, "files"),
+            revs: path_compose(&root, "revs"),
+            head: path_compose(&root, "head"),
+            branch_heads: path_compose(&root, "branches"),
+            stage: path_compose(&root, "stage"),
+        }
+    }
+
+    pub (super) fn default() -> RepoPaths { // relative path config
+            let wd = ".";
+            let root = path_compose(wd, ".dvcs");
+        RepoPaths {
+            wd: wd.to_string(),
+            root: root.clone(),
             files: path_compose(&root, "files"),
             revs: path_compose(&root, "revs"),
             head: path_compose(&root, "head"),
@@ -84,7 +98,7 @@ pub fn init() -> Repo { // Result<(),()>{ // error handling to be impl
         paths: paths,
         revs: None, // *** CHANGE LATER
     };
-    new_repo.save();
+    // new_repo.save();
     return new_repo;
 }
 
@@ -123,17 +137,17 @@ pub (super) fn sha_match<'a, T: Clone + Iterator + Iterator<Item=&'a String>> (s
 mod tests {
         use super::*;
         use std::fs;
-        #[test]
-        fn test_make_repo_paths() {
-            use std::path::PathBuf;
-            let wd = get_wd_path();
+        // #[test]
+        // fn test_make_repo_paths() {
+        //     use std::path::PathBuf;
+        //     let wd = get_wd_path();
 
-            let paths = RepoPaths::new(&wd);
-            print!("{}",paths.root);
-            let mut path = PathBuf::from(&wd);
-            path.push(".dvcs");
-            assert_eq!(paths.root, path.to_str().unwrap());
-        }
+        //     let paths = RepoPaths::new(&wd);
+        //     print!("{}",paths.root);
+        //     let mut path = PathBuf::from(&wd);
+        //     path.push(".dvcs");
+        //     assert_eq!(paths.root, path.to_str().unwrap());
+        // }
 
         #[test]
         fn test_init() {
