@@ -51,7 +51,7 @@ impl UserInterface {
     }
     pub fn receive_input_command_loop() ->io::Result<()>{//start here temporary
         log4rs::init_file("src/log4rs.yml", Default::default()).unwrap();
-        print!("input q to quit");
+        println!("input q to quit");
         loop{
             print!("dvcs command>: ");
             stdout().flush().unwrap();
@@ -62,9 +62,9 @@ impl UserInterface {
                 println!("quit!");
                 break;
             }
-            println!("input {}",buffer);
+            //println!("input {}",buffer);
             let path=dsr::get_wd_path();
-            println!("path {}",path);
+            //println!("path {}",path);
             let mut command: Command = Command{path,command_input: buffer, temp: "111".parse().unwrap() };
             //self.commands.push(Command{path: input_test.clone(),command_input: "input_test.clone()" });
             UserInterface::match_command(Command{path: command.path,command_input: command.command_input, temp: "111".parse().unwrap() });
@@ -109,8 +109,10 @@ impl UserInterface {
             Some("pull") => {res=createonly::pull("input.path","input.path",Some("input.path"));}//3
             Some("push") => {res=createonly::push("input.path","input.path",Some("input.path"));}//4
             Some("init") => {
-                let init:Repo=crate::vc::repository::init();
-                res=Ok("init successfully")}//1
+                let init=crate::vc::repository::init();
+                if init==Some(()) { res=Ok("init successfully")}
+                else { res=Err("init error!") }
+                }//1
             _ => {warn!(target: "aaaaaa","{} update {}", "command line","wrong");}
         }
         if res!=Err("1") && res!=Err("2") && res!=Err("3")
