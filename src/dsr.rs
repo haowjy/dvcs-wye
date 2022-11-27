@@ -3,6 +3,8 @@ use std::fs::Metadata;
 use std::io::{Error, ErrorKind};
 use std::path::{Path, PathBuf};
 
+use crate::vc::revision::Rev;
+
 // ==================================
 //        PRIVATE FUNCTIONS
 // ==================================
@@ -162,19 +164,17 @@ pub fn is_path_valid(path: &str) -> bool {
 
 // 14. Takes in Revision struct (vc/revision.rs/Rev), copy
 //      its contents to the current working directory
-/* ===================== PSEUDOCODE =====================
+/* ===================== EXPERIMENTAL - UNKNOWN BEHAVIOUR ===================== */
 pub fn make_wd(rev: &Rev) -> io::Result<()> {
-    clear_dir(wd)
-    for each F in Rev.manifest {
-        path = F.key
-        info = F.value
-
-        create_file(path)
-        content = info.get_content() from vc/file.rs
-        write_file(&path, &content)
+    let wd_path = get_wd_path();
+    clear_dir(&wd_path, vec![])?;
+    for (path, item) in rev.get_files() {
+        create_file(path)?;
+        let content = item.get_content();
+        write_file(&path, &content.unwrap())?;
     }
+    Ok(())
 }
-======================== PSEUDOCODE ===================== */
 
 // 15. Returns a string to the current working directory
 // USEAGE: get_wd_path()
@@ -204,4 +204,15 @@ pub fn get_name(path: &str) -> Option<String> {
 pub fn get_metadata(path: &str) -> io::Result<Metadata> {
     let attr = fs::metadata(path)?;
     return Ok(attr)
+}
+
+// 19. .git/a/b/c -> .git/a/b
+pub fn get_parent_name(path: &str) -> Option<String> {
+    let mut path = PathBuf::from(path); 
+    path.pop();
+    let rt = path.into_os_string().into_string();
+    match rt {
+        Ok(p) => return Some(p),
+        Err(_) => return None,
+    }
 }
