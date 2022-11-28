@@ -83,6 +83,8 @@ impl ItemInfo {
         let repo_storage_dir = path_compose(&wd_root, ".dvcs/files");
 
         let content = read_file_as_string(&path_compose(&wd_root, self.loc_in_wd.as_ref()?)).ok()?;
+
+
         let mut new_id = checked_sha(&content, &repo_storage_dir);
         let storage_path = path_compose(&repo_storage_dir, &new_id);
         if !is_path_valid(&storage_path) {

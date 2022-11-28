@@ -20,14 +20,14 @@ mod tests {
         let path = "src/vc.rs";
         let abs_path = get_abs_path(&path).unwrap();
         repo.add_file(&abs_path).unwrap(); //ok as long as the path contains the wd root
-        repo.commit().unwrap(); // problematic, returns None
+        repo.commit().unwrap(); 
+        let rev = repo.get_current_head().unwrap(); // problematic, returns None
+        // assert_eq!(rev.get_parent_id(), None);
 
         delete_dir("./.dvcs");
     }
 
 
-    // let rev = repo.get_current_head().unwrap();
-    // assert_eq!(rev.get_parent_id(), None);
 
     // // VC_test_2
     // #[test]

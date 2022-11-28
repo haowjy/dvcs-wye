@@ -162,7 +162,7 @@ fn check_wd(wd_path: &str) -> Option<String> {
 
 pub (super) fn get_rel_path(abs_path: &str) -> Option<String> {
     let wd = get_name(&check_wd(&get_wd_path())?)?;
-    let rel_path = abs_path.rsplit_once(&wd)?.1;
+    let rel_path = abs_path.rsplit_once(&wd)?.1.trim_matches('/'); // not tested on windows
     Some(rel_path.to_string())
 }
 
