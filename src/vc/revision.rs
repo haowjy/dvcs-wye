@@ -22,7 +22,7 @@ pub struct Rev {
     parent_id: Option<String>,
     user_id: Option<String>,
     time_stamp: SystemTime,
-    manifest: HashMap<String, ItemInfo>,  // Hashmap<K: wd_relative_path, V: FileInfo: file content id and metadata id
+    manifest: HashMap<String, ItemInfo>,  // Hashmap<K: wd_relative_path, V: ItemInfo: file content id and metadata id
     // path_self: String,
 }
 
@@ -37,14 +37,14 @@ impl Rev {
     }
 
     // *** serialize not implemented, use serde_json for now
-    pub (crate) fn save(&self) -> Option<()> { //need to figure out destructor
+    pub (super) fn save(&self, rev_path: &str) -> Option<()> { //need to figure out destructor
         match &self.rev_id {
-            Some(id) => write_file(&path_compose(REV_DIR, &id), &serde_json::to_string(&self).ok()?).ok(),
+            Some(id) => write_file(&path_compose(rev_path, &id), &serde_json::to_string(&self).ok()?).ok(),
             None => None
         }
     }
 
-    fn new() -> Rev {
+    pub (super) fn new() -> Rev {
         Rev {
             rev_id: None,
             parent_id: None,
@@ -56,6 +56,7 @@ impl Rev {
 
     pub fn get_id(&self) -> Option<&str> {
         match self.rev_id.as_ref() {
+            
             Some(x) => Some(x.as_str()),
             None => None
         }
@@ -73,7 +74,7 @@ impl Rev {
     }
 
     // NOTE: current vc doesn't track files moving from one subdirectory to another, 
-    pub fn add_file(&mut self, wd_file_path: &str) -> Option<()> {
+    pub (super) fn add_file(&mut self, wd_file_path: &str) -> Option<()> {
         if self.manifest.contains_key(wd_file_path) {
             return None;
         }
@@ -82,21 +83,29 @@ impl Rev {
         return Some(());
     }
 
+    pub (super) fn remove_file(&mut self, d_file_path: &str) -> Option<()> {None} // *** to be impl 
+
     pub (super) fn update_time(&mut self) -> &Self {
         self.time_stamp = SystemTime::now();
         self
     }
 
     pub fn store_files(&mut self, path: &str) -> Option<()> {// *** to be implemented
-        None
-    //     self.manifest.iter_mut().for_each(|_path, info| {
-    //         info.update_id();
+        for (_, info) in self.manifest.iter_mut() {
+            info.save_to_repo()?;
+        }
     //         
-    //     })
+        Some(())
     }
 
-    pub (crate) fn gen_id(&mut self) -> Option<String> {
-        let id = sha(&serde_json::to_string(&self.clone()).ok()?);
+    pub (super) fn gen_id(&mut self) -> Option<String> {
+        let wd = get_wd_root()?;
+        let revs_dir = path_compose(&path_compose(&wd, ".dvcs"), "revs");
+
+        self.parent_id = self.rev_id.clone(); // "inheritance"
+        self.rev_id = None;
+
+        let id = checked_sha(&serde_json::to_string(&self.clone()).ok()?, &revs_dir);
         self.rev_id = Some(id.clone());
         Some(id)
     }
@@ -104,7 +113,6 @@ impl Rev {
 
 
 //     pub fn remove_file(&mut self, wd_file_path:&str) -> Self {
-    // pub fn add_file(&mut self, wd_file_path: &str) -> Self {
         // self.manifest
     // }
 //     }

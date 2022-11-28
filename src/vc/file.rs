@@ -51,12 +51,13 @@ pub enum EntryType {
 
 impl ItemInfo {
     // MOVED TO Repo!
-    // pub fn get_content(&self) -> Option<String> { // get cached content
-    //     match &self.content_id { 
-    //         Some(id) => read_file_as_string(path_compose(STORAGE_DIR, id).as_str()).ok(),
-    //         None => None
-    //     }
-    // }
+    pub fn get_content(&self) -> Option<String> { // get cached content
+        let repo_storage_dir = get_repo_storage_dir()?;
+        match &self.content_id { 
+            Some(id) => read_file_as_string(&path_compose(&repo_storage_dir, &id)).ok(),
+            None => None
+        }
+    }
 
     pub fn get_file_wd_path(&self) -> Option<String> {
         self.loc_in_wd.clone()
@@ -73,14 +74,36 @@ impl ItemInfo {
     // trial only, might move to repos
     pub fn make_file(&self, wd:&str) -> Option<()> {
         let wd_file_path = path_compose(wd, &self.loc_in_wd.as_ref()?);
-        let repo_storage_path = path_compose(wd, self.content_id.as_ref()?);
-        copy_file(&repo_storage_path, &wd_file_path).ok()
+        let repo_storage_dir = path_compose(wd, ".dvcs/files");
+        let repo_storage_file = path_compose(&repo_storage_dir, self.content_id.as_ref()?);
+        copy_file(&repo_storage_file, &wd_file_path).ok()
     }
+    pub (super) fn save_to_repo(&mut self) -> Option<()> {
+        let wd_root = get_wd_root()?;
+        let repo_storage_dir = path_compose(&wd_root, ".dvcs/files");
+
+        let content = read_file_as_string(&path_compose(&wd_root, self.loc_in_wd.as_ref()?)).ok()?;
+        let mut new_id = checked_sha(&content, &repo_storage_dir);
+        let storage_path = path_compose(&repo_storage_dir, &new_id);
+        if !is_path_valid(&storage_path) {
+            write_file(&storage_path, &content);
+        }
+        self.content_id = Some(new_id);
+        Some(())
+    }
+
 }
 
-pub (crate) fn retrieve_info(wd_path: &str) -> Option<ItemInfo> {
+// fn resolve_id_conflict(sha_id: &str, pool_path) -> Option<String> {
+//     let repo_storage_path = path_compose(pool_path, sha_id);
+//     if !is_path_valid(repo_storage_path) {
+//         return None;
+//     }
+//     if content_    
+// } 
+pub (super) fn retrieve_info(wd_path: &str) -> Option<ItemInfo> {
     if !is_path_valid(wd_path) {
-        println!("invalid path");
+        println!("invalid path"); // might replace with more organized error handling
         return None;
     }
     let meta = get_metadata(wd_path).ok()?; // *** ERROR HANDLING LATER
@@ -101,6 +124,12 @@ pub (crate) fn retrieve_info(wd_path: &str) -> Option<ItemInfo> {
 
     Some(info)
 }
+
+fn get_repo_storage_dir() -> Option<String> {
+    let wd_root = get_wd_root()?;
+    Some(path_compose(&wd_root, ".dvcs/files"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
