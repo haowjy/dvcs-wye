@@ -10,6 +10,8 @@ use crate::vc::repository::{Repo};
 use std::io::{stdout, Write};
 use log::{info, warn};
 use log4rs;
+use crate::vc::revision::Rev;
+
 pub trait Log {
     fn log_for_dev(&self);
 }
@@ -77,6 +79,8 @@ impl UserInterface {
         let mut res:Result<&str,&str>=Err("1");
         let mut res_diff:Result<RevDiff,&str>=Err("2");
         let mut res_file_diff:Result<FileDiff,&str>=Err("3");
+        let mut res_log:Result<Option<Vec<String>>,&str>=Err("4");
+        let mut res_head:Result<Rev,&str>=Err("4");
         let mut arg= input.command_input.split_whitespace();
         //println!("input {:?}",arg.next());
         let input_1=arg.next();
@@ -102,8 +106,9 @@ impl UserInterface {
             Some("status") => {res_file_diff=readonly::status("input.path");
                 res=Err("3");}//status1
             Some("log") => {
-                res=readonly::log("input.path");}//log2
-            Some("heads") => {res=readonly::heads("input.path");}//heads3
+                res_log=readonly::log("input.path");
+                res=Err("4");}//log2
+            Some("heads") => {res_head=readonly::heads("input.path");res=Err("5");}//heads3
             Some("clone") => {res=createonly::clone("input.path1",input_2.unwrap());}//1
             Some("checkout") => {res=createonly::checkout("input.path","input.path");}//2
             Some("pull") => {res=createonly::pull("input.path","input.path",Some("input.path"));}//3
@@ -115,7 +120,7 @@ impl UserInterface {
                 }//1
             _ => {warn!(target: "aaaaaa","{} update {}", "command line","wrong");}
         }
-        if res!=Err("1") && res!=Err("2") && res!=Err("3")
+        if res!=Err("1") && res!=Err("2") && res!=Err("3") && res!=Err("4") && res!=Err("5")
         {
             Self::input_handling(res);
             info!(target: "a","{} update {}", "command line","b");
@@ -126,6 +131,14 @@ impl UserInterface {
         }
         else  if res==Err("3"){
             Self::input_handling_special_file(res_file_diff);
+            info!(target: "a","{} update {}", "command line","b");
+        }
+        else  if res==Err("4"){
+            Self::input_handling_log(res_log);
+            info!(target: "a","{} update {}", "command line","b");
+        }
+        else  if res==Err("5"){
+            Self::input_handling_rev(res_head);
             info!(target: "a","{} update {}", "command line","b");
         }
     }
@@ -160,7 +173,23 @@ impl UserInterface {
             true
         }
     }
+    fn input_handling_log(return_result:Result<Option<Vec<String>>,&str>){
+        if return_result.is_err() {println!("{:?}", return_result); }
+        else { let vec = return_result.unwrap();
+            if vec.is_none() {println!("{:?}", vec); }
+            else { println!("{:?}", vec.unwrap()); } }
+        info!(target: "a","{} update {}", "command line","b");
+    }
 
+    fn input_handling_rev(return_result:Result<Rev,&str>){
+        if return_result.is_err() {println!("{:?}", return_result); }
+        else {
+            let vec = return_result.unwrap();
+            println!("{:?}", vec);
+        }
+
+        info!(target: "a","{} update {}", "command line","b");
+    }
     /*fn input_handling_backup<E: std::fmt::Debug>(return_result:Result<(), E>){
         println!("{:?}",return_result)
     }*/

@@ -1,34 +1,24 @@
 use crate::cmd_function::{file_diff, FileDiff};
 use crate::vc::{file, repository, revision};
+use crate::vc::revision::Rev;
 
-pub fn heads<'a>(wd:&'a str)->Result<&'a str,&'a str>{
-    //get VC::Repo::load
+pub fn heads<'a>(wd:&'a str)->Result<Rev,&'a str>{
     let load=repository::load(wd);//get Repo
-    //use get_heads to let head=load.current_head();
-    let head="VC::Repository::get_current_head()";
-    /*
-    return revision_id according to diff command line
-    VC::Repo::load;
-    let head=VC::Repository::get_current_head();//for heads
-    (let head=VC::Repository::get_heads();
-    //for heads -all with Result<Vec<&Revision>>)
-    head
-    */
-    Ok(head)
+    if load.is_none(){ return Err("No heads found")}
+    else { let head= load.unwrap().get_current_head();
+        if head.is_none() {return Err("No heads found") }
+        else { Ok(head.unwrap()) }
+
+    }
 }
-pub fn log<'a>(wd:&'a str)->Result<&'a str,&'a str>{
+pub fn log(wd:&str)->Result<Option<Vec<String>>,&str>{
     let load=repository::load(wd);//got Repo
-    //let log= load.get_log();
-    //let version=vc::Repository::load();
-    /*
-    VC::Repository::load()
-    let log=VC::Repository::get_log()
-    VC::Revision::parent()
-    log
-    */
-    //add log here
-    let log="load.crate::vc::repository:get_log(),log information, information";
-    Ok(log)
+    if load.is_none(){ return Err("No log found")}
+    else { let log= load.unwrap().get_log();
+        if log.is_none() {return Err("No log found") }
+        else { let vec=log.as_ref().unwrap();
+            Ok(log) }
+    }
 }
 pub fn status<'a>(wd:&'a str)->Result<FileDiff,&'a str>{
     /*VC::from_stage();
