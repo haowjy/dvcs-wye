@@ -56,10 +56,11 @@ impl Repo {
                 self.current_head = Some(new_head_alias.to_string())
             }
         }
-    Some(())
+        self.save();
+        Some(())
     }
 
-    pub fn get_log(&self) -> Option<Vec<&str>> {None} // *** to be implemented
+    pub fn get_log(&self) -> Option<Vec<String>> {None} // *** to be implemented
     // called by command "log", trace from the current head to parent(s) recursively to get a complete history of metadata in relevant revisions
 
     // pub fn get_heads(&self) ->Option<Vec<&Rev>> {None}; // *** to be implemented
@@ -87,9 +88,8 @@ impl Repo {
     }
 
     pub fn add_file(&mut self, abs_path: &str) -> Option<()> {
-        let wd = get_name(&self.paths.wd)?;
-        let rel_path = abs_path.rsplit_once(&wd)?.1;
-        self.stage.add_file(&rel_path)?;
+
+        self.stage.add_file(&abs_path)?; // rel_path parse inside rev (stage)
         self.save()
     }
 
@@ -158,6 +158,17 @@ fn check_wd(wd_path: &str) -> Option<String> {
             None => None
         }
     }
+}
+
+pub (super) fn get_rel_path(abs_path: &str) -> Option<String> {
+    let wd = get_name(&check_wd(&get_wd_path())?)?;
+    let rel_path = abs_path.rsplit_once(&wd)?.1;
+    Some(rel_path.to_string())
+}
+
+pub (super) fn get_abs_path(rel_path: &str) -> Option<String> {
+    let wd_path = check_wd(&get_wd_path())?;
+    Some(path_compose(&wd_path, rel_path))
 }
 
 pub (super) fn sha<T: AsRef<[u8]> + ?Sized> (data: &T) -> String {
@@ -254,13 +265,13 @@ mod tests {
         //     assert_eq!(paths.root, path.to_str().unwrap());
         // }
 
-        #[test]
-        fn test_init() {
-            let wd = get_wd_path();
-            let paths = RepoPaths::new(&wd);
-            print!("{}", &paths.revs);
-            init();
-            assert!(fs::read_dir(paths.revs).is_ok());
-            assert!(delete_dir(&paths.root).is_ok());
-        }
+        // #[test]
+        // fn test_init() {
+        //     let wd = get_wd_path();
+        //     let paths = RepoPaths::new(&wd);
+        //     print!("{}", &paths.revs);
+        //     init();
+        //     assert!(fs::read_dir(paths.revs).is_ok());
+        //     assert!(delete_dir(&paths.root).is_ok());
+        // }
     }

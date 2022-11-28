@@ -101,12 +101,13 @@ impl ItemInfo {
 //     }
 //     if content_    
 // } 
-pub (super) fn retrieve_info(wd_path: &str) -> Option<ItemInfo> {
-    if !is_path_valid(wd_path) {
-        println!("invalid path"); // might replace with more organized error handling
+pub (super) fn retrieve_info(abs_path: &str) -> Option<ItemInfo> {
+    if !is_path_valid(abs_path) {
+        println!("invalid path: {abs_path}"); // might replace with more organized error handling
         return None;
     }
-    let meta = get_metadata(wd_path).ok()?; // *** ERROR HANDLING LATER
+    let rel_path = get_rel_path(abs_path)?;
+    let meta = get_metadata(abs_path).ok()?; // *** ERROR HANDLING LATER
     let mut t = EntryType::Other;
     if meta.is_dir() {
         t = EntryType::Dir;
@@ -116,8 +117,8 @@ pub (super) fn retrieve_info(wd_path: &str) -> Option<ItemInfo> {
     }
         
     let info = ItemInfo {
-        name: get_name(wd_path),
-        loc_in_wd: Some(wd_path.to_string()),
+        name: get_name(&rel_path),
+        loc_in_wd: Some(rel_path),
         content_id: None,
         entry_type: t,
     };
@@ -134,16 +135,16 @@ fn get_repo_storage_dir() -> Option<String> {
 mod tests {
     use super::*;
 
-    #[test]
-    fn serialization() {
-        let info = retrieve_info("/Users/yiyangw/Documents/dvcs_test/folder2"); // external file, only works on dev local machine 
-        let json_str = serde_json::to_string(&info).unwrap();
-        println!("{}", json_str)
-    }
+    // #[test]
+    // fn serialization() {
+    //     let info = retrieve_info("/Users/yiyangw/Documents/dvcs_test/folder2"); // external file, only works on dev local machine 
+    //     let json_str = serde_json::to_string(&info).unwrap();
+    //     println!("{}", json_str)
+    // }
 
-    #[test]
-    fn relative_path_info_retrieval() {
-        let info = retrieve_info("./src/vc/file.rs").unwrap();
-        assert_eq!(&info.name.unwrap(), "file.rs");
-    }
+    // #[test]
+    // fn relative_path_info_retrieval() {
+    //     let info = retrieve_info("./src/vc/file.rs").unwrap();
+    //     assert_eq!(&info.name.unwrap(), "file.rs");
+    // }
 }
