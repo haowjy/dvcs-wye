@@ -68,13 +68,17 @@ pub fn push<'a>(wd:&'a str, remote:&'a str, head:Option<&'a str>) -> Result<&'a 
 
 #[cfg(test)]
 mod tests {
-    use crate::dsr;
 
     use super::*;
+    
+    use crate::dsr;
 
     #[test]
     fn test_clone() {
         // TODO: can replace with init or fs::?
+        let _ = dsr::delete_dir("remoterepo/remote/.dvcs");
+        let _ = dsr::delete_dir("local/.dvcs");
+
         let _ = dsr::create_dir("remoterepo/remote/.dvcs");
         let _ = dsr::create_file("remoterepo/remote/.dvcs/HEAD");
         let _ = dsr::write_file("remoterepo/remote/.dvcs/HEAD", "Stuff");

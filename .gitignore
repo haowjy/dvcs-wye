@@ -3,3 +3,6 @@
 # test repos
 local/
 remoterepo/
+.dvcs/
+Cargo.lock
+predef_file.txt
