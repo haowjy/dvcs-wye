@@ -10,33 +10,47 @@ mod tests {
     use crate::vc::file::*;
     use crate::dsr::*;
 
-    // VC_test_1
-    #[test]
-    fn init_load_test() {
-        init().unwrap();
-        let wd = get_wd_path();
-        
-        let mut repo = load(&wd).unwrap();
-        let path = "src/vc.rs";
-        let abs_path = get_abs_path(&path).unwrap();
-        repo.add_file(&abs_path).unwrap(); //ok as long as the path contains the wd root
-        repo.commit().unwrap(); 
-        let rev = repo.get_current_head().unwrap(); // problematic, returns None
-        // assert_eq!(rev.get_parent_id(), None);
-
-        delete_dir("./.dvcs");
-    }
-
-
-
-    // // VC_test_2
+    // // VC_test_1
     // #[test]
-    // fn trace_test() {
-    //     let rev1 = Revision::new();
-    //     let rev2 = Revision::from(rev1.id());
-    //     assert_eq!(rev2.parent_id(), rev1.id())
+    // fn init_commit_test() {
+    //     init().unwrap();
+    //     let wd = get_wd_path();
+        
+    //     let mut repo = load(&wd).unwrap();
+    //     let path = "src/vc.rs";
+    //     let abs_path = get_abs_path(&path).unwrap();
+    //     repo.add_file(&abs_path).unwrap(); //ok as long as the path contains the wd root
+    //     repo.commit().unwrap(); 
+    //     let rev = repo.get_current_head().unwrap();
+    //     assert_eq!(rev.get_parent_id(), None); // first commit, thus parent is None.
+    //     delete_dir("./.dvcs");
     // }
 
+
+    // VC_test_2
+    // #[test]
+    // fn trace_test() {
+    //     delete_dir("./.dvcs");
+
+    //     init().unwrap();
+    //     let wd = get_wd_path();
+    //     let mut repo = load(&wd).unwrap();
+    //     let path = "src/vc.rs";
+    //     let abs_path = get_abs_path(&path).unwrap();
+    //     repo.add_file(&abs_path);
+    //     repo.commit();
+    //     let rev1 = repo.get_current_head().unwrap();
+
+    //     let path2 = "src/vc/file.rs";
+    //     let abs_path2 = get_abs_path(&path2).unwrap();
+    //     repo.add_file(&abs_path2);
+    //     repo.commit();
+    //     let rev2 = repo.get_current_head().unwrap();
+    //     delete_dir("./.dvcs");
+
+    //     assert_eq!(rev2.get_parent_id(), rev1.get_id());
+
+    // }
 
     // // VC_test_3
     // #[test]

@@ -26,7 +26,7 @@ pub struct Repo {
 impl Repo {
     pub fn get_current_head(&self) -> Option<Rev> {
         match &self.current_head {
-            Some(alias) => Rev::from(self.branch_heads.get(alias)?),
+            Some(alias) => self.get_rev(&self.branch_heads.get(alias)?),
             None => None
         }
     }
@@ -53,7 +53,7 @@ impl Repo {
             None => {
                 let new_head_alias = "main";
                 self.branch_heads.insert(new_head_alias.to_string(), commit_id);
-                self.current_head = Some(new_head_alias.to_string())
+                self.current_head = Some(new_head_alias.to_string());
             }
         }
         self.save();
