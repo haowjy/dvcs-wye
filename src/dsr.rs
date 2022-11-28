@@ -168,7 +168,7 @@ pub fn is_path_valid(path: &str) -> bool {
 pub fn make_wd(rev: &Rev) -> io::Result<()> {
     let wd_path = get_wd_path();
     clear_dir(&wd_path, vec![".git"])?;
-    for (path, item) in rev.get_files() {
+    for (path, item) in rev.get_manifest() {
         create_file(path)?;
         let content = item.get_content();
         write_file(&path, &content.unwrap())?;
@@ -194,7 +194,7 @@ pub fn path_compose(path1: &str, path2: &str) -> String {
 
 // 17. get the last portion of a path, e.g ".git/a/b/c" => "c"
 pub fn get_name(path: &str) -> Option<String> {
-    let path = Path::new(path); 
+    let path = Path::new(path);
     let name = path.file_name();
     let name_to_string = name.unwrap().to_owned().into_string().unwrap();
     return Some(name_to_string)
@@ -223,7 +223,13 @@ mod tests_dsr {
     use crate::dsr::*;
 
     #[test]
-    fn test_get_parent() {
+    fn test_14_make_wd() {
+        //let dummy_rev = Rev::new();
+
+    }
+
+    #[test]
+    fn test_19_get_parent_name() {
         let path = "this/that/those/test/hello_world.txt";
         let parent = get_parent_name(&path);
         println!("Parent Name {:?}", parent);
