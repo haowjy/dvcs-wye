@@ -1,6 +1,6 @@
 use std::io;
 //use std::path::Path;
-
+use clap::{Parser,Subcommand};
 //use crate::cmd_function;
 use crate::dsr;
 use crate::cmd_interface::{createonly, readwrite, readonly};
@@ -30,21 +30,64 @@ impl Log for RevDiff {
         info!(target: "a","Difference between rev {} and {}", "a","b");
     }
 }
-impl Log for Command{
+impl Log for Old_Command {
     fn log_for_dev(&self){
         info!(target: "a","{} update {}", "command line","b");
     }
 }
 
-
 //type input=fn()->String;
-pub struct Command{
-    path: String,
+#[derive(Parser,Debug)]
+#[command(author, version, about, long_about = None)]
+pub struct Cli{
+    /*/// Name of the person to greet
+    #[arg(short, long, default_value_t = 2)]
+    name: u8,
+
+    /// Number of times to greet
+    #[arg(short,long, default_value_t = 1)]
+    count: u8,
+    /// init
+    #[arg(short, long, default_value_t = dsr::get_wd_path())]
+    init: String,*/
+    #[command(subcommand)]
+    command: Command,
+}
+#[derive(Parser,Debug)]
+ enum Command {
+    Count {
+        #[arg(short, long, default_value_t = dsr::get_wd_path())]
+        /// Name of the package to search
+        path: String,
+    },
+    Init {
+        #[arg(short, long, default_value_t = dsr::get_wd_path())]
+        /// Name of the package to search
+        path: String,
+    },
+    Commit {
+        #[arg(short, long, default_value_t = dsr::get_wd_path())]
+        /// Name of the package to search
+        path: String,
+    },
+    Log {
+        #[arg(short, long, default_value_t = dsr::get_wd_path())]
+        /// Name of the package to search
+        path: String,
+    },
+    Remove {
+        #[arg(short, long, default_value_t = dsr::get_wd_path())]
+        /// Name of the package to search
+        path: String,
+    },
+}
+pub struct Old_Command {
     command_input:String,
+    path: String,
     temp: String
 }
 pub(crate) struct UserInterface{
-    commands: Vec<Command>
+    commands: Vec<Old_Command>
 }
 
 impl UserInterface {
@@ -52,6 +95,21 @@ impl UserInterface {
         Self{commands:vec![]}
     }
     pub fn receive_input_command_loop() ->io::Result<()>{//start here temporary
+        //cli start here
+        let args = Cli::parse();
+        /*for _ in 0..args.count {
+            println!("Hello {}!", args.name)
+        }*/
+        let command = args.command;
+        {
+            println!("Hello {:?}!", command);
+            let mut res:Result<&str,&str>=Err("1");
+            let init=crate::vc::repository::init();
+            if init==Some(()) { res=Ok("init successfully")}
+            else { res=Err("init error!") }
+        }
+        //cli close here
+
         log4rs::init_file("src/log4rs.yml", Default::default()).unwrap();
         println!("input q to quit");
         loop{
@@ -67,14 +125,14 @@ impl UserInterface {
             //println!("input {}",buffer);
             let path=dsr::get_wd_path();
             //println!("path {}",path);
-            let mut command: Command = Command{path,command_input: buffer, temp: "111".parse().unwrap() };
+            let mut command: Old_Command = Old_Command {path,command_input: buffer, temp: "111".parse().unwrap() };
             //self.commands.push(Command{path: input_test.clone(),command_input: "input_test.clone()" });
-            UserInterface::match_command(Command{path: command.path,command_input: command.command_input, temp: "111".parse().unwrap() });
+            UserInterface::match_command(Old_Command {path: command.path,command_input: command.command_input, temp: "111".parse().unwrap() });
         }
         Ok(())
     }
 
-    fn match_command(mut input:Command){//old:->String, new no return
+    fn match_command(mut input: Old_Command){//old:->String, new no return
         //input.path
         let mut res:Result<&str,&str>=Err("1");
         let mut res_diff:Result<RevDiff,&str>=Err("2");
