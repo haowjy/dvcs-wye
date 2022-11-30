@@ -1,6 +1,7 @@
 use std::io;
 //use std::path::Path;
-use clap::{Parser,Subcommand};
+use clap::{Parser, Subcommand, FromArgMatches, ArgMatches};
+use clap::error::{Error,ErrorKind};
 //use crate::cmd_function;
 use crate::dsr;
 use crate::cmd_interface::{createonly, readwrite, readonly};
@@ -30,7 +31,7 @@ impl Log for RevDiff {
         info!(target: "a","Difference between rev {} and {}", "a","b");
     }
 }
-impl Log for Old_Command {
+impl Log for Wye {
     fn log_for_dev(&self){
         info!(target: "a","{} update {}", "command line","b");
     }
@@ -39,166 +40,245 @@ impl Log for Old_Command {
 //type input=fn()->String;
 #[derive(Parser,Debug)]
 #[command(author, version, about, long_about = None)]
-pub struct Cli{
-    /*/// Name of the person to greet
-    #[arg(short, long, default_value_t = 2)]
-    name: u8,
-
-    /// Number of times to greet
-    #[arg(short,long, default_value_t = 1)]
-    count: u8,
-    /// init
-    #[arg(short, long, default_value_t = dsr::get_wd_path())]
-    init: String,*/
+pub struct Wye {
     #[command(subcommand)]
     command: Command,
 }
 #[derive(Parser,Debug)]
  enum Command {
-    Count {
-        #[arg(short, long, default_value_t = dsr::get_wd_path())]
+    /// Add file
+    add {
+        /// Name of the package to search
+        path: Vec<String>,
+    },
+    /// remove file
+    remove {
+        /// Name of the package to search
+        path: Vec<String>,
+    },
+    /// commit changes
+    commit {
+        #[arg(default_value_t)]
+        /// Name of the package to search
+        message: String,
+    },
+    /// merge version
+    merge {
+        /// Name of the package to search
+        rev_id: String,
+    },
+    /// Init the system
+    diff {
+        //#[arg(short, long, default_value_t = dsr::get_wd_path())]
+        /// Name of the package to search
+        rev_id_1: String,
+        rev_id_2: String,
+    },
+    /// see file inside
+    cat {
+        /// Name of the package to search
+        rev_id: String,
+        #[arg(default_value_t = dsr::get_wd_path())]
+        path: String,
+    },
+    /// show difference between old and current version
+    status {
+        /// Name of the package to search
+        #[arg(default_value_t = dsr::get_wd_path())]
+        path: String,
+    },
+    /// Show log to user
+    log {
+        #[arg(default_value_t = dsr::get_wd_path())]
         /// Name of the package to search
         path: String,
     },
-    Init {
-        #[arg(short, long, default_value_t = dsr::get_wd_path())]
+    /// show heads
+    heads {
         /// Name of the package to search
+        #[arg(default_value_t = dsr::get_wd_path())]
         path: String,
     },
-    Commit {
-        #[arg(short, long, default_value_t = dsr::get_wd_path())]
+    /// clone file and content
+    clone {
         /// Name of the package to search
+        #[arg(default_value_t = dsr::get_wd_path())]
         path: String,
+        remote: String,
     },
-    Log {
-        #[arg(short, long, default_value_t = dsr::get_wd_path())]
+    /// checkout the version
+    checkout {
         /// Name of the package to search
+        #[arg(default_value_t = dsr::get_wd_path())]
         path: String,
+        rev: String,
     },
-    Remove {
-        #[arg(short, long, default_value_t = dsr::get_wd_path())]
+    /// pull the version from server
+    pull {
         /// Name of the package to search
+        #[arg(default_value_t = dsr::get_wd_path())]
+        path: String,
+        remote: String,
+        head: String,
+    },
+    /// push new version
+    push {
+        /// Name of the package to search
+        #[arg(default_value_t = dsr::get_wd_path())]
+        path: String,
+        remote: String,
+        head: String,
+    },
+    /// init file structure in computer
+    init {
+        /// Name of the package to search
+        #[arg(default_value_t = dsr::get_wd_path())]
         path: String,
     },
 }
-pub struct Old_Command {
-    command_input:String,
-    path: String,
-    temp: String
-}
-pub(crate) struct UserInterface{
-    commands: Vec<Old_Command>
-}
-
-impl UserInterface {
-    fn new()-> Self{
-        Self{commands:vec![]}
-    }
-    pub fn receive_input_command_loop() ->io::Result<()>{//start here temporary
+impl Wye {
+    pub fn input_command() ->io::Result<()>{//start here temporary
         //cli start here
-        let args = Cli::parse();
-        /*for _ in 0..args.count {
-            println!("Hello {}!", args.name)
-        }*/
-        let command = args.command;
-        {
-            println!("Hello {:?}!", command);
-            let mut res:Result<&str,&str>=Err("1");
-            let init=crate::vc::repository::init();
-            if init==Some(()) { res=Ok("init successfully")}
-            else { res=Err("init error!") }
+        let args = Wye::parse();
+        println!("args {:?}!", args);
+        let wd_path=dsr::get_wd_path();
+        match args.command {
+            Command::add { mut path } => {
+                let mut res:Result<&str,&str>=Err("1");
+                println!("path is: {:?}", path);
+                if path.is_empty() {
+                    res=Err("Wrong Empty Path");
+                    println!("path is empty");
+                    }
+                else {
+                    path.iter().fold(0, |acc, x| {
+                    if Self::check_file_path_valid(Some(&*x))
+                    {
+                        res=readwrite::add(&*x);
+                    }
+                    else {
+                        res=Err("error file path or unreadable file path");
+                    }
+                    0
+                }
+                );
+                }
+                Self::input_handling(res);
+                info!(target: "add","{} update {}", "command line","b");
+            }
+            Command::remove { path } => {
+                let mut res:Result<&str,&str>=Err("1");
+                println!("path is: {:?}", path);
+                if path.is_empty() {
+                    res=Err("Wrong Empty Path");
+                    println!("path is empty");
+                }
+                else {
+                    path.iter().fold(0, |acc, x| {
+                        if Self::check_file_path_valid(Some(&*x))
+                        {
+                            res=readwrite::remove(&*x);
+                        }
+                        else {
+                            res=Err("error file path or unreadable file path");
+                        }
+                        0
+                    }
+                    );
+                }
+                Self::input_handling(res);
+                info!(target: "remove","{} update {}", "command line","b");
+            }
+            Command::commit { message } => {
+                let mut res:Result<&str,&str>=Err("1");
+                res=readwrite::commit(&*message);
+                Self::input_handling(res);
+                info!(target: "commit","{} update {}", "command line","b");
+                println!("message is: {:?}", message)
+            }
+            Command::merge { rev_id } => {
+                let mut res:Result<&str,&str>=Err("1");
+                res=readwrite::merge(&*rev_id);
+                Self::input_handling(res);
+                info!(target: "merge","{} update {}", "command line","b");
+                println!("path1 is: {:?}", rev_id);
+            }
+            Command::diff { rev_id_1,rev_id_2 } => {
+                let mut res_diff:Result<RevDiff,&str>=Err("2");
+                res_diff=readwrite::diff(&*rev_id_1, &*rev_id_2);
+                Self::input_handling_special(res_diff);
+                info!(target: "a","{} update {}", "command line","b");
+                println!("rev_id_1 is: {:?} rev_id_2 is: {:?}", rev_id_1,rev_id_2)
+            }
+            Command::cat { rev_id,path } => {
+                let mut res:Result<&str,&str>=Err("1");
+                res=readwrite::cat(&*rev_id,&*path);
+                Self::input_handling(res);
+                info!(target: "cat","{} update {}", "command line","b");
+                println!("rev_id is: {:?}", rev_id);
+                println!("path is: {:?}", path)
+            }
+            Command::status { path } => {
+                let mut res_file_diff:Result<FileDiff,&str>=Err("3");
+                res_file_diff=readonly::status("input.path");
+                Self::input_handling_special_file(res_file_diff);
+                info!(target: "status","{} update {}", "command line","b");
+                println!("path is: {:?}", path)
+            }
+            Command::log { path } => {
+                let mut res_log:Result<Option<Vec<String>>,&str>=Err("4");
+                res_log=readonly::log("input.path");
+                Self::input_handling_log(res_log);
+                info!(target: "log","{} update {}", "command line","b");
+                println!("path is: {:?}", path)
+            }
+            Command::heads { path } => {
+                let res_head=readonly::heads("input.path");
+                Self::input_handling_rev(res_head);
+                info!(target: "heads","{} update {}", "command line","b");
+                println!("path is: {:?}", path)
+            }
+            Command::clone { path,remote } => {
+                let res=createonly::clone(&*path, &*remote);
+                Self::input_handling(res);
+                info!(target: "clone","{} update {}", "command line","b");
+                println!("path is: {:?}", path)
+            }
+            Command::checkout { path,rev } => {
+                let res=createonly::checkout(&*path, &*rev);
+                Self::input_handling(res);
+                info!(target: "checkout","{} update {}", "command line","b");
+                println!("path is: {:?}", path)
+            }
+            Command::pull { path,remote,head } => {
+                let res=createonly::pull(&*path, &*remote, Some(&*head));
+                Self::input_handling(res);
+                info!(target: "pull","{} update {}", "command line","b");
+                println!("path is: {:?}", path)
+            }
+            Command::push { path,remote,head } => {
+                let res=createonly::push(&*path, &*remote, Some(&*head));
+                Self::input_handling(res);
+                info!(target: "push","{} update {}", "command line","b");
+                println!("path is: {:?}", path)
+            }
+            Command::init { path } => {
+                let mut res:Result<&str,&str>=Err("1");
+                let init=crate::vc::repository::init();
+                if init==Some(()) { res=Ok("init successfully");}
+                else { res=Err("init error!") }
+                Self::input_handling(res);
+                println!("path is: {:?}", path)
+            }
+            _ => {
+                println!("Sorry! Wrong input! Command not found");
+            }
         }
+
         //cli close here
 
         log4rs::init_file("src/log4rs.yml", Default::default()).unwrap();
-        println!("input q to quit");
-        loop{
-            print!("dvcs command>: ");
-            stdout().flush().unwrap();
-            let mut buffer=String::new();
-            let stdin=io::stdin();
-            let _k=stdin.read_line(&mut buffer);
-            if buffer=="q\r\n".to_string() ||buffer=="q".to_string() ||buffer=="q\n".to_string(){
-                println!("quit!");
-                break;
-            }
-            //println!("input {}",buffer);
-            let path=dsr::get_wd_path();
-            //println!("path {}",path);
-            let mut command: Old_Command = Old_Command {path,command_input: buffer, temp: "111".parse().unwrap() };
-            //self.commands.push(Command{path: input_test.clone(),command_input: "input_test.clone()" });
-            UserInterface::match_command(Old_Command {path: command.path,command_input: command.command_input, temp: "111".parse().unwrap() });
-        }
         Ok(())
-    }
-
-    fn match_command(mut input: Old_Command){//old:->String, new no return
-        //input.path
-        let mut res:Result<&str,&str>=Err("1");
-        let mut res_diff:Result<RevDiff,&str>=Err("2");
-        let mut res_file_diff:Result<FileDiff,&str>=Err("3");
-        let mut res_log:Result<Option<Vec<String>>,&str>=Err("4");
-        let mut res_head:Result<Rev,&str>=Err("4");
-        let mut arg= input.command_input.split_whitespace();
-        //println!("input {:?}",arg.next());
-        let input_1=arg.next();
-        let input_2=arg.next();
-        let _file=dsr::read_file_as_string(input_2.unwrap_or("1"));//add D://ur//test.txt
-        //println!("file content:{}",file.unwrap());//just test read file
-        match input_1{
-            Some("add") => {
-                //println!("add");
-                if Self::check_file_path_valid(input_2)
-                {res=readwrite::add(input_2.unwrap());}
-                else { res=Err("error file path or unreadable file path"); }
-            }//1
-            Some("remove")=> {res=readwrite::remove(&*input.path);
-                input.temp= "ok".parse().unwrap();
-                input.log_for_dev();
-            }//2
-            Some("commit") => {res=readwrite::commit(input_2.unwrap_or(""));}//3
-            Some("merge") => {res=readwrite::merge("input.path");}//4
-            Some("diff") => {res_diff=readwrite::diff("input.path","input.path");
-                res=Err("2");}//5
-            Some("cat") => {res=readwrite::cat("input.path",&*input.path);}//6
-            Some("status") => {res_file_diff=readonly::status("input.path");
-                res=Err("3");}//status1
-            Some("log") => {
-                res_log=readonly::log("input.path");
-                res=Err("4");}//log2
-            Some("heads") => {res_head=readonly::heads("input.path");res=Err("5");}//heads3
-            Some("clone") => {res=createonly::clone("input.path1",input_2.unwrap());}//1
-            Some("checkout") => {res=createonly::checkout("input.path","input.path");}//2
-            Some("pull") => {res=createonly::pull("input.path","input.path",Some("input.path"));}//3
-            Some("push") => {res=createonly::push("input.path","input.path",Some("input.path"));}//4
-            Some("init") => {
-                let init=crate::vc::repository::init();
-                if init==Some(()) { res=Ok("init successfully")}
-                else { res=Err("init error!") }
-                }//1
-            _ => {warn!(target: "aaaaaa","{} update {}", "command line","wrong");}
-        }
-        if res!=Err("1") && res!=Err("2") && res!=Err("3") && res!=Err("4") && res!=Err("5")
-        {
-            Self::input_handling(res);
-            info!(target: "a","{} update {}", "command line","b");
-        }
-        else if res==Err("2"){
-            Self::input_handling_special(res_diff);
-            info!(target: "a","{} update {}", "command line","b");
-        }
-        else  if res==Err("3"){
-            Self::input_handling_special_file(res_file_diff);
-            info!(target: "a","{} update {}", "command line","b");
-        }
-        else  if res==Err("4"){
-            Self::input_handling_log(res_log);
-            info!(target: "a","{} update {}", "command line","b");
-        }
-        else  if res==Err("5"){
-            Self::input_handling_rev(res_head);
-            info!(target: "a","{} update {}", "command line","b");
-        }
     }
 
     fn input_handling(return_result:Result<&str,&str>){
