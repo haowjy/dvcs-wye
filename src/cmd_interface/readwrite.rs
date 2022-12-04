@@ -5,22 +5,44 @@ pub struct RevDiff {
     // TODO
 }
 
-pub fn diff<'a>(rev1_id:&'a str, rev2_id:&'a str) -> Result<RevDiff, &'a str>{
+impl RevDiff {
+    pub fn new() -> RevDiff {
+        RevDiff {
+            // TODO
+        }
+    }
+}
+
+pub fn diff<'a>(wd: &'a str, rev1_id:&'a str, rev2_id:&'a str) -> Result<RevDiff, &'a str>{
     // go through all files in rev1 and rev2
     // if file in rev1 but not in rev2 -> file deleted
     // if file in rev2 but not in rev1 -> file added
     // if file in rev1 and rev2, but there is a diff -> file modified
     // if file in rev1 and rev2, and there is no diff -> file unchanged
+
+    let repo = repository::load(wd);
+    if repo.is_none() { 
+        return Err("No repository found");
+    } else {
+        let rev1 = repo.unwrap().get_rev(rev1_id);
+        let rev2 = repo.unwrap().get_rev(rev2_id);
+        if rev1.is_none() || rev2.is_none() { return Err("No revision found"); 
+    } else {
+            let rev1 = rev1.unwrap();
+            let rev2 = rev2.unwrap();
+            // rev1.get_files();
+        }
+    }
     unimplemented!(); //TODO
 }
 
-pub fn cat<'a>(rev_id:&'a str, path:&'a str) -> Result<&'a str, &'a str>{
+pub fn cat<'a>(wd: &'a str, rev_id:&'a str, path:&'a str) -> Result<&'a str, &'a str>{
     // find path in rev
     // return file content or error
     unimplemented!(); //TODO
 }
 
-pub fn add<'a>(path:&'a str) -> Result<&'a str, &'a str>{
+pub fn add<'a>(wd: &'a str, path:&'a str) -> Result<&'a str, &'a str>{
     
     let cwd = get_wd_path();
     if let Some(mut repo) = repository::load(&cwd) {
@@ -36,13 +58,13 @@ pub fn add<'a>(path:&'a str) -> Result<&'a str, &'a str>{
     }
 }
 
-pub fn remove<'a>(path:&'a str) -> Result<&'a str, &'a str>{
+pub fn remove<'a>(wd: &'a str, path:&'a str) -> Result<&'a str, &'a str>{
     // remove the file temporarily to the index branch by acting as if we have deleted the file (not committed yet)
     // just call repo.remove by obtaining absolute path
     unimplemented!(); //TODO
 }
 
-pub fn commit<'a>(message:&'a str) -> Result<&'a str, &'a str>{
+pub fn commit<'a>(wd: &'a str, message:&'a str) -> Result<&'a str, &'a str>{
     let cwd = get_wd_path();
     if let Some(mut repo) = repository::load(&cwd) {
         // TODO: message, error handling
@@ -60,7 +82,7 @@ pub fn commit<'a>(message:&'a str) -> Result<&'a str, &'a str>{
     // return a RevDiff if successful
 }
 
-pub fn merge<'a>(rev_id:&'a str) -> Result<&'a str, &'a str>{
+pub fn merge<'a>(wd: &'a str, rev_id_source:&'a str, rev_id_dst:&'a str) -> Result<&'a str, &'a str>{
     unimplemented!(); //TODO
 }
 
@@ -90,10 +112,10 @@ mod tests {
         let _ = dsr::create_file("predef_file.txt");
         let _ = dsr::write_file("predef_file.txt", "hello world");
 
-        let add1 = add("predef_file.txt");
+        let add1 = add("./", "predef_file.txt");
         assert_eq!(add1, Ok("add success"));
 
-        let nodef = add("nodef_file.txt");
+        let nodef = add("./", "nodef_file.txt");
         assert_eq!(nodef, Err("add failed: add_file failed"));
     }
 
@@ -115,9 +137,9 @@ mod tests {
         // println!("com1: {:?}", com1);
         // assert_eq!(com1, Err("commit failed: repo.commit failed"));
 
-        let _ = add("predef_file.txt");
+        let _ = add("./", "predef_file.txt");
         
-        let com2 = commit("test commit");
+        let com2 = commit("./", "test commit");
         println!("com2: {:?}", com2);
         assert_eq!(com2, Ok("commit success"));
     }

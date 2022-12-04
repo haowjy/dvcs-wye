@@ -52,7 +52,7 @@ pub fn pull<'a>(wd:&'a str, remote:&'a str, head:Option<&'a str>) -> Result<&'a 
 pub fn push<'a>(wd:&'a str, remote:&'a str, head:Option<&'a str>) -> Result<&'a str, &'a str> {
     // VC::Repo::load() // load wd and remote repos
     // diff(Repo.remote/head, remoteRepo.head) // if the remote tracked is different from what is actually on remote, then block and ask to pull
-    let diff_res : Result<RevDiff, ()> = match diff("curRepo.remote/head", "remoteRepo.head") {
+    let diff_res : Result<RevDiff, ()> = match diff(wd,"curRepo.remote/head", "remoteRepo.head") {
         Ok(repo_diff) => Ok(repo_diff),
         Err(_) => return Err("push failed: diff failed"),
     };
