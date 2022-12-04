@@ -13,30 +13,6 @@ use log::{info, warn};
 use log4rs;
 use crate::vc::revision::Rev;
 
-pub trait Log {
-    fn log_for_dev(&self);
-}
-impl Log for FileDiff<'_> {
-     fn log_for_dev(&self){
-        info!(target: "a","Difference between File {} and {}", "a","b");
-    }
-}
-impl Log for Repo {
-    fn log_for_dev(&self){
-        info!(target: "a","Repo update {}", "a");
-    }
-}
-impl Log for RevDiff {
-    fn log_for_dev(&self){
-        info!(target: "a","Difference between rev {} and {}", "a","b");
-    }
-}
-impl Log for Wye {
-    fn log_for_dev(&self){
-        info!(target: "a","{} update {}", "command line","b");
-    }
-}
-
 //type input=fn()->String;
 #[derive(Parser,Debug)]
 #[command(author, version, about, long_about = None)]
@@ -48,37 +24,50 @@ pub struct Wye {
  enum Command {
     /// Add file
     add {
+        #[arg(default_value_t = dsr::get_wd_path())]
+        wd_path: String,
         /// Name of the package to search
         path: Vec<String>,
     },
     /// remove file
     remove {
+        #[arg(default_value_t = dsr::get_wd_path())]
+        wd_path: String,
         /// Name of the package to search
         path: Vec<String>,
     },
     /// commit changes
     commit {
+        #[arg(default_value_t = dsr::get_wd_path())]
+        wd_path: String,
         #[arg(default_value_t)]
         /// Name of the package to search
         message: String,
     },
     /// merge version
     merge {
+        #[arg(default_value_t = dsr::get_wd_path())]
+        wd_path: String,
         /// Name of the package to search
         rev_id: String,
+        /// Name of the package to search
+        rev_dest: String,
     },
     /// Init the system
     diff {
         //#[arg(short, long, default_value_t = dsr::get_wd_path())]
         /// Name of the package to search
+        #[arg(default_value_t = dsr::get_wd_path())]
+        wd_path: String,
         rev_id_1: String,
         rev_id_2: String,
     },
     /// see file inside
     cat {
+        #[arg(default_value_t = dsr::get_wd_path())]
+        wd_path: String,
         /// Name of the package to search
         rev_id: String,
-        #[arg(default_value_t = dsr::get_wd_path())]
         path: String,
     },
     /// show difference between old and current version
@@ -103,7 +92,7 @@ pub struct Wye {
     clone {
         /// Name of the package to search
         #[arg(default_value_t = dsr::get_wd_path())]
-        path: String,
+        wd: String,
         remote: String,
     },
     /// checkout the version
@@ -143,7 +132,7 @@ impl Wye {
         println!("args {:?}!", args);
         let wd_path=dsr::get_wd_path();
         match args.command {
-            Command::add { mut path } => {
+            Command::add { wd_path,mut path } => {
                 let mut res:Result<&str,&str>=Err("1");
                 println!("path is: {:?}", path);
                 if path.is_empty() {
@@ -154,7 +143,7 @@ impl Wye {
                     path.iter().fold(0, |acc, x| {
                     if Self::check_file_path_valid(Some(&*x))
                     {
-                        res=readwrite::add(&*x);
+                        res=readwrite::add(&wd_path,&*x);
                     }
                     else {
                         res=Err("error file path or unreadable file path");
@@ -166,7 +155,7 @@ impl Wye {
                 Self::input_handling(res);
                 info!(target: "add","{} update {}", "command line","b");
             }
-            Command::remove { path } => {
+            Command::remove { wd_path,path } => {
                 let mut res:Result<&str,&str>=Err("1");
                 println!("path is: {:?}", path);
                 if path.is_empty() {
@@ -177,7 +166,7 @@ impl Wye {
                     path.iter().fold(0, |acc, x| {
                         if Self::check_file_path_valid(Some(&*x))
                         {
-                            res=readwrite::remove(&*x);
+                            res=readwrite::remove(&wd_path,&*x);
                         }
                         else {
                             res=Err("error file path or unreadable file path");
@@ -189,30 +178,30 @@ impl Wye {
                 Self::input_handling(res);
                 info!(target: "remove","{} update {}", "command line","b");
             }
-            Command::commit { message } => {
+            Command::commit {wd_path, message } => {
                 let mut res:Result<&str,&str>=Err("1");
-                res=readwrite::commit(&*message);
+                res=readwrite::commit(&wd_path,&message);
                 Self::input_handling(res);
                 info!(target: "commit","{} update {}", "command line","b");
                 println!("message is: {:?}", message)
             }
-            Command::merge { rev_id } => {
+            Command::merge { wd_path,rev_id,rev_dest } => {
                 let mut res:Result<&str,&str>=Err("1");
-                res=readwrite::merge(&*rev_id);
+                res=readwrite::merge(&wd_path, &rev_id, &rev_dest);
                 Self::input_handling(res);
                 info!(target: "merge","{} update {}", "command line","b");
                 println!("path1 is: {:?}", rev_id);
             }
-            Command::diff { rev_id_1,rev_id_2 } => {
+            Command::diff { wd_path,rev_id_1,rev_id_2 } => {
                 let mut res_diff:Result<RevDiff,&str>=Err("2");
-                res_diff=readwrite::diff(&*rev_id_1, &*rev_id_2);
+                res_diff=readwrite::diff(&wd_path,&rev_id_1, &rev_id_2);
                 Self::input_handling_special(res_diff);
                 info!(target: "a","{} update {}", "command line","b");
                 println!("rev_id_1 is: {:?} rev_id_2 is: {:?}", rev_id_1,rev_id_2)
             }
-            Command::cat { rev_id,path } => {
+            Command::cat { wd_path,rev_id,path } => {
                 let mut res:Result<&str,&str>=Err("1");
-                res=readwrite::cat(&*rev_id,&*path);
+                res=readwrite::cat(&wd_path,&rev_id,&path);
                 Self::input_handling(res);
                 info!(target: "cat","{} update {}", "command line","b");
                 println!("rev_id is: {:?}", rev_id);
@@ -220,44 +209,44 @@ impl Wye {
             }
             Command::status { path } => {
                 let mut res_file_diff:Result<FileDiff,&str>=Err("3");
-                res_file_diff=readonly::status("input.path");
+                res_file_diff=readonly::status(&path);
                 Self::input_handling_special_file(res_file_diff);
                 info!(target: "status","{} update {}", "command line","b");
                 println!("path is: {:?}", path)
             }
             Command::log { path } => {
                 let mut res_log:Result<Option<Vec<String>>,&str>=Err("4");
-                res_log=readonly::log("input.path");
+                res_log=readonly::log(&path);
                 Self::input_handling_log(res_log);
                 info!(target: "log","{} update {}", "command line","b");
                 println!("path is: {:?}", path)
             }
             Command::heads { path } => {
-                let res_head=readonly::heads("input.path");
+                let res_head=readonly::heads(&path);
                 Self::input_handling_rev(res_head);
                 info!(target: "heads","{} update {}", "command line","b");
                 println!("path is: {:?}", path)
             }
-            Command::clone { path,remote } => {
-                let res=createonly::clone(&*path, &*remote);
+            Command::clone { wd, remote, .. } => {
+                let res=createonly::clone(&wd, &remote);
                 Self::input_handling(res);
                 info!(target: "clone","{} update {}", "command line","b");
-                println!("path is: {:?}", path)
+                println!("wd_path is: {:?}", wd)
             }
             Command::checkout { path,rev } => {
-                let res=createonly::checkout(&*path, &*rev);
+                let res=createonly::checkout(&path, &rev);
                 Self::input_handling(res);
                 info!(target: "checkout","{} update {}", "command line","b");
                 println!("path is: {:?}", path)
             }
             Command::pull { path,remote,head } => {
-                let res=createonly::pull(&*path, &*remote, Some(&*head));
+                let res=createonly::pull(&path, &remote, Some(&head));
                 Self::input_handling(res);
                 info!(target: "pull","{} update {}", "command line","b");
                 println!("path is: {:?}", path)
             }
             Command::push { path,remote,head } => {
-                let res=createonly::push(&*path, &*remote, Some(&*head));
+                let res=createonly::push(&path, &remote, Some(&head));
                 Self::input_handling(res);
                 info!(target: "push","{} update {}", "command line","b");
                 println!("path is: {:?}", path)
