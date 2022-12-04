@@ -2,7 +2,9 @@ use std::{fs, io, env};
 use std::fs::Metadata;
 use std::io::{Error, ErrorKind};
 use std::path::{Path, PathBuf};
+use users::{get_user_by_uid, get_current_uid};
 
+use crate::vc::file::ItemInfo;
 use crate::vc::revision::Rev;
 
 // ==================================
@@ -15,19 +17,19 @@ fn is_name_valid(name: &str) -> bool {
     match os {
         "linux" => {
             if name.contains('/') {
-                eprintln!("ERR<DSR-02>: Name({}) contains forbidden ASCII character(s)", name);
+                eprintln!("error: Name({}) contains forbidden ASCII character(s)", name);
                 return false
             }
         }, "macos" => {
             if name.contains(':') {
-                eprintln!("ERR<DSR-03>: Name({}) contains forbidden ASCII character(s)", name);
+                eprintln!("error: Name({}) contains forbidden ASCII character(s)", name);
                 return false
             }
         }, "windows" => {
             if name.contains('<') || name.contains('>') || name.contains(':') ||
                name.contains('"') || name.contains('/') || name.contains('\\') ||
                name.contains('|') || name.contains('?') || name.contains('*') {
-                eprintln!("ERR<DSR-04>: Name({}) contains forbidden ASCII character(s)", name);
+                eprintln!("error: Name({}) contains forbidden ASCII character(s)", name);
                 return false
             }
         }, _ => {
@@ -42,10 +44,6 @@ fn is_name_valid(name: &str) -> bool {
 //        PUBLIC FUNCTIONS
 // ==================================
 
-// 1. Serialize
-
-// 2. Deserialize
-
 // 3. Create a directory and directory within recursively if missing
 //     If you would like to create a hidden folder, add a . in front
 //      of the folder name, i.e. "folder1/folder2/.git"
@@ -53,9 +51,9 @@ fn is_name_valid(name: &str) -> bool {
 pub fn create_dir(path: &str) -> io::Result<()> {
     let folder_name = get_name(path).unwrap();
     if is_path_valid(path) {
-        eprintln!("WARN<DSR-02>: Directory <{}> has already created", folder_name);
+        eprintln!("warning: Directory <{}> has already created", folder_name);
     } else if !is_name_valid(&folder_name) {
-        return Err(Error::new(ErrorKind::Unsupported, "ERR: Invalid directory name format"));
+        return Err(Error::new(ErrorKind::Unsupported, "error: Invalid directory name format"));
     }
     fs::create_dir_all(path)
 }
@@ -65,10 +63,10 @@ pub fn create_dir(path: &str) -> io::Result<()> {
 pub fn delete_dir(path: &str) -> io::Result<()> {
     let folder_name = get_name(path).unwrap();
     if !is_path_valid(path) {
-        eprintln!("ERR<DSR-05>: Directory <{}> has already deleted", folder_name);
-        return Err(Error::new(ErrorKind::Unsupported, "ERR: Directory does not exist"));
+        eprintln!("error: Directory <{}> has already deleted", folder_name);
+        return Err(Error::new(ErrorKind::Unsupported, "Directory does not exist"));
     } else if !is_name_valid(&folder_name) {
-        return Err(Error::new(ErrorKind::Unsupported, "ERR: Invalid directory name format"));
+        return Err(Error::new(ErrorKind::Unsupported, "Invalid directory name format"));
     }
     fs::remove_dir_all(path)
 }
@@ -121,8 +119,17 @@ pub fn clear_dir(path: &str, ignore: Vec<&str>) -> io::Result<()> {
 //     and will truncate it if it does
 // USEAGE: create_file("folder1/hello_world.py");
 pub fn create_file(path: &str) -> io::Result<()> {
-    fs::File::create(path)?;
-    Ok(())
+    if is_path_valid(path) {
+        eprintln!("error: file <{:?}> has already created!", get_name(path));
+    }
+    match fs::File::create(path) {
+        Ok(_) => {
+            return Ok(());
+        }, Err(_) => {
+            eprintln!("error: failed to create file at {}", path);
+            return Err(Error::new(ErrorKind::Other, "create_file(): unknown error"));
+        },
+    }
 }
 
 // 8. Removes a file from the filesystem.
@@ -217,15 +224,28 @@ pub fn get_parent_name(path: &str) -> Option<String> {
     }
 }
 
+// 20. get user id and user name, as a tuple
+pub fn get_user() -> (u32, String) {
+    let user_id = get_current_uid();
+    let user = get_user_by_uid(user_id);
+
+    let user_name = user.unwrap().name().to_os_string().into_string().unwrap();
+    return (user_id, user_name);
+}
+
 
 #[cfg(test)]
 mod tests_dsr {
     use crate::dsr::*;
 
     #[test]
-    fn test_14_make_wd() {
-        //let dummy_rev = Rev::new();
-
+    fn test_13_is_path_valid() {
+        let abs_path = "/Users/elio/Documents/GitHub/dvcs-wye/src/dsr.rs";
+        println!("1: {}", is_path_valid(&abs_path));
+        let abs_path = "/Users/elio/Documents/Code/UR453/!.txt";
+        println!("2: {}", is_path_valid(&abs_path));
+        let abs_path = "/Users/elio/Documents/Code/UR453/?.txt";
+        println!("2: {}", is_path_valid(&abs_path));
     }
 
     #[test]
@@ -235,5 +255,11 @@ mod tests_dsr {
         println!("Parent Name {:?}", parent);
         let parent = get_parent_name(&parent.unwrap());
         println!("Parent Name {:?}", parent);
+    }
+
+    #[test]
+    fn test_20_get_user() {
+        let user = get_user();
+        println!("(id, name): {:?}", user);
     }
 }
