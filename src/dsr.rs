@@ -4,7 +4,6 @@ use std::io::{Error, ErrorKind};
 use std::path::{Path, PathBuf};
 use users::{get_user_by_uid, get_current_uid};
 
-use crate::vc::file::ItemInfo;
 use crate::vc::revision::Rev;
 
 // ==================================
@@ -174,7 +173,7 @@ pub fn is_path_valid(path: &str) -> bool {
 /* ===================== EXPERIMENTAL - UNKNOWN BEHAVIOUR ===================== */
 pub fn make_wd(rev: &Rev) -> io::Result<()> {
     let wd_path = get_wd_path();
-    clear_dir(&wd_path, vec![".git"])?;
+    clear_dir(&wd_path, vec![".dvcs"])?;
     for (path, item) in rev.get_manifest() {
         create_file(path)?;
         let content = item.get_content();
