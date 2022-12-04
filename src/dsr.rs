@@ -171,8 +171,7 @@ pub fn is_path_valid(path: &str) -> bool {
 // 14. Takes in Revision struct (vc/revision.rs/Rev), copy
 //      its contents to the current working directory
 /* ===================== EXPERIMENTAL - UNKNOWN BEHAVIOUR ===================== */
-pub fn make_wd(rev: &Rev) -> io::Result<()> {
-    let wd_path = get_wd_path();
+pub fn make_wd(rev: &Rev, wd_path: &str) -> io::Result<()> {
     clear_dir(&wd_path, vec![".dvcs"])?;
     for (path, item) in rev.get_manifest() {
         create_file(path)?;
