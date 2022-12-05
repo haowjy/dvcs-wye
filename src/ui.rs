@@ -16,13 +16,15 @@ use crate::vc::revision::Rev;
 pub enum Errors {
     ErrSys(Error),
     ErrStr(String),
+    Errstatic(&'static str),
     ErrUnknown,
 }
-use Errors::{ErrSys, ErrStr, ErrUnknown};
-fn parse_error(res: Result<(), Errors>) -> String {
-    match res.unwrap_err() {
+use Errors::{ErrSys, ErrStr,Errstatic, ErrUnknown};
+fn parse_error(res: Errors) -> String {
+    match res {
         ErrSys(Error) => {print!("{:?}", Error);Error.to_string()},
         ErrStr(String) => {print!("{}", String);String},
+        Errstatic(Str) => {print!("{}", Str);Str.to_string()},
         ErrUnknown => {print!("ErrUnknown");"ErrUnknown".to_string()},
     }
 }
@@ -236,8 +238,9 @@ impl Wye {
                 println!("path is: {:?}", path)
             }
             Command::log { path } => {
-                let mut res_log:Result<Option<Vec<String>>,&str>=Err("4");
+                let mut res_log:Result<Option<Vec<String>>,Errors>;
                 res_log=readonly::log(&path);
+                parse_error(readonly::log(&path).unwrap_err());
                 Self::input_handling_log(res_log);
                 info!(target: "log","{} update {}", "command line","b");
                 println!("path is: {:?}", path)
@@ -321,7 +324,7 @@ impl Wye {
             true
         }
     }
-    fn input_handling_log(return_result:Result<Option<Vec<String>>,&str>){
+    fn input_handling_log(return_result:Result<Option<Vec<String>>,Errors>){
         if return_result.is_err() {println!("{:?}", return_result); }
         else { let vec = return_result.unwrap();
             if vec.is_none() {println!("{:?}", vec); }

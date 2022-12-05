@@ -1,6 +1,7 @@
 use crate::cmd_function::{file_diff, FileDiff};
 use crate::vc::{file, repository, revision};
 use crate::vc::revision::Rev;
+use crate::ui::Errors;
 
 pub fn heads<'a>(wd: &'a str) -> Result<Rev, &'a str> {
     let load = repository::load(wd);//get Repo
@@ -10,11 +11,11 @@ pub fn heads<'a>(wd: &'a str) -> Result<Rev, &'a str> {
     }
 }
 
-pub fn log(wd: &str) -> Result<Option<Vec<String>>, &str> {
+pub fn log(wd: &str) -> Result<Option<Vec<String>>, Errors> {
     let load = repository::load(wd);//got Repo
-    if load.is_none() { return Err("No log found"); } else {
+    if load.is_none() { return Err(Errors::Errstatic("No log found")); } else {
         let log = load.unwrap().get_log();
-        if log.is_none() { return Err("No log found"); } else {
+        if log.is_none() { return Err(Errors::Errstatic("No log found")); } else {
             let vec = log.as_ref().unwrap();
             Ok(log)
         }
