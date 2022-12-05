@@ -12,7 +12,20 @@ use std::io::{stdout, Write};
 use log::{info, warn};
 use log4rs;
 use crate::vc::revision::Rev;
-
+pub enum Errors {
+    Error,
+    Error_betweenbalabalabala,
+    String_content,
+    None
+}
+fn match_Errors(error: Errors) -> String {
+    match error {
+        Errors::Error => "error inside".to_string(),
+        Errors::Error_betweenbalabalabala => "Error_betweenbalabalabala".to_string(),
+        Errors::String_content => "more than string".to_string(),
+        Errors::None =>"None".to_string(),
+    }
+}
 //type input=fn()->String;
 #[derive(Parser,Debug)]
 #[command(author, version, about, long_about = None)]
