@@ -14,14 +14,16 @@ use log4rs;
 use crate::vc::revision::Rev;
 #[derive(Debug)]
 pub enum Errors {
+    ErrIo(std::io::Error),
     ErrSys(Error),
     ErrStr(String),
     Errstatic(&'static str),
     ErrUnknown,
 }
-use Errors::{ErrSys, ErrStr,Errstatic, ErrUnknown};
+use Errors::{ErrIo,ErrSys, ErrStr,Errstatic, ErrUnknown};
 fn parse_error(res: Errors) -> String {
     match res {
+        ErrIo(Error) => {print!("{:?}", Error);Error.to_string()},
         ErrSys(Error) => {print!("{:?}", Error);Error.to_string()},
         ErrStr(String) => {print!("{}", String);String},
         Errstatic(Str) => {print!("{}", Str);Str.to_string()},
