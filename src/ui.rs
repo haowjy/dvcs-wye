@@ -233,9 +233,8 @@ impl Wye {
                 println!("path is: {:?}", path)
             }
             Command::status { path } => {
-                let mut res_file_diff:Result<FileDiff,&str>=Err("3");
-                res_file_diff=readonly::status(&path);
-                Self::input_handling_special_file(res_file_diff);
+                let res_file_diff=readonly::status(&path);
+                Self::input_handling(res_file_diff);
                 info!(target: "status","{} update {}", "command line","b");
                 println!("path is: {:?}", path)
             }
@@ -306,7 +305,7 @@ impl Wye {
         println!("{:?}","return_result");
         info!(target: "a","{} update {}", "command line","b");
     }
-    fn input_handling_special_file(return_result:Result<FileDiff,&str>){
+    /*fn input_handling_special_file(return_result:Result<FileDiff,&str>){
         let fd = return_result.unwrap();
         let flag= fd.is_diff();
         if flag==true {
@@ -315,7 +314,7 @@ impl Wye {
         }
         else { println!("No difference, same");}
         info!(target: "a","{} update {}", "command line","b");
-    }
+    }*/
     fn check_file_path_valid(input_2:Option<&str>) ->bool{
         let file=dsr::read_file_as_string(input_2.unwrap_or("1"));//add D://ur//test.txt
         if file.is_err()

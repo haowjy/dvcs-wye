@@ -22,11 +22,11 @@ pub fn log(wd: &str) -> Result<Option<Vec<String>>, Errors> {
     }
 }
 
-pub fn status<'a>(wd: &'a str) -> Result<FileDiff, &'a str> {
-    /*let rev=revision::Rev::from(wd);//got Rev
+pub fn status<'a>(wd: &'a str) -> Result<&str, &'a str> {
+    let rev=revision::Rev::from(wd);//got Rev
     let load=repository::load(wd);//got Repo
     let id =rev.as_ref().unwrap().get_id().unwrap();
-    let revision=load.as_ref().unwrap().get_rev(id);*/
+    let revision=load.as_ref().unwrap().get_rev(id);
     /*VC::from_stage();
     VC::Repo::load();
     VC::Repo::get_rev();//old_revision: &str
@@ -36,10 +36,19 @@ pub fn status<'a>(wd: &'a str) -> Result<FileDiff, &'a str> {
     //let load=repository::load(wd);//got Repo
     /* let w=load.get_rev();
      print!("{:?}",w);*/
-    /*let file=load.as_ref().unwrap().get_file_content(id).unwrap();*/
-    let diff = file_diff("content1", "content2");
+    let file=load.unwrap().get_file_content(id).unwrap();
+    //let file1="content1".to_string();
+    let diff = file_diff("&file1", &file).clone();
+    //
+    let flag= diff.is_diff();
+    if flag==true {
+        let d= diff.get_patch();
+        println!("{}",d);
+        return Ok("diff")
+    }
+    else { println!("No difference, same");Err("diff")}
     //diff
-    Ok(diff)
+    //Ok(diff)
 }
 
 #[cfg(test)]
