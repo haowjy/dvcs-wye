@@ -27,7 +27,22 @@ pub fn status(wd: &str) -> Result<&str, Errors> {
     let load=repository::load(wd);//got Repo
     let id =rev.as_ref().unwrap().get_id().unwrap();
     let revision=load.as_ref().unwrap().get_rev(id);
-    /*VC::from_stage();
+    /*
+    let stage=revision::Rev::from_stage();// got stage暂存区里的一个版本
+    if stage==null返回nothing to commit, working tree clean
+    else compare with commit最后的一个版本？//aka current head?
+    如果是很多file返回的可能是vec<string>?So read iter() compare?
+
+    let stage=revision::Rev::from_stage();
+    stage.get_files();//获得文件，return hashmap
+    each file get_content();
+
+    //同理
+    get_current head()?
+    ???又是get_revision? getfile???
+    有没有getfilename???和通过filename找到file content的hashmap的key是名字还是id?
+
+
     VC::Repo::load();
     VC::Repo::get_rev();//old_revision: &str
     VC::Rev::new();
