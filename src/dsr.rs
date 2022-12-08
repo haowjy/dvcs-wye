@@ -1,3 +1,4 @@
+use glob::glob;
 use std::{fs, env};
 use std::fs::{Metadata, ReadDir};
 use std::io::{Error, ErrorKind};
@@ -22,6 +23,22 @@ fn read_dir(path: &str) -> Result<ReadDir, Errors> {
         Ok(it) => return Ok(it),
         Err(_) => return Err(new_error(ErrorKind::UnexpectedEof, &"read_dir: unknown error when reading directory")),
     }
+}
+
+// check if a file is in an directory or a sub directory
+fn is_in(path: &str, file: &str) -> bool {
+    match glob(&format!("{}/**/{}", path, file)) {
+        Ok(p) => {
+            for entry in p {
+                match entry {
+                    Ok(_) => return true,
+                    Err(_) => return false,
+                }
+            }
+        },
+        Err(_) => return false,
+    }
+    false
 }
 
 // check if the file/dir name contains forbidden character(s)
@@ -102,8 +119,7 @@ pub fn copy_dir(src: &str, dest: &str) -> Result<(), Errors> {
         
                 let mut new_addr = dest.to_owned();
                 let file_name = entry_name.to_str().unwrap();
-                new_addr.push('/');
-                new_addr.push_str(file_name);
+                new_addr = path_compose(&new_addr, file_name);
                 if entry_path.is_dir() {
                     copy_dir(raw_path, &new_addr)?;
                 } else {
@@ -117,6 +133,7 @@ pub fn copy_dir(src: &str, dest: &str) -> Result<(), Errors> {
 
 // 6. Delete items selectively in a directory, any items or folders name
 //     inside 'ignore' vector will not be deleted.
+// * This function does not check ignored files in sub-directories, use clear_dir_adv() if needed.
 // USEAGE: clear_dir("folder1/folder2", vec!["hi.txt", "rust.rs", "folder3"]);
 pub fn clear_dir(path: &str, ignore: Vec<&str>) -> Result<(), Errors> {
     for entry in read_dir(path)? {
@@ -130,6 +147,40 @@ pub fn clear_dir(path: &str, ignore: Vec<&str>) -> Result<(), Errors> {
                     if entry_path.is_dir() {
                         delete_dir(raw_path)?;
                     } else {
+                        delete_file(raw_path)?;
+                    }
+                }
+            }, Err(_) => return Err(new_error(ErrorKind::UnexpectedEof, &"clear_dir: unable to read entries from dir")),
+        }
+    }
+    Ok(())
+}
+
+// 6.1 A more advanced clear_dir() which checks ignored files in sub-directories, sub-directories
+//      that contains ignored files will not be deleted, SEE test_6_clear_dir_adv() OR Example 2 at the end of the code
+pub fn clear_dir_adv(path: &str, ignore: Vec<&str>) -> Result<(), Errors> {
+    for entry in read_dir(path)? {
+        match entry {
+            Ok(entry) => {
+                let entry = entry;
+                let entry_path = entry.path();
+                let entry_name = entry.file_name();
+                let raw_path = entry_path.to_str().unwrap();
+
+                if entry_path.is_dir() {
+                    let mut isin = false;
+                    for file in &ignore {
+                        if is_in(raw_path, file) {
+                            isin = true;
+                            clear_dir_adv(raw_path, ignore.clone())?;
+                            break;
+                        }
+                    }
+                    if isin == false {
+                        delete_dir(raw_path)?;
+                    }
+                } else if entry_path.is_file() {
+                    if !ignore.contains(&entry_name.to_str().unwrap()) {
                         delete_file(raw_path)?;
                     }
                 }
@@ -308,6 +359,27 @@ pub fn get_user() -> (u32, String) {
 mod tests_dsr {
     use crate::dsr::*;
 
+    #[allow(unused_must_use)]
+    fn setup_test_space() {
+        create_dir("dsr_test/folder1/folder2/folder3");
+        create_dir("dsr_test/folderA/folderB");
+
+        create_file("dsr_test/README.md");
+        create_file("dsr_test/folder1/hi.txt");
+        create_file("dsr_test/folder1/also_hi.txt");
+        create_file("dsr_test/folder1/first_layer.rs");
+        create_file("dsr_test/folder1/folder2/another_hi.txt");
+        create_file("dsr_test/folder1/folder2/second_layer.rs");
+        create_file("dsr_test/folder1/folder2/folder3/third_layer.rs");
+        create_file("dsr_test/folderA/cfile.cpp");
+        create_file("dsr_test/folderA/folderB/python.py");
+    }
+
+    #[allow(unused_must_use)]
+    fn clear_test_space() {
+        delete_dir("dsr_test");
+    }
+
     #[test]
     fn test_3_create_dir() {
         // success
@@ -385,14 +457,22 @@ mod tests_dsr {
     }
 
     #[test]
-    fn test_6_clear_dir() {
-        
+    fn test_6_clear_dir_adv() {
+        setup_test_space();
+
+        // success
+        match clear_dir_adv("dsr_test", vec!["hi.txt", "another_hi.txt"]) {
+            Ok(_) => println!("clear (dsr_test without hi.txt, another_hi.txt) success"),
+            Err(e) => println!("error: {:?}", e),
+        }
+
+        //clear_test_space();
     }
 
 
     #[test]
     fn test_13_is_path_valid() {
-
+        setup_test_space();
     }
 
     #[test]
@@ -401,7 +481,44 @@ mod tests_dsr {
     }
 
     #[test]
-    fn test_20_get_user() {
+    fn test_priv_is_in() {
+        setup_test_space();
 
+        assert_eq!(is_in("dsr_test", "README.md"), true);
+        assert_eq!(is_in("dsr_test", "second_layer.rs"), true);
+        assert_eq!(is_in("dsr_test/folder1/folder2", "hi.txt"), false);
+        assert_eq!(is_in("dsr_test/folderA", "python.py"), true);
+        assert_eq!(is_in("dsr_test/folderA/folderB", "cfile.cpp"), false);
+
+        clear_test_space();
     }
 }
+
+/*
+
+    ====================================
+    Example 2: 
+    dsr_test
+    README.md
+    | -> folder1
+            hi.txt
+            also_hi.txt
+            first_layer.rs
+            | -> folder 2
+                    another_hi.txt
+                    second_layer.rs
+                    | -> folder 3
+                            | -> third_layer.rs
+    | -> folderA
+            cfile.cpp
+            | -> folderB
+                    python.py
+
+    CALL: clear_dir_adv("dsr_test", vec!["hi.txt", "another_hi.txt"])
+
+    dsr_test
+    | -> folder1
+            hi.txt
+            | -> folder 2
+                    another_hi.txt
+*/
