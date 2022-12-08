@@ -1,36 +1,43 @@
 use crate::vc::{file, repository, revision};
 use crate::dsr::*;
+use std::collections::HashMap;
 
-pub struct RevDiff {
-    // TODO
+use crate::cmd_function::FileDiff;
+
+pub struct RevDiff<'a> {
+    files: HashMap<&'a str, FileDiff<'a>>,
 }
 
-impl RevDiff {
-    pub fn new() -> RevDiff {
+impl <'a> RevDiff<'a> {
+    pub fn new() -> RevDiff<'a> {
         RevDiff {
-            // TODO
+            files: HashMap::new(),
         }
     }
 }
 
-pub fn diff<'a>(wd: &'a str, rev1_id:&'a str, rev2_id:&'a str) -> Result<RevDiff, &'a str>{
+pub fn diff<'a>(wd: &'a str, rev1_id:&'a str, rev2_id:&'a str) -> Result<RevDiff<'a>, &'a str>{
     // go through all files in rev1 and rev2
     // if file in rev1 but not in rev2 -> file deleted
     // if file in rev2 but not in rev1 -> file added
     // if file in rev1 and rev2, but there is a diff -> file modified
     // if file in rev1 and rev2, and there is no diff -> file unchanged
 
-    let repo = repository::load(wd);
-    if repo.is_none() { 
+    let repo_opt = repository::load(wd);
+    if repo_opt.is_none() { 
         return Err("No repository found");
     } else {
-        let rev1 = repo.unwrap().get_rev(rev1_id);
-        let rev2 = repo.unwrap().get_rev(rev2_id);
+        let repo = repo_opt.unwrap();
+        let rev1 = repo.get_rev(rev1_id);
+        let rev2 = repo.get_rev(rev2_id);
         if rev1.is_none() || rev2.is_none() { return Err("No revision found"); 
     } else {
             let rev1 = rev1.unwrap();
             let rev2 = rev2.unwrap();
-            // rev1.get_files();
+
+            for (file, info) in rev1.get_manifest() {
+                println!("file: {}, info: {:?}", file, info);
+            }
         }
     }
     unimplemented!(); //TODO
@@ -91,11 +98,14 @@ mod tests {
     use super::*;
 
     use crate::dsr;
-    use crate::vc::repository;
+    use crate::vc::repository::{self, init};
 
     #[test]
     fn test_diff() {
-        // TODO
+        let _ = dsr::delete_dir(".dvcs");
+        init();
+
+        // add(wd, path)
     }
 
     #[test]
@@ -105,17 +115,18 @@ mod tests {
 
     #[test]
     fn test_add() {
-        let _ = dsr::delete_dir(".dvcs");
-        let _ = dsr::delete_file("predef_file.txt");
-        let _ = repository::init().unwrap();
+        let wd = get_wd_path();
+        // let _ = dsr::delete_dir(".dvcs");
+        // let _ = dsr::delete_file("a.txt");
+        // init();
         
-        let _ = dsr::create_file("predef_file.txt");
-        let _ = dsr::write_file("predef_file.txt", "hello world");
-
-        let add1 = add("./", "predef_file.txt");
+        let _ = dsr::create_file("a.txt");
+        let _ = dsr::write_file("a.txt", "hello world");
+        
+        let add1 = add(&wd, "a.txt");
         assert_eq!(add1, Ok("add success"));
 
-        let nodef = add("./", "nodef_file.txt");
+        let nodef = add(&wd, "nodef_file.txt");
         assert_eq!(nodef, Err("add failed: add_file failed"));
     }
 

@@ -178,7 +178,7 @@ pub fn copy_file(src: &str, dest: &str) -> Result<(), Errors> {
     let file_name = get_name(dest).unwrap();
     if src.eq(dest) {
         return Err(new_error(ErrorKind::AlreadyExists, &"copy_file: src & dest are the same"));
-    } else if is_path_valid(src) {
+    } else if !is_path_valid(src) {
         return Err(new_error(ErrorKind::NotFound, &"copy_file: source file does not exist"));
     } else if !is_name_valid(&file_name) {
         return Err(new_error(ErrorKind::InvalidInput, &format!("copy_file: source file name({}) contains forbidden character(s)", file_name)));
@@ -310,8 +310,85 @@ mod tests_dsr {
 
     #[test]
     fn test_3_create_dir() {
-
+        // success
+        match create_dir("dsr_test/create_dir") {
+            Ok(_) => println!("create (dsr_test/create_dir) success"),
+            Err(e) => println!("error: {:?}", e),
+        }
+        // failure: already exist
+        match create_dir("dsr_test/create_dir") {
+            Ok(_) => println!("warning: suppose to fail!"),
+            Err(e) => println!("error: {:?}", e),
+        }
+        // failure: invalid char
+        match create_dir("dsr_test/invalid:folder") {
+            Ok(_) => println!("warning: suppose to fail!"),
+            Err(e) => println!("error: {:?}", e),
+        }
     }
+
+    #[test]
+    fn test_4_delete_dir() {
+        // success
+        match delete_dir("dsr_test/create_dir") {
+            Ok(_) => println!("delete (dsr_test/create_dir) success"),
+            Err(e) => println!("error: {:?}", e),
+        }
+        // failure: already deleted
+        match delete_dir("dsr_test/create_dir") {
+            Ok(_) => println!("warning: suppose to fail!"),
+            Err(e) => println!("error: {:?}", e),
+        }
+        // failure: invalid char
+        match delete_dir("dsr_test/invalid:folder") {
+            Ok(_) => println!("warning: suppose to fail!"),
+            Err(e) => println!("error: {:?}", e),
+        }
+    }
+
+    #[test]
+    fn test_7_create_file() {
+        // success
+        match create_dir("dsr_test/folder/inner") {
+            Ok(_) => println!("create (dsr_test/folder) success"),
+            Err(e) => println!("error: {:?}", e),
+        }
+        // success
+        match create_file("dsr_test/folder/hi.txt") {
+            Ok(_) => println!("create (dsr_test/folder/hi.txt) success"),
+            Err(e) => println!("error: {:?}", e),
+        }
+        // success
+        match create_file("dsr_test/folder/python.py") {
+            Ok(_) => println!("create (dsr_test/folder/python.py) success"),
+            Err(e) => println!("error: {:?}", e),
+        }
+        // success
+        match create_file("dsr_test/folder/inner/rust.rs") {
+            Ok(_) => println!("create (dsr_test/folder/inner/rust.rs) success"),
+            Err(e) => println!("error: {:?}", e),
+        }
+        // failure: already exists
+        match create_file("dsr_test/folder/inner/rust.rs") {
+            Ok(_) => println!("warning: suppose to fail!"),
+            Err(e) => println!("error: {:?}", e),
+        }
+    }
+
+    #[test]
+    fn test_5_copy_dir() {
+        // success
+        match copy_dir("dsr_test/folder", "dsr_test/folder_dup") {
+            Ok(_) => println!("copy (dsr_test/folder) success"),
+            Err(e) => println!("error: {:?}", e),
+        }
+    }
+
+    #[test]
+    fn test_6_clear_dir() {
+        
+    }
+
 
     #[test]
     fn test_13_is_path_valid() {
