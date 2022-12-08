@@ -4,23 +4,49 @@
 use diffy::{create_patch, Patch, merge};
 
 #[derive(PartialEq,Debug,Clone)]
+pub enum FileDiffType {
+    Added,
+    Deleted,
+    Modified,
+    Unchanged,
+}
+
+#[derive(PartialEq,Debug,Clone)]
 pub struct FileDiff<'a> {
     origin_content:&'a str,
     mod_content:&'a str,
     patch: Patch<'a, str>,
-    is_diff: bool,
+    diff_type: FileDiffType,
 }
 
 impl <'a> FileDiff<'a> {
-    pub fn new(origin_content:&'a str, mod_content:&'a str) -> Self {
+    pub fn new(origin_content: &'a str, mod_content:&'a str) -> Self {
+        let diff_type = if origin_content.is_empty() {
+            FileDiffType::Added
+        } else if mod_content.is_empty() {
+            FileDiffType::Deleted
+        } else if origin_content != mod_content {
+            FileDiffType::Modified
+        } else {
+            FileDiffType::Unchanged
+        };
+
         let patch = create_patch(origin_content, mod_content);
-        let is_diff = origin_content != mod_content;
-        Self {
-            origin_content,
-            mod_content,
-            patch,
-            is_diff,
+        
+        return Self {
+            origin_content: origin_content,
+            mod_content: mod_content,
+            patch: patch,
+            diff_type: diff_type,
         }
+    }
+
+    pub fn get_original(&self) -> &'a str {
+        self.origin_content
+    }
+
+    pub fn get_modified(&self) -> &'a str {
+        self.mod_content
     }
 
     pub fn get_patch(&self) -> &Patch<'a, str> {
@@ -31,8 +57,12 @@ impl <'a> FileDiff<'a> {
         self.patch.to_string()
     }
 
+    pub fn get_diff_type(&self) -> &FileDiffType {
+        &self.diff_type
+    }
+
     pub fn is_diff(&self) -> bool {
-        self.is_diff
+        &self.diff_type != &FileDiffType::Unchanged
     }
 }
 
@@ -77,6 +107,7 @@ impl <'a> FileConflict<'a> {
     pub fn is_conflict(&self) -> bool {
         self.is_conflict
     }
+
 }
 
 // results: Ok is running fine -> error -> conflict, ok -> no conflict
@@ -89,7 +120,7 @@ pub fn conflict_find<'a>(diff1:&'a FileDiff, diff2:&'a FileDiff) -> Result<FileC
 }
 
 // Uses diffy crate to find if there is a conflict in the file
-pub fn find_unmerged<'a>(content: &'a str) -> Result<(), &'a str> {
+pub fn find_unmerged<'a>(content: &'a str) -> Result<(), String> {
     let mut unmerged_markers = vec!["<<<<<<< ours", "||||||| original", "=======", ">>>>>>> theirs"].into_iter();
     let is_unmerged = content.split("\n").into_iter().try_fold(unmerged_markers.next(), |marker, line| {
         if marker.is_none() {
@@ -102,7 +133,8 @@ pub fn find_unmerged<'a>(content: &'a str) -> Result<(), &'a str> {
         Some(marker)
     }).is_none();
     if is_unmerged {
-        return Err("file is unmerged");
+        let i = content.split("\n").into_iter().position(|line| line == "<<<<<<< ours");
+        return Err(["File is unmerged at line", &i.unwrap().to_string()].join(" "));
     }
     Ok(())
 }
@@ -114,9 +146,9 @@ mod tests {
     #[test]
     fn test_file_diff() {
         let diff1 = file_diff("Some line of text\nSecond line", "Some line of text\nSecond line\nin a file");
-        assert_eq!(diff1.is_diff, true); // diff's is_diff is true
+        assert_eq!(diff1.get_diff_type(), &FileDiffType::Modified); // modified
         let diff2 = file_diff("Some line of text\nSecond line", "Some line of text\nSecond line");
-        assert_eq!(diff2.is_diff, false); //diff;s is_diff is false
+        assert_eq!(diff2.get_diff_type(), &FileDiffType::Unchanged); // no diff, unchanged
 
         let diff = file_diff("Some line of text\nSecond line", "Some line of text\nSecond line\n");
         let test_patch = diffy::create_patch("Some line of text\nSecond line", "Some line of text\nSecond line\n");
@@ -124,8 +156,13 @@ mod tests {
             origin_content: "Some line of text\nSecond line",
             mod_content: "Some line of text\nSecond line\n",
             patch: test_patch,
-            is_diff: true
+            diff_type: FileDiffType::Modified
         }); // diff returns error
+
+        let diff_no_origin = file_diff("", "Some line of text\nSecond line\n");
+        assert_eq!(diff_no_origin.get_diff_type(), &FileDiffType::Added); // added
+        let diff_no_mod = file_diff("Some line of text\nSecond line", "");
+        assert_eq!(diff_no_mod.get_diff_type(), &FileDiffType::Deleted); // deleted
     }
 
     #[test]
@@ -182,7 +219,8 @@ mod tests {
             &fd03
         ).unwrap();
         assert_eq!(conflict0_13.is_conflict, true); // is a conflict
-        assert_eq!(find_unmerged(conflict0_13.get_content()), Err("file is unmerged")); // has unmerged markers
+        
+        assert_eq!(find_unmerged(conflict0_13.get_content()), Err(String::from("File is unmerged at line 0"))); // has unmerged markers
 
         let conf = "<<<<<<< ours\n\
         Some line of text\n\
@@ -191,10 +229,17 @@ mod tests {
         Some line of text\n\
         =======\n\
         Some line of\n\
-        >>>>>>> theirs\n\
         SecondLine\n\
         InsertLast";
-        // println!("{}", conf);
-        assert_eq!(find_unmerged(conf), Err("file is unmerged")); // has unmerged markers
+
+        // must EXACTLY match the merge markers:
+        // <<< ours
+        // ...
+        // |||origin 
+        // ...
+        //=== 
+        // ...
+        //>>> their
+        assert_eq!(find_unmerged(conf), Ok(())); // has unmerged markers
     }
 }
