@@ -3,11 +3,11 @@ use crate::vc::{file, repository, revision};
 use crate::vc::revision::Rev;
 use crate::ui::Errors;
 
-pub fn heads<'a>(wd: &'a str) -> Result<Rev, &'a str> {
+pub fn heads(wd: &str) -> Result<Rev, Errors> {
     let load = repository::load(wd);//get Repo
-    if load.is_none() { return Err("No heads found"); } else {
+    if load.is_none() { return Err(Errors::Errstatic("No heads found")); } else {
         let head = load.unwrap().get_current_head();
-        if head.is_none() { return Err("No heads found"); } else { Ok(head.unwrap()) }
+        if head.is_none() { return Err(Errors::Errstatic("No heads found")); } else { Ok(head.unwrap()) }
     }
 }
 
@@ -22,7 +22,7 @@ pub fn log(wd: &str) -> Result<Option<Vec<String>>, Errors> {
     }
 }
 
-pub fn status<'a>(wd: &'a str) -> Result<&str, &'a str> {
+pub fn status(wd: &str) -> Result<&str, Errors> {
     let rev=revision::Rev::from(wd);//got Rev
     let load=repository::load(wd);//got Repo
     let id =rev.as_ref().unwrap().get_id().unwrap();
@@ -46,7 +46,9 @@ pub fn status<'a>(wd: &'a str) -> Result<&str, &'a str> {
         println!("{}",d);
         return Ok("diff")
     }
-    else { println!("No difference, same");Err("diff")}
+    else { println!("No difference, same");
+        Err(Errors::Errstatic("diff"))
+    }
     //diff
     //Ok(diff)
 }

@@ -9,8 +9,8 @@ use crate::cmd_interface::readwrite::RevDiff;
 use crate::cmd_function::FileDiff;
 use crate::vc::repository::{Repo};
 use std::io::{stdout, Write};
-use log::{info, warn};
-use log4rs;
+/*use log::{info, warn};
+use log4rs;*/
 use crate::vc::revision::Rev;
 #[derive(Debug)]
 pub enum Errors {
@@ -23,11 +23,11 @@ pub enum Errors {
 use Errors::{ErrIo,ErrSys, ErrStr,Errstatic, ErrUnknown};
 fn parse_error(res: Errors) -> String {
     match res {
-        ErrIo(Error) => {print!("{:?}", Error);Error.to_string()},
-        ErrSys(Error) => {print!("{:?}", Error);Error.to_string()},
-        ErrStr(String) => {print!("{}", String);String},
-        Errstatic(Str) => {print!("{}", Str);Str.to_string()},
-        ErrUnknown => {print!("ErrUnknown");"ErrUnknown".to_string()},
+        ErrIo(Error) => {println!("{:?}", Error);Error.to_string()},
+        ErrSys(Error) => {println!("{:?}", Error);Error.to_string()},
+        ErrStr(String) => {println!("{}", String);String},
+        Errstatic(Str) => {println!("{}", Str);Str.to_string()},
+        ErrUnknown => {println!("ErrUnknown");"ErrUnknown".to_string()},
     }
 }
 /*fn match_Errors(error: Errors) -> String {
@@ -178,7 +178,6 @@ impl Wye {
                 );
                 }
                 Self::input_handling(res);
-                info!(target: "add","{} update {}", "command line","b");
             }
             Command::remove { wd_path,path } => {
                 let mut res:Result<&str,&str>=Err("1");
@@ -201,79 +200,68 @@ impl Wye {
                     );
                 }
                 Self::input_handling(res);
-                info!(target: "remove","{} update {}", "command line","b");
             }
             Command::commit {wd_path, message } => {
                 let mut res:Result<&str,&str>=Err("1");
                 res=readwrite::commit(&wd_path,&message);
                 Self::input_handling(res);
-                info!(target: "commit","{} update {}", "command line","b");
                 println!("message is: {:?}", message)
             }
             Command::merge { wd_path,rev_id,rev_dest } => {
                 let mut res:Result<&str,&str>=Err("1");
                 res=readwrite::merge(&wd_path, &rev_id, &rev_dest);
                 Self::input_handling(res);
-                info!(target: "merge","{} update {}", "command line","b");
                 println!("path1 is: {:?}", rev_id);
             }
             Command::diff { wd_path,rev_id_1,rev_id_2 } => {
                 let mut res_diff:Result<RevDiff,&str>=Err("2");
                 res_diff=readwrite::diff(&wd_path,&rev_id_1, &rev_id_2);
                 Self::input_handling_special(res_diff);
-                info!(target: "a","{} update {}", "command line","b");
                 println!("rev_id_1 is: {:?} rev_id_2 is: {:?}", rev_id_1,rev_id_2)
             }
             Command::cat { wd_path,rev_id,path } => {
                 let mut res:Result<&str,&str>=Err("1");
                 res=readwrite::cat(&wd_path,&rev_id,&path);
                 Self::input_handling(res);
-                info!(target: "cat","{} update {}", "command line","b");
                 println!("rev_id is: {:?}", rev_id);
                 println!("path is: {:?}", path)
             }
             Command::status { path } => {
                 let res_file_diff=readonly::status(&path);
-                Self::input_handling(res_file_diff);
-                info!(target: "status","{} update {}", "command line","b");
+                Self::input_handling_status(res_file_diff);
                 println!("path is: {:?}", path)
             }
             Command::log { path } => {
                 let mut res_log:Result<Option<Vec<String>>,Errors>;
                 res_log=readonly::log(&path);
-                parse_error(readonly::log(&path).unwrap_err());
+                //parse_error(readonly::log(&path).unwrap_err());
                 Self::input_handling_log(res_log);
-                info!(target: "log","{} update {}", "command line","b");
                 println!("path is: {:?}", path)
             }
             Command::heads { path } => {
                 let res_head=readonly::heads(&path);
+                //parse_error(readonly::heads(&path).unwrap_err());
                 Self::input_handling_rev(res_head);
-                info!(target: "heads","{} update {}", "command line","b");
                 println!("path is: {:?}", path)
             }
-            Command::clone { wd, remote, .. } => {
+            Command::clone { wd, remote} => {
                 let res=createonly::clone(&wd, &remote);
                 Self::input_handling(res);
-                info!(target: "clone","{} update {}", "command line","b");
                 println!("wd_path is: {:?}", wd)
             }
             Command::checkout { path,rev } => {
                 let res=createonly::checkout(&path, &rev);
                 Self::input_handling(res);
-                info!(target: "checkout","{} update {}", "command line","b");
                 println!("path is: {:?}", path)
             }
             Command::pull { path,remote,head } => {
                 let res=createonly::pull(&path, &remote, Some(&head));
                 Self::input_handling(res);
-                info!(target: "pull","{} update {}", "command line","b");
                 println!("path is: {:?}", path)
             }
             Command::push { path,remote,head } => {
                 let res=createonly::push(&path, &remote, Some(&head));
                 Self::input_handling(res);
-                info!(target: "push","{} update {}", "command line","b");
                 println!("path is: {:?}", path)
             }
             Command::init { path } => {
@@ -291,19 +279,31 @@ impl Wye {
 
         //cli close here
 
-        log4rs::init_file("src/log4rs.yml", Default::default()).unwrap();
+        //log4rs::init_file("src/log4rs.yml", Default::default()).unwrap();
         Ok(())
+    }
+
+    fn input_handling_new(return_result:Result<&str,Errors>){
+        if return_result.is_err() {
+            parse_error(return_result.unwrap_err());
+        }
+        else {
+            println!("{:?}",return_result);
+        }
+    }
+    fn input_handling_status(return_result:Result<&str,Errors>){
+        if return_result.is_err() {
+            parse_error(return_result.unwrap_err());
+        }
     }
 
     fn input_handling(return_result:Result<&str,&str>){
         println!("{:?}",return_result);
-        info!(target: "a","{} update {}", "command line","b");
     }
 
     fn input_handling_special(return_result:Result<RevDiff,&str>){
         //waiting structure inside RevDiff, similar with FileDiff
         println!("{:?}","return_result");
-        info!(target: "a","{} update {}", "command line","b");
     }
     /*fn input_handling_special_file(return_result:Result<FileDiff,&str>){
         let fd = return_result.unwrap();
@@ -326,21 +326,22 @@ impl Wye {
         }
     }
     fn input_handling_log(return_result:Result<Option<Vec<String>>,Errors>){
-        if return_result.is_err() {println!("{:?}", return_result); }
+        if return_result.is_err() {
+            parse_error(return_result.unwrap_err());
+        }
         else { let vec = return_result.unwrap();
             if vec.is_none() {println!("{:?}", vec); }
             else { println!("{:?}", vec.unwrap()); } }
-        info!(target: "a","{} update {}", "command line","b");
     }
 
-    fn input_handling_rev(return_result:Result<Rev,&str>){
-        if return_result.is_err() {println!("{:?}", return_result); }
+    fn input_handling_rev(return_result:Result<Rev,Errors>){
+        if return_result.is_err() {
+            parse_error(return_result.unwrap_err());
+        }
         else {
             let vec = return_result.unwrap();
             println!("{:?}", vec);
         }
-
-        info!(target: "a","{} update {}", "command line","b");
     }
     /*fn input_handling_backup<E: std::fmt::Debug>(return_result:Result<(), E>){
         println!("{:?}",return_result)
