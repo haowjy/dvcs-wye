@@ -14,15 +14,17 @@ use log4rs;*/
 use crate::vc::revision::Rev;
 #[derive(Debug)]
 pub enum Errors {
+    ErrSerde(serde_json::Error),
     ErrIo(std::io::Error),
     ErrSys(Error),
     ErrStr(String),
     Errstatic(&'static str),
     ErrUnknown,
 }
-use Errors::{ErrIo,ErrSys, ErrStr,Errstatic, ErrUnknown};
+use Errors::{ErrSerde,ErrIo,ErrSys, ErrStr,Errstatic, ErrUnknown};
 fn parse_error(res: Errors) -> String {
     match res {
+        ErrSerde(Error) => {println!("{:?}", Error);Error.to_string()},
         ErrIo(Error) => {println!("{:?}", Error);Error.to_string()},
         ErrSys(Error) => {println!("{:?}", Error);Error.to_string()},
         ErrStr(String) => {println!("{}", String);String},
@@ -47,21 +49,21 @@ pub struct Wye {
 }
 #[derive(Parser,Debug)]
  enum Command {
-    /// Add file
+    /// add specific files that you want to track
     add {
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
         /// Name of the package to search
         path: Vec<String>,
     },
-    /// remove file
+    /// remove specific files from tracking list
     remove {
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
         /// Name of the package to search
         path: Vec<String>,
     },
-    /// commit changes
+    /// commit changes and create a new revision
     commit {
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
@@ -69,7 +71,7 @@ pub struct Wye {
         /// Name of the package to search
         message: String,
     },
-    /// merge version
+    /// merge two revisions
     merge {
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
@@ -78,7 +80,7 @@ pub struct Wye {
         /// Name of the package to search
         rev_dest: String,
     },
-    /// Init the system
+    /// check the changes between revisions
     diff {
         //#[arg(short, long, default_value_t = dsr::get_wd_path())]
         /// Name of the package to search
@@ -87,7 +89,7 @@ pub struct Wye {
         rev_id_1: String,
         rev_id_2: String,
     },
-    /// see file inside
+    /// inspect a file of a given revision
     cat {
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
@@ -95,32 +97,32 @@ pub struct Wye {
         rev_id: String,
         path: String,
     },
-    /// show difference between old and current version
+    ///  check the current status of current repository
     status {
         /// Name of the package to search
         #[arg(default_value_t = dsr::get_wd_path())]
         path: String,
     },
-    /// Show log to user
+    /// view the change log
     log {
         #[arg(default_value_t = dsr::get_wd_path())]
         /// Name of the package to search
         path: String,
     },
-    /// show heads
+    /// show the current heads
     heads {
         /// Name of the package to search
         #[arg(default_value_t = dsr::get_wd_path())]
         path: String,
     },
-    /// clone file and content
+    ///  copy an existing repository
     clone {
         /// Name of the package to search
         #[arg(default_value_t = dsr::get_wd_path())]
         wd: String,
         remote: String,
     },
-    /// checkout the version
+    /// check out a specific revision
     checkout {
         /// Name of the package to search
         #[arg(default_value_t = dsr::get_wd_path())]
@@ -143,7 +145,7 @@ pub struct Wye {
         remote: String,
         head: String,
     },
-    /// init file structure in computer
+    /// create an empty repository
     init {
         /// Name of the package to search
         #[arg(default_value_t = dsr::get_wd_path())]
