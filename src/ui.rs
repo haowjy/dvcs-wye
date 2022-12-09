@@ -108,6 +108,8 @@ pub struct Wye {
         #[arg(default_value_t = dsr::get_wd_path())]
         /// Name of the package to search
         wd_path: String,
+        #[arg(default_value_t)]
+        rev_id: String,
     },
     /// show the current heads
     heads {
@@ -257,12 +259,12 @@ impl Wye {
                 Self::input_handling_status(res_file_diff);
                 println!("wd_path is: {:?}", wd_path)
             }
-            Command::log { mut wd_path } => {
+            Command::log { mut wd_path,rev_id } => {
                 if wd_path.eq("-d") || wd_path.eq("-"){
                     wd_path=default_wd_path;
                 }
                 let mut res_log:Result<Option<Vec<String>>,Errors>;
-                res_log=readonly::log(&wd_path);
+                res_log=readonly::log(&wd_path,&rev_id);
                 //parse_error(readonly::log(&path).unwrap_err());
                 Self::input_handling_log(res_log);
                 println!("wd_path is: {:?}", wd_path)

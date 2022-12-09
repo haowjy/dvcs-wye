@@ -12,7 +12,14 @@ pub fn heads(wd: &str) -> Result<Rev, Errors> {
     unimplemented!(); //TODO
 }
 
-pub fn log(wd: &str) -> Result<Option<Vec<String>>, Errors> {//alias,rev_id: &str
+pub fn log(wd: &str,rev_id: &str) -> Result<Option<Vec<String>>, Errors> {//alias,rev_id: &str
+    if rev_id.is_empty() {
+        //normal
+        println!("empty")
+    } else {
+        //
+        println!("not empty")
+    }
     let mut string=Vec::new();
     let load = repository::load(wd);//got Repo暂时先读
 
@@ -46,15 +53,21 @@ pub fn status(wd: &str) -> Result<&str, Errors> {
     let stage=revision::Rev::from_stage();// got stage暂存区里的一个版本
     if stage==null返回nothing to commit, working tree clean
     // WD 从  file里的   read, retieve_info, return iteminfo
-    // last commit repo.getcurrenthead()
+    // last commit repo.get_current_head()
     //
-
-
-
+    read stage: let stage=revision::Rev::from_stage();// got stage's revision
+    read WD: let wd_rev=retieve_info; iteminfo --hashmap read balabala
+    read last commit: let last_commit= repo.get_current_head();
 
     WD Stage Last
     1  0      0      add
     1  1      0
+    1  1      1
+    1  0      1
+    0  0      1
+    0  0      0
+    0  1      0
+    0  1      1
     else compare with commit最后的一个版本？//aka current head?
     如果是很多file返回的可能是vec<string>?So read iter() compare?
 
@@ -69,8 +82,6 @@ pub fn status(wd: &str) -> Result<&str, Errors> {
     path same, compare id; id not same, output;
     WD's path not exist, deleted.
     Stage
-
-
 
     VC::Repo::load();
     VC::Repo::get_rev();//old_revision: &str
@@ -111,7 +122,7 @@ mod test {
     #[test]
     fn test_logs() {
         let wd = "remoterepo/remote/.dvcs/HEAD";
-        let res = log(wd);
+        let res = log(wd,"123");
         assert_eq!(res.unwrap(), "load.crate::vc::repository:get_log(),log information, information");
     }
 
