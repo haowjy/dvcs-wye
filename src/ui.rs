@@ -101,19 +101,19 @@ pub struct Wye {
     status {
         /// Name of the package to search
         #[arg(default_value_t = dsr::get_wd_path())]
-        path: String,
+        wd_path: String,
     },
     /// view the change log
     log {
         #[arg(default_value_t = dsr::get_wd_path())]
         /// Name of the package to search
-        path: String,
+        wd_path: String,
     },
     /// show the current heads
     heads {
         /// Name of the package to search
         #[arg(default_value_t = dsr::get_wd_path())]
-        path: String,
+        wd_path: String,
     },
     ///  copy an existing repository
     clone {
@@ -149,7 +149,7 @@ pub struct Wye {
     init {
         /// Name of the package to search
         #[arg(default_value_t = dsr::get_wd_path())]
-        path: String,
+        wd_path: String,
     },
 }
 impl Wye {
@@ -157,9 +157,13 @@ impl Wye {
         //cli start here
         let args = Wye::parse();
         println!("args {:?}!", args);
-        let wd_path=dsr::get_wd_path();
+        let default_wd_path=dsr::get_wd_path();
         match args.command {
-            Command::add { wd_path,mut path } => {
+            Command::add { mut wd_path,mut path } => {
+                if wd_path.eq("-d") || wd_path.eq("-"){
+                    wd_path=default_wd_path;
+                }
+                println!("wd_path is: {:?}", wd_path);
                 let mut res:Result<&str,&str>=Err("1");
                 println!("path is: {:?}", path);
                 if path.is_empty() {
@@ -181,7 +185,11 @@ impl Wye {
                 }
                 Self::input_handling(res);
             }
-            Command::remove { wd_path,path } => {
+            Command::remove { mut wd_path,path } => {
+                if wd_path.eq("-d") || wd_path.eq("-"){
+                    wd_path=default_wd_path;
+                }
+                println!("wd_path is: {:?}", wd_path);
                 let mut res:Result<&str,&str>=Err("1");
                 println!("path is: {:?}", path);
                 if path.is_empty() {
@@ -203,76 +211,113 @@ impl Wye {
                 }
                 Self::input_handling(res);
             }
-            Command::commit {wd_path, message } => {
+            Command::commit {mut wd_path, message } => {
+                if wd_path.eq("-d") || wd_path.eq("-"){
+                    wd_path=default_wd_path;
+                }
                 let mut res:Result<&str,&str>=Err("1");
                 res=readwrite::commit(&wd_path,&message);
                 Self::input_handling(res);
                 println!("message is: {:?}", message)
             }
-            Command::merge { wd_path,rev_id,rev_dest } => {
+            Command::merge { mut wd_path,rev_id,rev_dest } => {
+                if wd_path.eq("-d") || wd_path.eq("-"){
+                    wd_path=default_wd_path;
+                }
+                println!("wd_path is: {:?}", wd_path);
                 let mut res:Result<&str,&str>=Err("1");
                 res=readwrite::merge(&wd_path, &rev_id, &rev_dest);
                 Self::input_handling(res);
                 println!("path1 is: {:?}", rev_id);
             }
-            Command::diff { wd_path,rev_id_1,rev_id_2 } => {
+            Command::diff { mut wd_path,rev_id_1,rev_id_2 } => {
+                if wd_path.eq("-d") || wd_path.eq("-"){
+                    wd_path=default_wd_path;
+                }
                 let mut res_diff:Result<RevDiff,&str>=Err("2");
                 res_diff=readwrite::diff(&wd_path,&rev_id_1, &rev_id_2);
                 Self::input_handling_special(res_diff);
                 println!("rev_id_1 is: {:?} rev_id_2 is: {:?}", rev_id_1,rev_id_2)
             }
-            Command::cat { wd_path,rev_id,path } => {
+            Command::cat { mut wd_path,rev_id,path } => {
+                if wd_path.eq("-d") || wd_path.eq("-"){
+                    wd_path=default_wd_path;
+                }
                 let mut res:Result<&str,&str>=Err("1");
                 res=readwrite::cat(&wd_path,&rev_id,&path);
                 Self::input_handling(res);
                 println!("rev_id is: {:?}", rev_id);
                 println!("path is: {:?}", path)
             }
-            Command::status { path } => {
-                let res_file_diff=readonly::status(&path);
+            Command::status { mut wd_path } => {
+                if wd_path.eq("-d") || wd_path.eq("-"){
+                    wd_path=default_wd_path;
+                }
+                let res_file_diff=readonly::status(&wd_path);
                 Self::input_handling_status(res_file_diff);
-                println!("path is: {:?}", path)
+                println!("wd_path is: {:?}", wd_path)
             }
-            Command::log { path } => {
+            Command::log { mut wd_path } => {
+                if wd_path.eq("-d") || wd_path.eq("-"){
+                    wd_path=default_wd_path;
+                }
                 let mut res_log:Result<Option<Vec<String>>,Errors>;
-                res_log=readonly::log(&path);
+                res_log=readonly::log(&wd_path);
                 //parse_error(readonly::log(&path).unwrap_err());
                 Self::input_handling_log(res_log);
-                println!("path is: {:?}", path)
+                println!("wd_path is: {:?}", wd_path)
             }
-            Command::heads { path } => {
-                let res_head=readonly::heads(&path);
+            Command::heads { mut wd_path } => {
+                if wd_path.eq("-d") || wd_path.eq("-"){
+                    wd_path=default_wd_path;
+                }
+                let res_head=readonly::heads(&wd_path);
                 //parse_error(readonly::heads(&path).unwrap_err());
                 Self::input_handling_rev(res_head);
-                println!("path is: {:?}", path)
+                println!("path is: {:?}", wd_path)
             }
-            Command::clone { wd, remote} => {
+            Command::clone { mut wd, remote} => {
+                if wd.eq("-d") || wd.eq("-"){
+                    wd=default_wd_path;
+                }
                 let res=createonly::clone(&wd, &remote);
                 Self::input_handling(res);
                 println!("wd_path is: {:?}", wd)
             }
-            Command::checkout { path,rev } => {
+            Command::checkout { mut path,rev } => {
+                if path.eq("-d") || path.eq("-"){
+                    path=default_wd_path;
+                }
                 let res=createonly::checkout(&path, &rev);
                 Self::input_handling(res);
                 println!("path is: {:?}", path)
             }
-            Command::pull { path,remote,head } => {
+            Command::pull { mut path,remote,head } => {
+                if path.eq("-d") || path.eq("-"){
+                    path=default_wd_path;
+                }
                 let res=createonly::pull(&path, &remote, Some(&head));
                 Self::input_handling(res);
                 println!("path is: {:?}", path)
             }
-            Command::push { path,remote,head } => {
+            Command::push { mut path,remote,head } => {
+                if path.eq("-d") || path.eq("-"){
+                    path=default_wd_path;
+                }
                 let res=createonly::push(&path, &remote, Some(&head));
                 Self::input_handling(res);
                 println!("path is: {:?}", path)
             }
-            Command::init { path } => {
+            Command::init { mut wd_path } => {
+                if wd_path.eq("-d") || wd_path.eq("-"){
+                    wd_path=default_wd_path;
+                }
                 let mut res:Result<&str,&str>=Err("1");
                 let init=crate::vc::repository::init();
                 if init==Some(()) { res=Ok("init successfully");}
                 else { res=Err("init error!") }
                 Self::input_handling(res);
-                println!("path is: {:?}", path)
+                println!("path is: {:?}", wd_path)
             }
             _ => {
                 println!("Sorry! Wrong input! Command not found");
