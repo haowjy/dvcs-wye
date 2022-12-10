@@ -1,8 +1,7 @@
 #[allow(dead_code)]
 #[allow(unused_imports)]
 use std::collections::HashMap;
-use std::time::SystemTime;
-
+// use std::time::SystemTime;
 // external crates:
 // use petgraph::graphmap::DiGraphMap;
 use sha2::{Sha256, Digest};
@@ -11,56 +10,105 @@ use serde::{Serialize, Deserialize};
 use crate::dsr::*;
 use crate::vc::file::*;
 use crate::vc::revision::*;
+use crate::ui::Errors;
+
+
 
 #[derive(Debug, Serialize, Deserialize)] 
 pub struct Repo {
     current_head: Option<String>, // alias 
     branch_heads: HashMap<String,String>, // <K=alias, V=sha_rev_id>
     paths: RepoPaths,
-    stage: Rev,
+    stage: Stage,
     // revs: DiGraphMap<String, RevInfo>, // will change to wrapper struct
     // remote_head: Option<String>
 }
 
+#[derive(Debug, Serialize, Deserialize)] 
+pub struct Stage {
+    to_add: HashMap<String, ItemInfo>,
+    to_remove: HashMap<String, ItemInfo>,
+}
+
+impl Stage {
+    pub fn get_add(&self) -> &HashMap<String, ItemInfo> {
+        &self.to_add
+    }
+
+    pub fn get_remove(&self) -> &HashMap<String, ItemInfo> {
+        &self.to_remove
+    }
+    
+    fn clear(&mut self) -> &Self {
+        self.to_add.clear();
+        self.to_remove.clear();
+        self
+    }
+
+    fn new() -> Self {
+        Stage {
+            to_add: HashMap::new(),
+            to_remove: HashMap::new()
+        }
+    }
+}
+
+// ------ pub Repo fns ------
 
 impl Repo {
-    pub fn get_current_head(&self) -> Option<Rev> {
+    pub fn get_current_head(&self) -> Result<Rev, Errors> {
+
         match &self.current_head {
-            Some(alias) => self.get_rev(&self.branch_heads.get(alias)?),
-            None => None
+            Some(alias) => {
+                match self.branch_heads.get(alias) {
+                    Some(id) => self.get_rev(id),
+                    None => Err(Errors::ErrStr("Unable to locate current head by alias".to_string()))
+                }
+            },
+            None => Err(Errors::ErrStr("Null current head".to_string()))
         }
     }
 
-    pub fn get_rev(&self, rev_id: &str) -> Option<Rev> {
+    pub fn get_rev(&self, rev_id: &str) -> Result<Rev, Errors>  {
         Rev::from(&path_compose(&self.paths.revs, rev_id))
     }
 
-    pub fn commit(&mut self) -> Option<()> {
-        // let mut stage = Rev::from(&self.paths.stage)?;
-        self.stage.store_files(&self.paths.files)?;// need to figure out logging to report
-        self.stage.update_time();
-
-        let commit_id = self.stage.gen_id()?;
-        
-        self.stage.save(&self.paths.revs)?; // save to revs 
-
-        // update head pointers
-        match &self.current_head {
-            Some(alias) => {if let Some(id) = self.branch_heads.get_mut(self.current_head.as_ref()?) {
-                *id = commit_id;
-                } // update id
-            },
-            None => {
-                let new_head_alias = "main";
-                self.branch_heads.insert(new_head_alias.to_string(), commit_id);
-                self.current_head = Some(new_head_alias.to_string());
-            }
-        }
-        self.save();
-        Some(())
+    // *** In the process to be rewritten 
+    pub fn commit(&mut self) -> Result<(), Errors> {
+        Err(Errors::ErrUnknown)
     }
+    
+    // Result<CommitResult, Errors> { // Result<CommitResult, Errors> *** TODO
+    //     self.stage.to_add.
 
-    pub fn get_log(&self) -> Option<Vec<String>> {None} // *** to be implemented
+    //     self.stage.store_files(&self.paths.files)?;// need to figure out logging to report
+    //     self.stage.update_time();
+
+    //     let commit_id = self.stage.gen_id()?;
+        
+    //     self.stage.save(&self.paths.revs)?; // save to revs 
+
+    //     // update head pointers
+    //     match &self.current_head {
+    //         Some(alias) => {if let Some(id) = self.branch_heads.get_mut(self.current_head.as_ref()?) {
+    //             *id = commit_id;
+    //             } // update id
+    //         },
+    //         None => {
+    //             let new_head_alias = "main";
+    //             self.branch_heads.insert(new_head_alias.to_string(), commit_id);
+    //             self.current_head = Some(new_head_alias.to_string());
+    //         }
+    //     }
+    //     self.save();
+    //     Some(())
+    // }
+
+    // pub fn get_log(&self) -> Option<Vec<String>> {
+    //     current_head = self.get_current_head()?;
+    // *** to be impl
+
+    // } 
     // called by command "log", trace from the current head to parent(s) recursively to get a complete history of metadata in relevant revisions
 
     // pub fn get_heads(&self) ->Option<Vec<&Rev>> {None}; // *** to be implemented
@@ -74,12 +122,17 @@ impl Repo {
     // pub fn fetch(&mut self, rwd:&str) -> &Self; // *** to be implemented
 
 // ------ newly added pub functions ------
-    pub fn get_file_content(&self, file_id: &str) -> Option<String> {
-        read_file_as_string(&path_compose(&self.paths.files, file_id)).ok()
+    pub fn get_file_content(&self, file_id: &str) -> Result<String, Errors> { // support cat 
+        read_file_as_string(&path_compose(&self.paths.files, file_id))
     }
 
-    pub fn get_stage(&self) -> &Rev {
+    pub fn get_stage(&self) -> &Stage {
         &self.stage
+    }
+
+    pub fn clear_stage(&mut self) -> &Self {
+        self.stage.clear();
+        self
     }
 
     pub fn clone(rwd:&str) -> Option<()> { // clone from a remote repo
@@ -87,61 +140,81 @@ impl Repo {
         // needs to update remote head and have data structure tracking the rwd path,
     }
 
-    pub fn add_file(&mut self, abs_path: &str) -> Option<()> {
-
-        self.stage.add_file(&abs_path)?; // rel_path parse inside rev (stage)
+    // pub fn add_file(&mut self, abs_paths: Vec<&str>) -> Option<()> { // *** to be impl
+    pub fn add_file(&mut self, abs_path: &str) -> Result<(), Errors> {
+        // abs_paths.iter()
+        let temp_rev = Rev::new();
+        temp_rev.add_file(abs_path); // *** iterator operations and branching tbd here
+        self.stage.to_add.extend(temp_rev.get_manifest().clone());
         self.save()
     }
 
-    pub fn remove_file(&self, abs_path:&str) -> Option<()> {
-        None // *** to be impl
+    pub fn remove_file(&self, abs_path:&str) -> Result<(), Errors>{
+        let temp_rev = Rev::new();
+        temp_rev.add_file(abs_path); // *** iterator operations and branching tbd here
+        self.stage.to_remove.extend(temp_rev.get_manifest().clone());
+        self.save()
     }
+
+
+    pub fn merge_commit(&mut self, parent_1: &str, parent_2: &str, msg: Option<&str>) -> Result<(), Errors> {
+        Ok(()) // *** to be impl
+    }
+
 }
 
 
 // ------ pub mod fns ------
-pub fn init() -> Option<()> { // Result<(),()>{ // error handling to be impl
-    let wd = get_wd_path();
+pub fn init(opt_path: Option<&str>) -> Result<(), Errors> {
+    let wd = match opt_path {
+        Some(path) => path.to_string(),
+        None => get_wd_path()
+    };
     let paths = RepoPaths::new(&wd);
-    // ***** error handling needed *****
-    // esp: handle running init again with existing repo
-    // try loading existing repo first 
-    // match let new_repo = load():
-    
-    create_dir(&paths.files).ok()?; // *** CHANGE ERR HANDLING LATER // root .dvcs automatically added
-    create_dir(&paths.revs).ok()?;
-    // create_file(&paths.branch_heads); 
-    // create_file(&paths.head);
+
+    create_dir(&paths.files)?;
+    create_dir(&paths.revs)?;
+
     let new_repo = Repo {
         current_head: None, // Some("main".to_string())
         branch_heads: HashMap::new(),
         paths: paths,
-        stage: Rev::new(),
+        stage: Stage::new(),
         // remote_head: None,
-        // revs: None, // *** CHANGE LATER
     };
     new_repo.save();
-    return Some(());
+    return Ok(());
 }
 
-pub fn load(wd:&str) -> Option<Repo> { // Result<Repo, ()>
-    let checked_wd = check_wd(wd)?;
+pub fn load(wd:&str) -> Result<Repo, Errors> { // Result<Repo, ()>
+    let checked_wd = match check_wd(wd) {
+        Some(s) => s,
+        None => return Err(Errors::ErrStr("Directory untracked, fail to locate repository".to_string()))
+    };
     let paths = RepoPaths::new(&checked_wd);
-    let mut load_repo: Repo = serde_json::from_str(&read_file_as_string(&paths.repos).ok()?).ok()?;
+    let mut load_repo: Repo = match serde_json::from_str(&read_file_as_string(&paths.repos)?) {
+        Ok(x) => x,
+        Err(e) => return Err(Errors::ErrSerde(e))
+    };
     load_repo.paths = paths;
-    Some(load_repo)
-
+    Ok(load_repo)
 }
 
-pub fn get_wd_root() -> Option<String> {
+pub fn get_wd_root() -> Result<String, Errors> {
     let wd = get_wd_path();
-    check_wd(&wd)
+    match check_wd(&wd) {
+        Some(path) => Ok(path),
+        None => Err(Errors::ErrStr("Directory untracked, fail to locate repository".to_string()))
+    }
 }
+
+
 // ------ private Repo fns ------
 impl Repo {
-    fn save(&self) -> Option<()> { // Result<(), ()> {
-        write_file(&self.paths.repos, &serde_json::to_string(self).ok()?).ok()
-
+    fn save(&self) -> Result<(), Errors> {
+        let content = serialize(self)?;
+        write_file(&self.paths.repos, &content)?;
+        Ok(())
         // write_file(&self.paths.current_head)
         // write_file(&self.paths.branch_heads, &serde_json::to_string(&self.branch_heads).ok()?).ok()?;
         // write_file(&self.paths.branch_heads, &serde_json::to_string(&self.branch_heads).ok()?).ok()?;
@@ -160,6 +233,7 @@ fn check_wd(wd_path: &str) -> Option<String> {
     }
 }
 
+// weak untested fn prone to error
 pub (super) fn get_rel_path(abs_path: &str) -> Option<String> {
     let wd = get_name(&check_wd(&get_wd_path())?)?;
     let rel_path = abs_path.rsplit_once(&wd)?.1.trim_matches('/'); // not tested on windows
@@ -198,8 +272,9 @@ pub (crate) fn checked_sha(data: &str, matching_pool_path: &str) -> String {
         sha_id.push('0');
     }
     sha_id
-    
 }
+
+// ------ private mod structs ------
 
 #[derive(Debug, Serialize, Deserialize)] 
 pub (super) struct RepoPaths { 
@@ -248,6 +323,35 @@ impl RepoPaths {
     }
 }
 
+pub(super) fn serialize<T: Serialize> (data_struct: &T) -> Result<String, Errors> {
+    match serde_json::to_string(data_struct) {
+        Ok(x) => Ok(x),
+        Err(e) => Err(Errors::ErrStr(e.to_string()))
+    }
+}
+
+// in-process attempt to generalize deserialize with trait / trait obj
+
+// pub trait SerDe {
+//     type Item;
+
+//     fn deserialize(str_in: &str) -> Result<Self::Item, Errors> {
+//         match serde_json::from_str(str_in) {
+//             Ok(x) => Ok(x),
+//             Err(_) =>  Err(Errors::ErrStr("Deserialization failed!".to_string()))
+//         } 
+
+//     }
+
+// }
+
+// pub(super) fn deserialize(str_in: &str) -> Result<Box<dyn Deserialize>, Errors> {
+//     serde_json::from_str(str_in) match {
+//         Ok(val) => Ok(val),
+//         Err(e) => Err(Errors::ErrStr(e.to_string()))
+//     }
+
+// }
 
 #[cfg(test)]
 mod tests {
@@ -265,13 +369,13 @@ mod tests {
         //     assert_eq!(paths.root, path.to_str().unwrap());
         // }
 
-        // #[test]
-        // fn test_init() {
-        //     let wd = get_wd_path();
-        //     let paths = RepoPaths::new(&wd);
-        //     print!("{}", &paths.revs);
-        //     init();
-        //     assert!(fs::read_dir(paths.revs).is_ok());
-        //     assert!(delete_dir(&paths.root).is_ok());
-        // }
+        #[test]
+        fn test_init() {
+            let wd = get_wd_path();
+            let paths = RepoPaths::new(&wd);
+            print!("{}", &paths.revs);
+            init(None);
+            assert!(fs::read_dir(paths.revs).is_ok());
+            assert!(delete_dir(&paths.root).is_ok());
+        }
     }
