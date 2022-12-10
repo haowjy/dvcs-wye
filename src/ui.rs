@@ -396,7 +396,7 @@ impl Wye {
             else { println!("{:?}", vec.unwrap()); } }
     }
 
-    fn input_handling_rev(return_result:Result<Rev,Errors>){
+    fn input_handling_rev(return_result:Result<Vec<String>,Errors>){
         if return_result.is_err() {
             parse_error(return_result.unwrap_err());
         }

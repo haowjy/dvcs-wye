@@ -3,13 +3,16 @@ use crate::vc::{file, repository, revision};
 use crate::vc::revision::Rev;
 use crate::ui::Errors;
 
-pub fn heads(wd: &str) -> Result<Rev, Errors> {
-    let load = repository::load(wd);//get Repo
-    if load.is_none() { return Err(Errors::Errstatic("No heads found")); } else {
-        //let head = load.unwrap().get_heads();//Hashmap//waiting
-        //if head.is_none() { return Err(Errors::Errstatic("No heads found")); } else { Ok(head.unwrap()) }
+pub fn heads(wd: &str) -> Result<Vec<String>, Errors> {
+    let load = repository::load(wd)?;//get Repo//Result<Repo, Errors>//if error return directly
+    let head = load.get_heads();//&Hashmap//waiting
+    let mut res=Vec::new();
+    let mut string=String::new();
+    for(key,value) in head{
+        string=key.to_owned()+":"+value;
+        res.push(string);
     }
-    unimplemented!(); //TODO
+    return if head.is_empty() { Err(Errors::Errstatic("No heads found")) } else { Ok(res) }
 }
 
 pub fn log(wd: &str,rev_id: &str) -> Result<Option<Vec<String>>, Errors> {//alias,rev_id: &str
@@ -21,25 +24,20 @@ pub fn log(wd: &str,rev_id: &str) -> Result<Option<Vec<String>>, Errors> {//alia
         println!("not empty")
     }
     let mut string=Vec::new();
-    let load = repository::load(wd);//got Repo暂时先读
-
-    if load.is_none() { return Err(Errors::Errstatic("No log found")); } else {
-        let log = load.as_ref().unwrap().get_log();//change into Hashmap
-        if log.is_none() { return Err(Errors::Errstatic("No log found")); } else {
-            //let vec = log.as_ref().unwrap();
-            let current_head = load.as_ref().unwrap().get_current_head().unwrap();//
+    let load = repository::load(wd)?;//got Repo暂时先读
+        //let log = load.get_log();//change into Hashmap
+        //let vec = log.as_ref().unwrap();
+            let current_head = load.get_current_head().unwrap();//
             current_head.get_manifest();//here get hashmap, this is log need print, maybe put into Vec<String>
             string.push(("example").parse().unwrap());
             let parent_head = current_head.get_parent_id().unwrap();
-            let mut new_rev = load.as_ref().unwrap().get_rev(parent_head).unwrap();
+            let mut new_rev = load.get_rev(parent_head).unwrap();
             while new_rev.get_parent_id().is_none() {
-                new_rev = load.as_ref().unwrap().get_rev(new_rev.get_parent_id().unwrap()).unwrap();
+                new_rev = load.get_rev(new_rev.get_parent_id().unwrap()).unwrap();
                 new_rev.get_manifest();//here get hashmap, this is log need print, maybe put into Vec<String>
                 string.push(("example").parse().unwrap());
             }
             Ok(Some(string))
-        }
-    }
     //first current head->know parent head-> get_rev(return Revision碰到revision就读Parent id->until None
 }
 
