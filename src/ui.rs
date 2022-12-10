@@ -246,7 +246,7 @@ impl Wye {
                 }
                 println!("wd_path is: {:?}", wd_path);
                 let mut res:Result<String,Errors>=Err(Errstatic("1"));
-                res=readwrite::merge(&wd_path, &rev_id, &rev_dest);
+                res=readwrite::merge(&wd_path, rev_id.clone());
                 Self::input_handling(res);
                 println!("path1 is: {:?}", rev_id);
             }
@@ -308,7 +308,7 @@ impl Wye {
                 if path.eq("-d") || path.eq("-"){
                     path=default_wd_path;
                 }
-                let res=createonly::checkout(&path, &rev);
+                let res=createonly::checkout(&path, &rev); // TODO:
                 Self::input_handling(res);
                 println!("path is: {:?}", path)
             }
@@ -316,7 +316,7 @@ impl Wye {
                 if path.eq("-d") || path.eq("-"){
                     path=default_wd_path;
                 }
-                let res=createonly::pull(&path, &remote, Some(&head));
+                let res=createonly::pull(&path, &remote);
                 Self::input_handling(res);
                 println!("path is: {:?}", path)
             }
@@ -324,7 +324,7 @@ impl Wye {
                 if path.eq("-d") || path.eq("-"){
                     path=default_wd_path;
                 }
-                let res=createonly::push(&path, &remote, Some(&head));
+                let res=createonly::push(&path, &remote);
                 Self::input_handling(res);
                 println!("path is: {:?}", path)
             }

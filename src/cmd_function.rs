@@ -1,7 +1,11 @@
 #![allow(unused_variables)]
 #![allow(dead_code)]
 //TODO: remove this
+
+use std::collections::{VecDeque, HashMap, HashSet};
+
 use crate::ui::{Errors, Errors::*};
+use crate::vc::{repository::{Repo}, revision::{Rev}};
 use diffy::{create_patch, merge};
 
 #[derive(PartialEq,Debug,Clone)]
@@ -122,7 +126,7 @@ pub fn conflict_find(diff1: FileDiff, diff2: FileDiff) -> Result<FileConflict, E
 }
 
 // Uses diffy crate to find if there is a conflict in the file
-pub fn find_unmerged<'a>(content: String) -> Result<(), Errors> {
+pub fn find_unmerged<'a>(content: String) -> Result<(), String> {
     let mut unmerged_markers = vec!["<<<<<<< ours", "||||||| original", "=======", ">>>>>>> theirs"].into_iter();
     let is_unmerged = content.split("\n").into_iter().try_fold(unmerged_markers.next(), |marker, line| {
         if marker.is_none() {
@@ -136,9 +140,121 @@ pub fn find_unmerged<'a>(content: String) -> Result<(), Errors> {
     }).is_none();
     if is_unmerged {
         let i = content.split("\n").into_iter().position(|line| line == "<<<<<<< ours");
-        return Err(ErrStr(["File is unmerged at line", &i.unwrap().to_string()].join(" ")));
+        return Err(["File is unmerged at line", &i.unwrap().to_string()].join(" "));
     }
     Ok(())
+}
+
+fn get_all_rev_ancestors(repo:Repo, rev:Rev) -> Result<Vec<Rev>, Errors> {
+    let mut revs:Vec<Rev> = Vec::new();
+
+    let q = VecDeque::new();
+    q.push_back(rev);
+
+    while !q.is_empty() {
+        let cur_rev = q.pop_front().unwrap();
+        let parents = vec![cur_rev.get_parent_id(), cur_rev.get_parent_id2()];
+        for parent in parents {
+            if parent.is_none() { continue; }
+            let p = parent.unwrap().to_string();
+            let parent_rev = repo.get_rev(p.as_str())?; // NOTE: getting parent_rev from repo will return erorr if it fails
+
+            revs.push(parent_rev);
+            q.push_back(parent_rev);
+        }
+    }
+    return Ok(revs);
+}
+
+// count the number of indegrees of each revision
+fn count_indegrees(repo:Repo, rev:Rev, revs_anc:Vec<Rev>) -> Result<HashMap<String, i32>,Errors> {
+    let q = VecDeque::new();
+
+    q.push_back(rev);
+
+    let mut indegrees:HashMap<String, i32> = HashMap::new();
+    
+    for rev in revs_anc {
+        let p1 = rev.get_parent_id();
+        if p1.is_some() {
+            let p1 = p1.unwrap().to_string();
+            indegrees.entry(p1).and_modify(|e| *e += 1).or_insert(1);
+        }
+
+        let p2 = rev.get_parent_id2();
+        if p2.is_some() {
+            let p2 = p2.unwrap().to_string();
+            indegrees.entry(p2).and_modify(|e| *e += 1).or_insert(1);
+        }
+    }
+    return Ok(indegrees);
+}
+
+// Topological sort of revisions
+fn get_rev_topo(repo:Repo, rev: Rev) -> Result<Vec<String>, Errors> {
+    let mut ordering = Vec::new();
+
+    let mut revs_anc = get_all_rev_ancestors(repo, rev)?;
+
+    // indegrees
+    let mut indegrees = count_indegrees(repo, rev, revs_anc)?;
+
+    // queue with 0 indegrees (no parents, so should be just the first rev)
+    let mut queue = VecDeque::new();
+    for (rev_id, degree) in indegrees {
+        if degree == 0 {
+            queue.push_back(rev_id);
+        }
+    }
+
+    while let Some(rev_id) = queue.pop_front() {
+        let rev = repo.get_rev(rev_id.as_str())?;
+        ordering.push(rev_id);
+
+        let parents = vec![rev.get_parent_id(), rev.get_parent_id2()];
+        for parent in parents {
+            if parent.is_none() { continue; }
+            let p = parent.unwrap().to_string();
+            indegrees.entry(p).and_modify(|e| *e -= 1);
+
+            if indegrees.get(p.as_str()).unwrap() == &0 {
+                queue.push_back(p);
+            }
+        }
+    }
+
+    Ok(ordering)
+    
+}
+
+// TODO: test
+// LCA of two nodes in a DAG
+pub fn find_rev_lca(repo:Repo, rev1: Rev, rev2: Rev) -> Result<Rev,Errors> {
+    // Creates 2 topo sortings of the DAGs that are somewhat connected
+    // Then, find the first common node in the 2 topo sortings
+    // Ex:
+    //      0
+    //     1 2      (0 -> 1, 0 -> 2)
+    //    3  (4)    (1 -> 3, 2 -> 4)
+    //      5  [8]  (3 -> 5, 4->5, 4 -> 8)
+    //   [6] 7      (5 -> 6, 5 -> 7)
+    // between 6 and 8
+    // topo6 = [6, 5, 3, 4, 1, 2, 0]
+    // topo8 = [8, 4, 2, 0]
+    // LCA = 4
+
+    let topo_rev1 = get_rev_topo(repo, rev1)?;
+    let rev1_hashset:HashSet<String> = topo_rev1.iter().cloned().collect();
+    
+    let topo_rev2 = get_rev_topo(repo, rev2)?;
+    
+    for rev_id in topo_rev2 {
+        if rev1_hashset.contains(rev_id.as_str()) {
+            return repo.get_rev(rev_id.as_str());
+        }
+    }
+    return Err(Errstatic("No LCA found"));
+
 }
 
 #[cfg(test)]

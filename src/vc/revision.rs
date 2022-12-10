@@ -68,6 +68,10 @@ impl Rev {
     pub fn get_parent_id(&self) -> Option<&str> {
         self.parent_id.as_deref()
     }
+    
+    pub fn get_parent_id2(&self) -> Option<&str> {
+        self.parent_id2.as_deref()
+    }
 
     pub fn get_manifest(&self) -> &HashMap<String, ItemInfo> {
         &self.manifest
