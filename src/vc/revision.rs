@@ -3,11 +3,11 @@
 #[allow(unused_imports)]
 use std::collections::HashMap;
 use std::time::SystemTime;
-
 // external crates:
 // use petgraph::graphmap::DiGraphMap;
 // use sha2::{Sha256, Digest};
 use serde::{Serialize, Deserialize};
+use chrono::{DateTime, Local};
 
 use crate::dsr::*;
 use crate::ui::Errors;
@@ -61,34 +61,33 @@ impl Rev {
     }
 
     pub fn get_id(&self) -> Option<&str> {
-        match self.rev_id.as_ref() {
-            
-            Some(x) => Some(x.as_str()),
-            None => None
-        }
+        self.rev_id.as_deref()
     }
 
     pub fn get_parent_id(&self) -> Option<&str> {
-        match self.parent_id.as_ref() {
-            Some(x) => Some(x.as_str()),
-            None => None
-        }
+        self.parent_id.as_deref()
     }
-    
+
     pub fn get_manifest(&self) -> &HashMap<String, ItemInfo> {
         &self.manifest
     }
 
-    pub fn get_log(&self) -> HashMap<String, String> {
+    pub fn get_log(&self) -> HashMap<&'static  str, String> {
         let log = HashMap::new();
-        // self.rev_id = log()
-        log // *** TODO 
+        log.insert("id", self.rev_id.unwrap_or_default());
+        log.insert("user", self.user_id.unwrap_or("Unknown".to_string()));
+        log.insert("time", self.get_date_time());
+        log
     }
 
     // NOTE: current vc doesn't track files moving from one subdirectory to another, 
     pub (super) fn add_file(&mut self, abs_path: &str) -> Result<(), Errors> {
         Err(Errors::ErrUnknown) // *** TO BE IMPL
 
+    // pub (super) fn add_file(&mut self, staged_add: ItemInfo) -> Result<(), Errors> {
+    //     let wd_path = staged_add.get_file_wd_path();
+    //     self.manifest.
+    // }
     //     let rel_path = get_rel_path(abs_path).ok_or(Errors::ErrUnknown)?; // change later
     //     if self.manifest.contains_key(&rel_path) {
     //         return None;
@@ -128,11 +127,19 @@ impl Rev {
         self.rev_id = Some(id.clone());
         Ok(id)
     }
+
+    pub(super) fn set_user(&mut self, user_info: &str) -> &Self {
+        self.user_id = Some(user_info.to_string());
+        self
+    }
+    
+    fn get_date_time(&self) -> String{
+        DateTime::<Local>::from(self.time_stamp).to_string()
+    }
+
 }
 
-fn get_date_time(t: SystemTime) -> () {
-    () // TODO 
-}
+
 
 //     pub fn remove_file(&mut self, abs_path:&str) -> Self {
         // self.manifest
