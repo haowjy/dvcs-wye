@@ -150,7 +150,7 @@ pub struct Wye {
     /// create an empty repository
     init {
         /// Name of the package to search
-        #[arg(default_value_t = dsr::get_wd_path())]
+        #[arg(default_value_t)]
         wd_path: String,
     },
 }
@@ -311,13 +311,16 @@ impl Wye {
                 println!("path is: {:?}", path)
             }
             Command::init { mut wd_path } => {
+                let opt_path:Option<&str>=None;
                 if wd_path.eq("-d") || wd_path.eq("-"){
-                    wd_path=default_wd_path;
+                    opt_path=None;
                 }
+                else { opt_path=Some(&wd_path)}
                 let mut res:Result<&str,&str>=Err("1");
-                let init=crate::vc::repository::init();
-                if init==Some(()) { res=Ok("init successfully");}
-                else { res=Err("init error!") }
+                let init=crate::vc::repository::init(opt_path);
+                if init.unwrap()==() { res=Ok("init successfully");}
+                else {
+                    res=Err("init error!") }
                 Self::input_handling(res);
                 println!("path is: {:?}", wd_path)
             }
@@ -344,6 +347,16 @@ impl Wye {
         if return_result.is_err() {
             parse_error(return_result.unwrap_err());
         }
+    }
+
+    fn input_handling_init(return_result:Result<(),Errors>){
+        if return_result.is_err() {
+            parse_error(return_result.unwrap_err());
+        }
+        else if return_result.unwrap()==() {
+            println!("init successfully");
+            }
+
     }
 
     fn input_handling(return_result:Result<&str,&str>){
