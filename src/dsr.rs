@@ -245,7 +245,7 @@ pub fn copy_file(src: &str, dest: &str) -> Result<(), Errors> {
 // USEAGE: write_file("folder1/hello_world.py", "print(\"hello world!\")");
 pub fn write_file(path: &str, content: &str) -> Result<(), Errors> {
     let file_name = get_name(path).unwrap();
-    if is_path_valid(path) {
+    if !is_path_valid(path) {
         return Err(new_error(ErrorKind::NotFound, &&format!("write_file: file({}) does not exist", file_name)));
     } else if !is_name_valid(&file_name) {
         return Err(new_error(ErrorKind::InvalidInput, &format!("write_file: name({}) contains forbidden character(s)", file_name)));
