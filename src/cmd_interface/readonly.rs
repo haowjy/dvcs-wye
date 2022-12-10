@@ -50,9 +50,15 @@ pub fn status(wd: &str) -> Result<&str, Errors> {
     //let rev=revision::Rev::from(wd);//got Rev
     let load=repository::load(wd)?;//got Repo以后可以换成？
     let renew=load.get_current_head()?;//get Rev
-    let wd_rev=file::retrieve_info(wd);//ItemInfo
+    let stage=load.get_stage();// got stage暂存区里的一个版本
+    let stage_inside_add=stage.get_add().get(wd);
+    let stage_inside_remove=stage.get_remove().get(wd);
+    let wd_rev=file::retrieve_info(wd)?;//ItemInfo
     let last_commit= load.get_current_head()?;//Rev
-    let last_commit_file=last_commit.get_manifest().get(wd);//iteminfo//TODO???
+    let last_commit_file=last_commit.get_manifest().get(wd).unwrap();//iteminfo//TODO???
+    /*if last_commit_file==wd_rev{
+        println!("eq")
+    }*/
     //iteminfo compare eq, iteminfo use get_content() to get string and use diff compare
     //let id =rev.as_ref().unwrap().get_id().unwrap();
     //let revision=load.as_ref().unwrap().get_rev(id);

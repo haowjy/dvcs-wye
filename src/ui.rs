@@ -130,6 +130,7 @@ pub struct Wye {
         #[arg(default_value_t = dsr::get_wd_path())]
         path: String,
         rev: String,
+        new_branch_alias: String,
     },
     /// pull the version from server
     pull {
@@ -304,11 +305,11 @@ impl Wye {
                 Self::input_handling(res);
                 println!("wd_path is: {:?}", wd)
             }
-            Command::checkout { mut path,rev } => {
+            Command::checkout { mut path,rev,new_branch_alias } => {
                 if path.eq("-d") || path.eq("-"){
                     path=default_wd_path;
                 }
-                let res=createonly::checkout(&path, &rev); // TODO:
+                let res=createonly::checkout(&path, &rev,Some(new_branch_alias)); // TODO:
                 Self::input_handling(res);
                 println!("path is: {:?}", path)
             }
@@ -339,7 +340,6 @@ impl Wye {
                 match init { Ok(())=>{res=Ok("init successfully".to_string());}
                     Err(String)=>{res=Err(String)} }
                 Self::input_handling(res);
-                println!("path is: {:?}", wd_path)
             }
             Command::Test { wd_path } => {
                 match wd_path{
