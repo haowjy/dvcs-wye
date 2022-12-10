@@ -320,7 +320,7 @@ pub fn get_name(path: &str) -> Option<String> {
 // 18. returns existing std::fs::Metadata struct
 pub fn get_metadata(path: &str) -> Result<Metadata, Errors> {
     let file_name = get_name(path).unwrap();
-    if is_path_valid(path) {
+    if !is_path_valid(path) {
         return Err(new_error(ErrorKind::NotFound, &&format!("get_metadata: file({}) does not exist", file_name)));
     }
 
