@@ -16,32 +16,32 @@ pub fn heads(wd: &str) -> Result<Vec<String>, Errors> {
 }
 
 pub fn log(wd: &str,rev_id: &str) -> Result<Option<Vec<String>>, Errors> {//alias,rev_id: &str
-    if rev_id.is_empty() {
-        //normal
-        println!("empty")
-    } else {
-        //
-        println!("not empty")
-    }
     let mut string=Vec::new();
-    let load = repository::load(wd)?;//got Repo暂时先读
-        //let log = load.get_log();//change into Hashmap
-        //let vec = log.as_ref().unwrap();
-            let current_head = load.get_current_head()?;//
-            let mut hashmap=current_head.get_log();//here get hashmap, this is log need print, maybe put into Vec<String>
-            for(key,value) in hashmap{
-                string.push(key.to_owned()+ ":"+ &value);
-            }
-            //string.push(("example").parse().unwrap());
-            let parent_head = current_head.get_parent_id().unwrap();
-            let mut new_rev = load.get_rev(parent_head).unwrap();
-            while new_rev.get_parent_id().is_none() {
-                new_rev = load.get_rev(new_rev.get_parent_id().unwrap()).unwrap();
-                hashmap=new_rev.get_log();//here get hashmap, this is log need print, maybe put into Vec<String>
+    let load = repository::load(wd)?;//got Repo
+    let mut hashmap;
+    let mut new_rev;
+            if rev_id.is_empty() {
+                //normal
+                println!("empty rev_id");
+                let current_head = load.get_current_head()?;//
+                hashmap=current_head.get_log();//here get hashmap, this is log need print, maybe put into Vec<String>
                 for(key,value) in hashmap{
-                    string.push(key.to_owned()+":"+&value);
+                    string.push(key.to_owned()+ ":"+ &value);
                 }
+                let parent_head = current_head.get_parent_id().unwrap();
+                new_rev = load.get_rev(parent_head).unwrap();
+            } else {
+                //
+                println!("not empty rev_id");
+                new_rev = load.get_rev(rev_id).unwrap();
             }
+    while new_rev.get_parent_id().is_none() {
+        new_rev = load.get_rev(new_rev.get_parent_id().unwrap()).unwrap();
+        hashmap=new_rev.get_log();//here get hashmap, this is log need print, maybe put into Vec<String>
+        for(key,value) in hashmap{
+            string.push(key.to_owned()+":"+&value);
+        }
+    }
             Ok(Some(string))
     //first current head->know parent head-> get_rev(return Revision碰到revision就读Parent id->until None
 }
@@ -53,7 +53,7 @@ pub fn status(wd: &str) -> Result<&str, Errors> {
     let wd_rev=file::retrieve_info(wd);//ItemInfo
     let last_commit= load.get_current_head()?;//Rev
     let last_commit_file=last_commit.get_manifest().get(wd);//iteminfo//TODO???
-    //iteminfo compare eq
+    //iteminfo compare eq, iteminfo use get_content() to get string and use diff compare
     //let id =rev.as_ref().unwrap().get_id().unwrap();
     //let revision=load.as_ref().unwrap().get_rev(id);
     /*
@@ -117,19 +117,21 @@ pub fn status(wd: &str) -> Result<&str, Errors> {
 
 #[cfg(test)]
 mod test {
+    use crate::dsr;
     use super::*;
 
     #[test]
     fn test_heads() {
-        let wd = "remoterepo/remote/.dvcs/HEAD";
-        let res = heads(wd).unwrap();
-        assert_eq!(res.get_parent_id().unwrap(), "VC::Repository::get_current_head()");
+        let wd = dsr::get_wd_path();
+        let res = heads(&wd).unwrap();
+        println!("{:?}", res);
+        //assert_eq!(res.get_parent_id().unwrap(), "VC::Repository::get_current_head()");
     }
 
     #[test]
     fn test_logs() {
-        let wd = "remoterepo/remote/.dvcs/HEAD";
-        let res = log(wd,"123");
+        let wd = dsr::get_wd_path();
+        let res = log(&wd,"");
         println!("{:?}", res.unwrap().unwrap());
         //assert_eq!(res.unwrap(), "load.crate::vc::repository:get_log(),log information, information");
     }
