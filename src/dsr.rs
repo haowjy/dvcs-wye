@@ -261,7 +261,7 @@ pub fn write_file(path: &str, content: &str) -> Result<(), Errors> {
 // USEAGE: read_file_as_string("folder1/hello_world.py") -> "print("hello world!")"
 pub fn read_file_as_string(path: &str) -> Result<String, Errors> {
     let file_name = get_name(path).unwrap();
-    if is_path_valid(path) {
+    if !is_path_valid(path) {
         return Err(new_error(ErrorKind::NotFound, &&format!("read_file_as_string: file({}) does not exist", file_name)));
     }
 
