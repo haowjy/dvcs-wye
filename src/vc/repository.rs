@@ -138,15 +138,15 @@ impl Repo {
     // pub fn add_files(&mut self, abs_paths: Vec<&str>) -> Option<()> { // *** list version to be impl
     pub fn add_file(&mut self, abs_path: &str) -> Result<(), Errors> {
         // abs_paths.iter()
-        let temp_rev = Rev::new();
-        temp_rev.add_file(abs_path); // *** iterator operations and branching tbd here
+        let mut temp_rev = Rev::new();
+        temp_rev.add_file(abs_path)?; // *** iterator operations and branching tbd here
         self.stage.to_add.extend(temp_rev.get_manifest().clone());
         self.save()
     }
 
-    pub fn remove_file(&self, abs_path:&str) -> Result<(), Errors>{
-        let temp_rev = Rev::new();
-        temp_rev.add_file(abs_path); // *** iterator operations and branching tbd here
+    pub fn remove_file(&mut self, abs_path:&str) -> Result<(), Errors>{
+        let mut temp_rev = Rev::new();
+        temp_rev.add_file(abs_path)?; // *** iterator operations and branching tbd here
         self.stage.to_remove.extend(temp_rev.get_manifest().clone());
         self.save()
     }
@@ -155,7 +155,6 @@ impl Repo {
     pub fn merge_commit(&mut self, parent_1: &str, parent_2: &str, msg: Option<&str>) -> Result<(), Errors> {
         Ok(()) // *** to be impl
     }
-
 }
 
 
@@ -166,18 +165,21 @@ pub fn init(opt_path: Option<&str>) -> Result<(), Errors> {
         None => get_wd_path()
     };
     let paths = RepoPaths::new(&wd);
+    if !is_path_valid(&paths.root) { // bypass recreating dirs if .dvcs already exists
+        create_dir(&paths.files)?;
+        create_dir(&paths.revs)?;
+    }
 
-    create_dir(&paths.files)?;
-    create_dir(&paths.revs)?;
-
-    let new_repo = Repo {
-        current_head: None, // Some("main".to_string())
-        branch_heads: HashMap::new(),
-        paths: paths,
-        stage: Stage::new(),
-        // remote_head: None,
-    };
-    new_repo.save();
+    if !is_path_valid(&paths.repos) {
+        let new_repo = Repo {
+            current_head: None, // Some("main".to_string())
+            branch_heads: HashMap::new(),
+            paths: paths,
+            stage: Stage::new(),
+            // remote_head: None,
+        };
+        new_repo.save()?;
+    }
     return Ok(());
 }
 
@@ -302,20 +304,20 @@ impl RepoPaths {
         }
     }
 
-    pub (super) fn default() -> RepoPaths { // relative path config
-            let wd = ".";
-            let root = path_compose(wd, ".dvcs");
-        RepoPaths {
-            wd: wd.to_string(),
-            root: root.clone(),
-            files: path_compose(&root, "files"),
-            revs: path_compose(&root, "revs"),
-            repos: path_compose(&root, "repos")
-            // head: path_compose(&root, "head"),
-            // branch_heads: path_compose(&root, "branches"),
-            // stage: path_compose(&root, "stage"),
-        }
-    }
+    // pub (super) fn default() -> RepoPaths { // relative path config
+    //         let wd = ".";
+    //         let root = path_compose(wd, ".dvcs");
+    //     RepoPaths {
+    //         wd: wd.to_string(),
+    //         root: root.clone(),
+    //         files: path_compose(&root, "files"),
+    //         revs: path_compose(&root, "revs"),
+    //         repos: path_compose(&root, "repos")
+    //         // head: path_compose(&root, "head"),
+    //         // branch_heads: path_compose(&root, "branches"),
+    //         // stage: path_compose(&root, "stage"),
+    //     }
+    // }
 }
 
 pub(super) fn serialize<T: Serialize> (data_struct: &T) -> Result<String, Errors> {

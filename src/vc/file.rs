@@ -54,7 +54,7 @@ impl ItemInfo {
     // CHANGE INCOMING: WILL MOVE TO Repo's get_file()
     pub fn get_content(&self) -> Result<String, Errors> { // get cached content
         
-        match self.entry {
+        match &self.entry {
             File(id) => {
                 let repo_storage_dir = get_repo_storage_dir().ok_or(Errors::ErrUnknown)?;
                 read_file_as_string(&path_compose(&repo_storage_dir, &id))
@@ -68,7 +68,7 @@ impl ItemInfo {
     }
 
     pub fn get_file_id(&self) -> Option<&str> {
-        match self.entry {
+        match &self.entry {
             File(id) => Some(&id),
             _ => None
         }
@@ -79,7 +79,7 @@ impl ItemInfo {
     pub fn make_file(&self, wd:&str) -> Result<(), Errors> {    
         let wd_file_path = path_compose(wd, &self.loc_in_wd);
         let repo_storage_dir = path_compose(wd, ".dvcs/files");
-        match self.entry {
+        match &self.entry {
             File(id) => {
                 let repo_storage_file = path_compose(&repo_storage_dir, &id);
                 copy_file(&repo_storage_file, &wd_file_path)
