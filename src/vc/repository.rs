@@ -104,15 +104,10 @@ impl Repo {
     //     Some(())
     // }
 
-    // pub fn get_log(&self) -> Option<Vec<String>> {
-    //     current_head = self.get_current_head()?;
-    // *** to be impl
 
-    // } 
-    // called by command "log", trace from the current head to parent(s) recursively to get a complete history of metadata in relevant revisions
-
-    // pub fn get_heads(&self) ->Option<Vec<&Rev>> {None}; // *** to be implemented
-    // get heads for all branches
+    pub fn get_heads(&self) -> &HashMap<String, String> {
+        &self.branch_heads
+    }
 
     pub fn new_head(&mut self, head_alias:&str, rev_id:&str) -> &Self { // *** needs revisiting later
         self.branch_heads.entry(head_alias.to_string()).or_insert(rev_id.to_string());
@@ -140,7 +135,7 @@ impl Repo {
         // needs to update remote head and have data structure tracking the rwd path,
     }
 
-    // pub fn add_file(&mut self, abs_paths: Vec<&str>) -> Option<()> { // *** to be impl
+    // pub fn add_files(&mut self, abs_paths: Vec<&str>) -> Option<()> { // *** list version to be impl
     pub fn add_file(&mut self, abs_path: &str) -> Result<(), Errors> {
         // abs_paths.iter()
         let temp_rev = Rev::new();

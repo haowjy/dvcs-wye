@@ -23,14 +23,10 @@ pub struct ItemInfo {
     name: String, // last component of path. Can be directory?
     loc_in_wd: String, // wd RELATIVE path
     entry: EntryType
-
-    // content_id: Option<String>, // sha_id
-    // entry_type: EntryType,
-    // metadata: Option<FileMetaData>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq)] 
 pub enum EntryType {
-    File(String),
+    File(String),// String: content SHA id
     Dir, 
     Other 
 }
@@ -71,9 +67,16 @@ impl ItemInfo {
         &self.loc_in_wd
     }
 
+    pub fn get_file_id(&self) -> Option<&str> {
+        match self.entry {
+            File(id) => Some(&id),
+            _ => None
+        }
+    }
+
     // new pub fn, assisting make_wd
     // trial only, might move to repos
-    pub fn make_file(&self, wd:&str) -> Result<(), Errors> {     // *** ERROR HANDLING
+    pub fn make_file(&self, wd:&str) -> Result<(), Errors> {    
         let wd_file_path = path_compose(wd, &self.loc_in_wd);
         let repo_storage_dir = path_compose(wd, ".dvcs/files");
         match self.entry {
@@ -125,7 +128,7 @@ impl ItemInfo {
 //     if content_    
 // } 
 pub fn retrieve_info(abs_path: &str) -> Result<ItemInfo, Errors> {
-    let rel_path = get_rel_path(abs_path).ok_or(Errors::ErrStr(format!("Cannot find the proper repository path for file {abs_path}")))?;
+    let rel_path = get_rel_path(abs_path).ok_or(Errors::ErrStr(format!("Cannot find the proper working directory path for file {abs_path}")))?;
 
     let meta = get_metadata(abs_path)?; 
     let mut entry = EntryType::Other;
@@ -145,7 +148,7 @@ pub fn retrieve_info(abs_path: &str) -> Result<ItemInfo, Errors> {
 }
 
 
-pub fn get_id(file_path: &str) -> Result<String, Errors> {
+fn get_id(file_path: &str) -> Result<String, Errors> {
     let wd_root = get_wd_root()?;
     let repo_storage_dir = path_compose(&wd_root, ".dvcs/files");
 
