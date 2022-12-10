@@ -39,6 +39,10 @@ impl Stage {
         &self.to_remove
     }
     
+    pub fn is_empty(&self) -> bool {
+        self.to_add.is_empty() && self.to_remove.is_empty()
+    }
+
     fn clear(&mut self) -> &Self {
         self.to_add.clear();
         self.to_remove.clear();
