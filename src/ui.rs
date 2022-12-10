@@ -166,10 +166,10 @@ impl Wye {
                     wd_path=default_wd_path;
                 }
                 println!("wd_path is: {:?}", wd_path);
-                let mut res:Result<&str,&str>=Err("1");
+                let mut res:Result<&str,Errors>=Err(Errstatic("1"));
                 println!("path is: {:?}", path);
                 if path.is_empty() {
-                    res=Err("Wrong Empty Path");
+                    res=Err(Errstatic("Wrong Empty Path"));
                     println!("path is empty");
                     }
                 else {
@@ -179,7 +179,7 @@ impl Wye {
                         res=readwrite::add(&wd_path,&*x);
                     }
                     else {
-                        res=Err("error file path or unreadable file path");
+                        res=Err(Errstatic("error file path or unreadable file path"));
                     }
                     0
                 }
@@ -192,10 +192,10 @@ impl Wye {
                     wd_path=default_wd_path;
                 }
                 println!("wd_path is: {:?}", wd_path);
-                let mut res:Result<&str,&str>=Err("1");
+                let mut res:Result<&str,Errors>=Err(Errstatic("1"));
                 println!("path is: {:?}", path);
                 if path.is_empty() {
-                    res=Err("Wrong Empty Path");
+                    res=Err(Errstatic("Wrong Empty Path"));
                     println!("path is empty");
                 }
                 else {
@@ -205,7 +205,7 @@ impl Wye {
                             res=readwrite::remove(&wd_path,&*x);
                         }
                         else {
-                            res=Err("error file path or unreadable file path");
+                            res=Err(Errstatic("error file path or unreadable file path"));
                         }
                         0
                     }
@@ -217,9 +217,9 @@ impl Wye {
                 if wd_path.eq("-d") || wd_path.eq("-"){
                     wd_path=default_wd_path;
                 }
-                let mut res:Result<&str,&str>=Err("1");
+                let mut res:Result<RevDiff,Errors>=Err(Errstatic("1"));
                 res=readwrite::commit(&wd_path,&message);
-                Self::input_handling(res);
+                Self::input_handling_special(res);
                 println!("message is: {:?}", message)
             }
             Command::merge { mut wd_path,rev_id,rev_dest } => {
@@ -227,7 +227,7 @@ impl Wye {
                     wd_path=default_wd_path;
                 }
                 println!("wd_path is: {:?}", wd_path);
-                let mut res:Result<&str,&str>=Err("1");
+                let mut res:Result<&str,Errors>=Err(Errstatic("1"));
                 res=readwrite::merge(&wd_path, &rev_id, &rev_dest);
                 Self::input_handling(res);
                 println!("path1 is: {:?}", rev_id);
@@ -236,7 +236,7 @@ impl Wye {
                 if wd_path.eq("-d") || wd_path.eq("-"){
                     wd_path=default_wd_path;
                 }
-                let mut res_diff:Result<RevDiff,&str>=Err("2");
+                let mut res_diff:Result<RevDiff,Errors>=Err(Errstatic("2"));
                 res_diff=readwrite::diff(&wd_path,&rev_id_1, &rev_id_2);
                 Self::input_handling_special(res_diff);
                 println!("rev_id_1 is: {:?} rev_id_2 is: {:?}", rev_id_1,rev_id_2)
@@ -245,7 +245,7 @@ impl Wye {
                 if wd_path.eq("-d") || wd_path.eq("-"){
                     wd_path=default_wd_path;
                 }
-                let mut res:Result<&str,&str>=Err("1");
+                let mut res:Result<&str,Errors>=Err(Errstatic("1"));
                 res=readwrite::cat(&wd_path,&rev_id,&path);
                 Self::input_handling(res);
                 println!("rev_id is: {:?}", rev_id);
@@ -316,11 +316,11 @@ impl Wye {
                     opt_path=None;
                 }
                 else { opt_path=Some(&wd_path)}
-                let mut res:Result<&str,&str>=Err("1");
+                let mut res:Result<&str,Errors>=Err(Errstatic("1"));
                 let init=crate::vc::repository::init(opt_path);
                 if init.unwrap()==() { res=Ok("init successfully");}
                 else {
-                    res=Err("init error!") }
+                    res=Err(Errstatic("init error!")) }
                 Self::input_handling(res);
                 println!("path is: {:?}", wd_path)
             }
@@ -359,11 +359,11 @@ impl Wye {
 
     }
 
-    fn input_handling(return_result:Result<&str,&str>){
+    fn input_handling(return_result:Result<&str,Errors>){
         println!("{:?}",return_result);
     }
 
-    fn input_handling_special(return_result:Result<RevDiff,&str>){
+    fn input_handling_special(return_result:Result<RevDiff,Errors>){
         //waiting structure inside RevDiff, similar with FileDiff
         println!("{:?}","return_result");
     }
