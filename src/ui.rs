@@ -311,8 +311,8 @@ impl Wye {
                 println!("path is: {:?}", path)
             }
             Command::init { mut wd_path } => {
-                let opt_path:Option<&str>=None;
-                if wd_path.eq("-d") || wd_path.eq("-"){
+                let mut opt_path:Option<&str>=None;
+                if wd_path.eq("-d") || wd_path.eq("-") || wd_path.is_empty(){
                     opt_path=None;
                 }
                 else { opt_path=Some(&wd_path)}
