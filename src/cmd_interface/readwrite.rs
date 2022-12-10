@@ -71,23 +71,34 @@ pub fn diff<'a>(wd: &'a str, rev1_id:&'a str, rev2_id:&'a str) -> Result<RevDiff
         
 }
 
-pub fn cat<'a>(wd: &'a str, rev_id:&'a str, path:&'a str) -> Result<&'a str, Errors>{
+pub fn cat<'a>(wd: &'a str, rev_id:&'a str, path:&'a str) -> Result<String, Errors>{
     // find path in rev
     // return file content or error
-    unimplemented!(); //TODO
+    let repo = repository::load(wd)?;
+    let rev = repo.get_rev(rev_id)?;
+    let manifest = rev.get_manifest();
+    let file_info = manifest.get(path);
+
+    if file_info.is_none() {
+        return Err(Errstatic("file not found"));
+    }else{
+        let file_info = file_info.unwrap();
+        let content = file_info.get_content()?;
+        return Ok(content);
+    }
 }
 
-pub fn add<'a>(wd: &'a str, path:&'a str) -> Result<&'a str, Errors>{
+pub fn add<'a>(wd: &'a str, path:&'a str) -> Result<String, Errors>{
     println!("wd: {:?}", wd);
     let mut repo = repository::load(wd)?;
     
     let abs_path = path_compose(wd, path);
     println!("abs_path: {:?}", abs_path);
     let res = repo.add_file(&abs_path)?;
-    Ok("add success")
+    Ok("add success".to_string())
 }
 
-pub fn remove<'a>(wd: &'a str, path:&'a str) -> Result<&'a str, Errors>{
+pub fn remove<'a>(wd: &'a str, path:&'a str) -> Result<String, Errors>{
     // remove the file temporarily to the index branch by acting as if we have deleted the file (not committed yet)
     // just call repo.remove by obtaining absolute path
     unimplemented!(); //TODO
@@ -110,7 +121,7 @@ pub fn commit<'a>(wd: &'a str, message:&'a str) -> Result<RevDiff, Errors>{
     diff(wd, rev_id1, rev_id2)
 }
 
-pub fn merge<'a>(wd: &'a str, rev_id_source:&'a str, rev_id_dst:&'a str) -> Result<&'a str, Errors>{
+pub fn merge<'a>(wd: &'a str, rev_id_source:&'a str, rev_id_dst:&'a str) -> Result<String, Errors>{
     unimplemented!(); //TODO
 }
 
@@ -156,11 +167,14 @@ mod tests {
         let _ = dsr::create_file(&path_compose(cwd, "a.txt"));
         let _ = dsr::write_file(&path_compose(cwd, "a.txt"), "hello world");
         
-        // let add1 = add(&cwd, "a.txt");
-        // println!("add1: {:?}", add1);
+        // TODO: this add doesn't seem to add anything to repos file
+        let add1 = add(&cwd, "a.txt");
+        println!("add1: {:?}", add1);
+        // // It doesn't actually add the file to the index branch?
         // assert!(add1.is_ok());
 
         // let nodef = add(&cwd, "nodef_file.txt");
+        // println!("nodef: {:?}", nodef);
         // assert!(nodef.is_err());
     }
 
