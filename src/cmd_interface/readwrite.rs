@@ -1,95 +1,116 @@
+use crate::ui::{Errors, Errors::*};
 use crate::vc::{file, repository, revision};
-use crate::dsr::*;
+use crate::dsr::{*};
 use std::collections::HashMap;
 
-use crate::cmd_function::FileDiff;
+use crate::cmd_function::{FileDiff, file_diff};
 
-pub struct RevDiff<'a> {
-    files: HashMap<&'a str, FileDiff<'a>>,
+#[derive(Debug)]
+pub struct RevDiff {
+    files: HashMap<String, FileDiff>,
 }
 
-impl <'a> RevDiff<'a> {
-    pub fn new() -> RevDiff<'a> {
+impl RevDiff {
+    pub fn new() -> RevDiff {
         RevDiff {
             files: HashMap::new(),
         }
     }
+    pub fn get_files(&self) -> &HashMap<String, FileDiff> {
+        &self.files
+    }
+    pub fn to_string(&self) -> String {
+        let mut res:String = String::new();
+        for (file, diff) in &self.files {
+            res.push_str(&format!("{}\n{:?}\n", file, diff.get_diff_type()));
+        }
+        res
+    }
 }
 
-pub fn diff<'a>(wd: &'a str, rev1_id:&'a str, rev2_id:&'a str) -> Result<RevDiff<'a>, &'a str>{
+pub fn diff<'a>(wd: &'a str, rev1_id:&'a str, rev2_id:&'a str) -> Result<RevDiff, Errors>{
+    // TODO: should work, but not tested cuz repo is not working atm
     // go through all files in rev1 and rev2
     // if file in rev1 but not in rev2 -> file deleted
     // if file in rev2 but not in rev1 -> file added
     // if file in rev1 and rev2, but there is a diff -> file modified
     // if file in rev1 and rev2, and there is no diff -> file unchanged
+    let mut rev_diff = RevDiff::new();
 
-    let repo_opt = repository::load(wd);
-    if repo_opt.is_none() { 
-        return Err("No repository found");
-    } else {
-        let repo = repo_opt.unwrap();
-        let rev1 = repo.get_rev(rev1_id);
-        let rev2 = repo.get_rev(rev2_id);
-        if rev1.is_none() || rev2.is_none() { return Err("No revision found"); 
-    } else {
-            let rev1 = rev1.unwrap();
-            let rev2 = rev2.unwrap();
+    let repo = repository::load(wd)?;
 
-            for (file, info) in rev1.get_manifest() {
-                println!("file: {}, info: {:?}", file, info);
-            }
+    let rev1 = repo.get_rev(rev1_id)?;
+    let rev2 = repo.get_rev(rev2_id)?;
+    
+    let rev1_manifest = rev1.get_manifest();
+    let rev2_manifest = rev2.get_manifest();
+
+    for (file1, info1) in rev1_manifest.clone() {
+        let content1 = info1.get_content()?;
+
+        let file2_opt = rev2_manifest.get(&file1);
+        if file2_opt.is_none() { // file deleted
+            let file_diff = file_diff(content1, "".to_string());
+            rev_diff.files.insert(file1.clone(), file_diff);
+        } else { // file modified or unchanged
+            let content2 = file2_opt.unwrap().get_content()?;
+            rev_diff.files.insert(file1.clone(), file_diff(content1, content2));
         }
     }
-    unimplemented!(); //TODO
+    for (file2, info2) in rev2_manifest.clone().iter() {
+        // if file in rev_diff, skip
+        if rev_diff.files.contains_key(file2) { continue; }
+
+        let content2 = info2.get_content()?;
+
+        // If not in rev_diff, that means it does not exist in rev1_manifest
+        // So it is a new file
+        rev_diff.files.insert(file2.clone(), file_diff("".to_string(), content2));
+    }
+    return Ok(rev_diff);
+        
 }
 
-pub fn cat<'a>(wd: &'a str, rev_id:&'a str, path:&'a str) -> Result<&'a str, &'a str>{
+pub fn cat<'a>(wd: &'a str, rev_id:&'a str, path:&'a str) -> Result<&'a str, Errors>{
     // find path in rev
     // return file content or error
     unimplemented!(); //TODO
 }
 
-pub fn add<'a>(wd: &'a str, path:&'a str) -> Result<&'a str, &'a str>{
+pub fn add<'a>(wd: &'a str, path:&'a str) -> Result<&'a str, Errors>{
+    println!("wd: {:?}", wd);
+    let mut repo = repository::load(wd)?;
     
-    let cwd = get_wd_path();
-    if let Some(mut repo) = repository::load(&cwd) {
-        let abs_path = path_compose(&cwd, path);
-        
-        let res = repo.add_file(&abs_path);
-        match res {
-            Some(_) => return Ok("add success"),
-            None => return Err("add failed: add_file failed"),
-        }
-    } else {
-        return Err("add failed: no repository found")
-    }
+    let abs_path = path_compose(wd, path);
+    println!("abs_path: {:?}", abs_path);
+    let res = repo.add_file(&abs_path)?;
+    Ok("add success")
 }
 
-pub fn remove<'a>(wd: &'a str, path:&'a str) -> Result<&'a str, &'a str>{
+pub fn remove<'a>(wd: &'a str, path:&'a str) -> Result<&'a str, Errors>{
     // remove the file temporarily to the index branch by acting as if we have deleted the file (not committed yet)
     // just call repo.remove by obtaining absolute path
     unimplemented!(); //TODO
 }
 
-pub fn commit<'a>(wd: &'a str, message:&'a str) -> Result<&'a str, &'a str>{
-    let cwd = get_wd_path();
-    if let Some(mut repo) = repository::load(&cwd) {
-        // TODO: message, error handling
-        let res = repo.commit();
-        match res {
-            Some(_) => return Ok("commit success"),
-            None => return Err("commit failed: repo.commit failed"),
-        }
-    } else {
-        return Err("commit failed: no repository found")
-    }
+pub fn commit<'a>(wd: &'a str, message:&'a str) -> Result<RevDiff, Errors>{
+    let mut repo = repository::load(wd)?;
+    let head1 = repo.get_current_head()?;
+    let rev_id1 = head1.get_id().unwrap();
+
+    let commit_res = repo.commit()?;
+    let head2 = repo.get_current_head()?;
+    let rev_id2 = head2.get_id().unwrap();
+
     // commit the index branch to the head branch, create a new revision and update the head
     // write to log -> where would this be?
 
     // return a RevDiff if successful
+
+    diff(wd, rev_id1, rev_id2)
 }
 
-pub fn merge<'a>(wd: &'a str, rev_id_source:&'a str, rev_id_dst:&'a str) -> Result<&'a str, &'a str>{
+pub fn merge<'a>(wd: &'a str, rev_id_source:&'a str, rev_id_dst:&'a str) -> Result<&'a str, Errors>{
     unimplemented!(); //TODO
 }
 
@@ -100,12 +121,21 @@ mod tests {
     use crate::dsr;
     use crate::vc::repository::{self, init};
 
+    fn create_files_and_commit1(){
+        let _ = dsr::create_file("a.txt");
+        let _ = dsr::write_file("a.txt", "file a\nhello world");
+        let _ = dsr::create_file("b.txt");
+        let _ = dsr::write_file("b.txt", "file b\nhello world");
+    }
+
     #[test]
     fn test_diff() {
-        let _ = dsr::delete_dir(".dvcs");
-        init();
+        // let _ = dsr::delete_dir(".dvcs");
+        // let _ = init();
+        let wd = get_wd_path();
 
-        // add(wd, path)
+        let a = add(&wd, "a.txt");
+        println!("a: {:?}", a);
     }
 
     #[test]
@@ -115,19 +145,23 @@ mod tests {
 
     #[test]
     fn test_add() {
-        let wd = get_wd_path();
-        // let _ = dsr::delete_dir(".dvcs");
-        // let _ = dsr::delete_file("a.txt");
-        // init();
+        // let cwd = &path_compose(&get_wd_path(), "test_repo/");
+        let cwd = "./test_repo/";
         
-        let _ = dsr::create_file("a.txt");
-        let _ = dsr::write_file("a.txt", "hello world");
-        
-        let add1 = add(&wd, "a.txt");
-        assert_eq!(add1, Ok("add success"));
+        let _ = dsr::delete_dir(&path_compose(cwd, ".dvcs"));
+        let _ = dsr::delete_file(&path_compose(cwd, "a.txt"));
 
-        let nodef = add(&wd, "nodef_file.txt");
-        assert_eq!(nodef, Err("add failed: add_file failed"));
+        let _ = init(Some(cwd));
+
+        let _ = dsr::create_file(&path_compose(cwd, "a.txt"));
+        let _ = dsr::write_file(&path_compose(cwd, "a.txt"), "hello world");
+        
+        // let add1 = add(&cwd, "a.txt");
+        // println!("add1: {:?}", add1);
+        // assert!(add1.is_ok());
+
+        // let nodef = add(&cwd, "nodef_file.txt");
+        // assert!(nodef.is_err());
     }
 
     #[test]
@@ -137,22 +171,25 @@ mod tests {
 
     #[test]
     fn test_commit() {
-        let _ = dsr::delete_dir(".dvcs");
-        let _ = dsr::delete_file("predef_file.txt");
-        let _ = repository::init().unwrap();
+        let cwd = "./test_repo";
 
-        let _ = dsr::create_file("predef_file.txt");
-        let _ = dsr::write_file("predef_file.txt", "hello world");
+        let _ = dsr::delete_dir(&path_compose(cwd, ".dvcs"));
+        let _ = dsr::delete_file(&path_compose(cwd, "a.txt"));
 
-        // let com1 = commit("test commit");
-        // println!("com1: {:?}", com1);
-        // assert_eq!(com1, Err("commit failed: repo.commit failed"));
+        init(Some(cwd));
 
-        let _ = add("./", "predef_file.txt");
+        let _ = dsr::create_file(&path_compose(cwd, "a.txt"));
+        let _ = dsr::write_file(&path_compose(cwd, "a.txt"), "hello world");
+
+        let com1 = commit(cwd, "test commit");
+        println!("com1: {:?}", com1);
+        assert!(com1.is_err());
+
+        let _ = add(cwd, "a.txt");
         
-        let com2 = commit("./", "test commit");
+        let com2 = commit(cwd, "test commit");
         println!("com2: {:?}", com2);
-        assert_eq!(com2, Ok("commit success"));
+        assert!(com2.is_ok());
     }
 
     #[test]
