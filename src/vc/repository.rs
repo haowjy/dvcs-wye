@@ -165,18 +165,21 @@ pub fn init(opt_path: Option<&str>) -> Result<(), Errors> {
         None => get_wd_path()
     };
     let paths = RepoPaths::new(&wd);
+    if !is_path_valid(&paths.root) { // bypass recreating dirs if .dvcs already exists
+        create_dir(&paths.files)?;
+        create_dir(&paths.revs)?;
+    }
 
-    create_dir(&paths.files)?;
-    create_dir(&paths.revs)?;
-
-    let new_repo = Repo {
-        current_head: None, // Some("main".to_string())
-        branch_heads: HashMap::new(),
-        paths: paths,
-        stage: Stage::new(),
-        // remote_head: None,
-    };
-    new_repo.save()?;
+    if !is_path_valid(&paths.repos) {
+        let new_repo = Repo {
+            current_head: None, // Some("main".to_string())
+            branch_heads: HashMap::new(),
+            paths: paths,
+            stage: Stage::new(),
+            // remote_head: None,
+        };
+        new_repo.save()?;
+    }
     return Ok(());
 }
 
