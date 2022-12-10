@@ -24,8 +24,8 @@ pub struct Rev {
     parent_id2: Option<String>,
     user_id: Option<String>,
     time_stamp: SystemTime,
+    message: Option<String>, // to be added
     manifest: HashMap<String, ItemInfo>,  // Hashmap<K: wd_relative_path, V: ItemInfo: file content id and metadata id
-    // path_self: String,
 }
 
 
@@ -56,6 +56,7 @@ impl Rev {
             parent_id2:None,
             user_id: None,
             time_stamp: SystemTime::now(),
+            message: None,
             manifest: HashMap::new(),
         }
     }
@@ -73,10 +74,11 @@ impl Rev {
     }
 
     pub fn get_log(&self) -> HashMap<&'static  str, String> {
-        let log = HashMap::new();
-        log.insert("id", self.rev_id.unwrap_or_default());
-        log.insert("user", self.user_id.unwrap_or("Unknown".to_string()));
+        let mut log = HashMap::new();
+        log.insert("id", self.rev_id.clone().unwrap_or_default());
+        log.insert("user", self.user_id.clone().unwrap_or("Unknown".to_string()));
         log.insert("time", self.get_date_time());
+        // log.insert("message", _) // MESSAGE TO BE ADDED
         log
     }
 
