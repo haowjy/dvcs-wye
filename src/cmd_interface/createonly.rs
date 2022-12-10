@@ -17,14 +17,16 @@ pub fn clone<'a>(wd: &'a str, remote:&'a str) -> Result<String, Errors> {
 
     let head = "HEAD"; // TODO: Connect to VC
 
-    let co_res = checkout(wd, head);
+    let co_res = checkout(wd, head, None);
     match co_res {
         Ok(_) => Ok("clone success".to_string()),
         Err(_) => Err(Errstatic("clone failed: checkout failed")),
     }
 }
 
-pub fn checkout<'a>(wd:&'a str, rev:&'a str) -> Result<String, Errors> {
+pub fn checkout<'a>(wd:&'a str, rev:&'a str, new_branch_alias: Option<String>) -> Result<String, Errors> {
+    // NEW BRANCH DETATCH-HEAD, rev
+    // set current head to DETATCH-HEAD
     let rev = rev; // TODO: Connect to VC
 
     let clear_resp = clear_dir(wd, vec![".dvcs"]);
@@ -33,24 +35,27 @@ pub fn checkout<'a>(wd:&'a str, rev:&'a str) -> Result<String, Errors> {
         Err(_) => return Err(Errstatic("checkout failed: clear_dir failed")),
     };
 
+    // if rev is a branch, then get the head of the branch
+    // if the revision is detached, then create a new branch
     // TODO: for f in rev.get_files() -> DSR::create_file(f.get_path(), f.get_content())
+    // DSR::make_wd
+
     Ok("checkout success".to_string())
 }
 
-pub fn new_checkout<'a>(wd:&'a str, rev:&'a str) -> Result<String, Errors> {
-    // VC::Repo::load(wd)
-    // VC::Repo.new_head(head, rev_id)
-    unimplemented!(); //TODO
-}
-
-pub fn pull<'a>(wd:&'a str, remote:&'a str, head:Option<&'a str>) -> Result<String, Errors> {
+pub fn pull<'a>(wd:&'a str, remote:&'a str) -> Result<String, Errors> {
     // VC::Repo::load(wd)
     // VC::Repo.fetch(remote, head)
+    // repo_remote
+    // repo_remote.get_head("name")
+    // create head remote/name
+    // merge(wd, remote/name)
+
     // merge(wd, head, remote/head)
     unimplemented!(); //TODO
 }
 
-pub fn push<'a>(wd:&'a str, remote:&'a str, head:Option<&'a str>) -> Result<String, Errors> {
+pub fn push<'a>(wd:&'a str, remote:&'a str) -> Result<String, Errors> {
     // VC::Repo::load() // load wd and remote repos
     // diff(Repo.remote/head, remoteRepo.head) // if the remote tracked is different from what is actually on remote, then block and ask to pull
     let diff_res : Result<RevDiff, ()> = match diff(wd,"curRepo.remote/head", "remoteRepo.head") {
