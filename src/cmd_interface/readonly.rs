@@ -100,7 +100,7 @@ pub fn status(wd: &str) -> Result<&str, Errors> {
      print!("{:?}",w);*/
     //let file=load.unwrap().get_file_content(id).unwrap();
     //let file1="content1".to_string();
-    let diff = file_diff("&file1", "&file").clone();
+    let diff = file_diff("&file1".to_string(), "&file".to_string()).clone();
     //
     let flag= diff.is_diff();
     if flag==true {
