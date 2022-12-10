@@ -355,6 +355,30 @@ pub fn get_user() -> (u32, String) {
     return (user_id, user_name);
 }
 
+// 21.
+// USAGE: let mut list_files = vec![]; get_files("path1/path2", &mut list_files);
+pub fn get_files(path: &str, list: &mut Vec<String>) -> Result<(), Errors> {
+    let paths = fs::read_dir(path).unwrap();
+
+    for path in paths {
+        match path {
+            Ok(entry) => {
+                let entry = entry;
+                let entry_path = entry.path();
+                let raw_path = entry_path.to_str().unwrap();
+                if entry_path.is_dir() {
+                    get_files(raw_path, list)?;
+                } else {
+                    list.push(raw_path.to_string());
+                }
+            },
+            Err(_) => return Err(new_error(ErrorKind::UnexpectedEof, &"copy_dir: unable to read entries from dir")),
+        }
+
+    }
+    Ok(())
+}
+
 // ====================================================
 //                  TESTING FUNCTIONS
 //        * all tests perform in dsr_tests folder
@@ -481,8 +505,13 @@ mod tests_dsr {
     }
 
     #[test]
-    fn test_19_get_parent_name() {
+    fn test_21_get_parent_name() {
+        setup_test_space();
 
+        let mut list = vec![];
+        get_files("dsr_test", &mut list);
+        println!("{:?}", list);
+        clear_test_space();
     }
 
     #[test]
