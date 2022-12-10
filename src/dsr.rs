@@ -245,9 +245,12 @@ pub fn copy_file(src: &str, dest: &str) -> Result<(), Errors> {
 // USEAGE: write_file("folder1/hello_world.py", "print(\"hello world!\")");
 pub fn write_file(path: &str, content: &str) -> Result<(), Errors> {
     let file_name = get_name(path).unwrap();
+    /*
     if !is_path_valid(path) {
         return Err(new_error(ErrorKind::NotFound, &&format!("write_file: file({}) does not exist", file_name)));
-    } else if !is_name_valid(&file_name) {
+    } else
+    */
+    if !is_name_valid(&file_name) {
         return Err(new_error(ErrorKind::InvalidInput, &format!("write_file: name({}) contains forbidden character(s)", file_name)));
     }
 
@@ -313,8 +316,10 @@ pub fn path_compose(path1: &str, path2: &str) -> String {
 pub fn get_name(path: &str) -> Option<String> {
     let path = Path::new(path);
     let name = path.file_name();
-    let name_to_string = name.unwrap().to_owned().into_string().unwrap();
-    return Some(name_to_string)
+    match name {
+        Some(n) => return Some(n.to_owned().into_string().unwrap()),
+        None => return None,
+    }
 }
 
 // 18. returns existing std::fs::Metadata struct
