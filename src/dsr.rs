@@ -359,9 +359,8 @@ pub fn get_user() -> (u32, String) {
 // USAGE: let mut list_files = vec![];
 //        get_files("path1/path2", &mut list_files);
 pub fn get_files(path: &str, list: &mut Vec<String>) -> Result<(), Errors> {
-    let paths = fs::read_dir(path).unwrap();
     match fs::read_dir(path) {
-        Ok(_) => {
+        Ok(paths) => {
             for path in paths {
                 match path {
                     Ok(entry) => {
