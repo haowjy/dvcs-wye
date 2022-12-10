@@ -166,7 +166,7 @@ impl Wye {
                     wd_path=default_wd_path;
                 }
                 println!("wd_path is: {:?}", wd_path);
-                let mut res:Result<&str,Errors>=Err(Errstatic("1"));
+                let mut res:Result<String,Errors>=Err(Errstatic("1"));
                 println!("path is: {:?}", path);
                 if path.is_empty() {
                     res=Err(Errstatic("Wrong Empty Path"));
@@ -192,7 +192,7 @@ impl Wye {
                     wd_path=default_wd_path;
                 }
                 println!("wd_path is: {:?}", wd_path);
-                let mut res:Result<&str,Errors>=Err(Errstatic("1"));
+                let mut res:Result<String,Errors>=Err(Errstatic("1"));
                 println!("path is: {:?}", path);
                 if path.is_empty() {
                     res=Err(Errstatic("Wrong Empty Path"));
@@ -227,7 +227,7 @@ impl Wye {
                     wd_path=default_wd_path;
                 }
                 println!("wd_path is: {:?}", wd_path);
-                let mut res:Result<&str,Errors>=Err(Errstatic("1"));
+                let mut res:Result<String,Errors>=Err(Errstatic("1"));
                 res=readwrite::merge(&wd_path, &rev_id, &rev_dest);
                 Self::input_handling(res);
                 println!("path1 is: {:?}", rev_id);
@@ -245,7 +245,7 @@ impl Wye {
                 if wd_path.eq("-d") || wd_path.eq("-"){
                     wd_path=default_wd_path;
                 }
-                let mut res:Result<&str,Errors>=Err(Errstatic("1"));
+                let mut res:Result<String,Errors>=Err(Errstatic("1"));
                 res=readwrite::cat(&wd_path,&rev_id,&path);
                 Self::input_handling(res);
                 println!("rev_id is: {:?}", rev_id);
@@ -316,9 +316,9 @@ impl Wye {
                     opt_path=None;
                 }
                 else { opt_path=Some(&wd_path)}
-                let mut res:Result<&str,Errors>=Err(Errstatic("1"));
+                let mut res:Result<String,Errors>=Err(Errstatic("1"));
                 let init=crate::vc::repository::init(opt_path);
-                if init.unwrap()==() { res=Ok("init successfully");}
+                if init.unwrap()==() { res=Ok("init successfully".to_string());}
                 else {
                     res=Err(Errstatic("init error!")) }
                 Self::input_handling(res);
@@ -359,7 +359,7 @@ impl Wye {
 
     }
 
-    fn input_handling(return_result:Result<&str,Errors>){
+    fn input_handling(return_result:Result<String,Errors>){
         println!("{:?}",return_result);
     }
 
