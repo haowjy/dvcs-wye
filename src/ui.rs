@@ -153,6 +153,24 @@ pub struct Wye {
         #[arg(default_value_t)]
         wd_path: String,
     },
+    /// create an empty repository
+    Test {
+        /// Name of the package to search
+        #[command(subcommand)]
+        wd_path: SubCommand,
+    },
+}
+#[derive(Parser,Debug)]
+enum SubCommand {
+    O {
+        /// Name of the package to search
+        #[arg(default_value_t)]
+        wd_path: String,
+    },
+    RevId {
+        /// Name of the package to search
+        wd_path: String,
+    }
 }
 impl Wye {
     pub fn input_command() ->io::Result<()>{//start here temporary
@@ -174,9 +192,9 @@ impl Wye {
                     }
                 else {
                     path.iter().fold(0, |acc, x| {
-                    if Self::check_file_path_valid(Some(&*x))
+                    if Self::check_file_path_valid(Some(&x))
                     {
-                        res=readwrite::add(&wd_path,&*x);
+                        res=readwrite::add(&wd_path,&x);
                     }
                     else {
                         res=Err(Errstatic("error file path or unreadable file path"));
@@ -318,10 +336,22 @@ impl Wye {
                 else { opt_path=Some(&wd_path)}
                 let mut res:Result<String,Errors>=Err(Errstatic("1"));
                 let init=crate::vc::repository::init(opt_path);
-                if init.unwrap()==() { res=Ok("init successfully".to_string());}
-                else {
-                    res=Err(Errstatic("init error!")) }
+                match init { Ok(())=>{res=Ok("init successfully".to_string());}
+                    Err(String)=>{res=Err(String)} }
                 Self::input_handling(res);
+                println!("path is: {:?}", wd_path)
+            }
+            Command::Test { wd_path } => {
+                match wd_path{
+                    SubCommand::O { ref wd_path} => {
+                        println!("path is: {:?}", wd_path)
+                    }
+                    SubCommand::RevId { ref wd_path} => {
+                        println!("path is: {:?}", wd_path)
+                    }
+                    _ => {}
+                }
+
                 println!("path is: {:?}", wd_path)
             }
             _ => {
@@ -379,6 +409,7 @@ impl Wye {
     }*/
     fn check_file_path_valid(input_2:Option<&str>) ->bool{
         let file=dsr::read_file_as_string(input_2.unwrap_or("1"));//add D://ur//test.txt
+        //println!("file content is {:?}",file);
         if file.is_err()
         {
             false
