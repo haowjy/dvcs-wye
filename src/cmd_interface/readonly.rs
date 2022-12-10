@@ -28,18 +28,18 @@ pub fn log(wd: &str,rev_id: &str) -> Result<Option<Vec<String>>, Errors> {//alia
         //let log = load.get_log();//change into Hashmap
         //let vec = log.as_ref().unwrap();
             let current_head = load.get_current_head()?;//
-            let mut hashmap=current_head.get_manifest();//here get hashmap, this is log need print, maybe put into Vec<String>
+            let mut hashmap=current_head.get_log();//here get hashmap, this is log need print, maybe put into Vec<String>
             for(key,value) in hashmap{
-                string.push(key.to_owned()+":"+"value");//TODO
+                string.push(key.to_owned()+ ":"+ &value);
             }
             //string.push(("example").parse().unwrap());
             let parent_head = current_head.get_parent_id().unwrap();
             let mut new_rev = load.get_rev(parent_head).unwrap();
             while new_rev.get_parent_id().is_none() {
                 new_rev = load.get_rev(new_rev.get_parent_id().unwrap()).unwrap();
-                hashmap=new_rev.get_manifest();//here get hashmap, this is log need print, maybe put into Vec<String>
+                hashmap=new_rev.get_log();//here get hashmap, this is log need print, maybe put into Vec<String>
                 for(key,value) in hashmap{
-                    string.push(key.to_owned()+":"+"value");//TODO:read iteminfo inside, but is there command inside iteminfo???
+                    string.push(key.to_owned()+":"+&value);
                 }
             }
             Ok(Some(string))
