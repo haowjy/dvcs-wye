@@ -27,15 +27,20 @@ pub fn log(wd: &str,rev_id: &str) -> Result<Option<Vec<String>>, Errors> {//alia
     let load = repository::load(wd)?;//got Repo暂时先读
         //let log = load.get_log();//change into Hashmap
         //let vec = log.as_ref().unwrap();
-            let current_head = load.get_current_head().unwrap();//
-            current_head.get_manifest();//here get hashmap, this is log need print, maybe put into Vec<String>
-            string.push(("example").parse().unwrap());
+            let current_head = load.get_current_head()?;//
+            let mut hashmap=current_head.get_manifest();//here get hashmap, this is log need print, maybe put into Vec<String>
+            for(key,value) in hashmap{
+                string.push(key.to_owned()+":"+"value");//TODO
+            }
+            //string.push(("example").parse().unwrap());
             let parent_head = current_head.get_parent_id().unwrap();
             let mut new_rev = load.get_rev(parent_head).unwrap();
             while new_rev.get_parent_id().is_none() {
                 new_rev = load.get_rev(new_rev.get_parent_id().unwrap()).unwrap();
-                new_rev.get_manifest();//here get hashmap, this is log need print, maybe put into Vec<String>
-                string.push(("example").parse().unwrap());
+                hashmap=new_rev.get_manifest();//here get hashmap, this is log need print, maybe put into Vec<String>
+                for(key,value) in hashmap{
+                    string.push(key.to_owned()+":"+"value");//TODO:read iteminfo inside, but is there command inside iteminfo???
+                }
             }
             Ok(Some(string))
     //first current head->know parent head-> get_rev(return Revision碰到revision就读Parent id->until None
@@ -43,8 +48,12 @@ pub fn log(wd: &str,rev_id: &str) -> Result<Option<Vec<String>>, Errors> {//alia
 
 pub fn status(wd: &str) -> Result<&str, Errors> {
     //let rev=revision::Rev::from(wd);//got Rev
-    let load=repository::load(wd).unwrap();//got Repo以后可以换成？
-    let renew=load.get_current_head();
+    let load=repository::load(wd)?;//got Repo以后可以换成？
+    let renew=load.get_current_head()?;//get Rev
+    let wd_rev=file::retrieve_info(wd);//ItemInfo
+    let last_commit= load.get_current_head()?;//Rev
+    let last_commit_file=last_commit.get_manifest().get(wd);//iteminfo//TODO???
+    //iteminfo compare eq
     //let id =rev.as_ref().unwrap().get_id().unwrap();
     //let revision=load.as_ref().unwrap().get_rev(id);
     /*
@@ -59,13 +68,13 @@ pub fn status(wd: &str) -> Result<&str, Errors> {
 
     WD Stage Last
     1  0      0      add
-    1  1      0
-    1  1      1
-    1  0      1
-    0  0      1
-    0  0      0
-    0  1      0
-    0  1      1
+    1  1      0      modify?
+    1  1      1      modify->check
+    1  0      1      delete?
+    0  0      1      delete?
+    0  0      0      no change
+    0  1      0      add?
+    0  1      1      modify?
     else compare with commit最后的一个版本？//aka current head?
     如果是很多file返回的可能是vec<string>?So read iter() compare?
 
