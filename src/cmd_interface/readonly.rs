@@ -95,8 +95,12 @@ let res:&str;
         return Err(Errors::Errstatic("Please commit first!"))
     }
     else { //no stage, now compare last commit with wd
-        let last_commit= load.get_current_head()?;//Rev//TODO???
-        let last_commit_hashmap=last_commit.get_manifest();//iteminfo//TODO???
+        let last_commit= load.get_current_head();//Rev//TODO???
+        if  last_commit.is_err(){ println!("no head, means last commit is empty");}
+        else
+        {
+            let last_commit_file=last_commit.unwrap();
+        let last_commit_hashmap=last_commit_file.get_manifest();//iteminfo
         for (path, ItemInfo) in last_commit_hashmap {//read last commit
             let wd_rev=file::retrieve_info(path);
             if  wd_rev.as_ref().is_err(){//Cannot find the proper working directory path for file
@@ -119,6 +123,7 @@ let res:&str;
             }
         }
     }
+        }
 
 }//commit but not push end
     Ok("???")

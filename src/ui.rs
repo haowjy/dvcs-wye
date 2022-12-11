@@ -401,15 +401,7 @@ impl Wye {
         info!(target: "a","{} update {}", "command line","b");
     }*/
     fn check_file_path_valid(input_2:Option<&str>) ->bool{
-        let file=dsr::read_file_as_string(input_2.unwrap_or("1"));//add D://ur//test.txt
-        //println!("file content is {:?}",file);
-        if file.is_err()
-        {
-            false
-        }
-        else {
-            true
-        }
+        dsr::is_path_valid(input_2.unwrap_or("1"))//add D://ur//test.txt
     }
     fn input_handling_log(return_result:Result<Option<Vec<String>>,Errors>){
         if return_result.is_err() {
