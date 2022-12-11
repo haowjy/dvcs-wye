@@ -372,7 +372,7 @@ pub fn get_files(path: &str, ignore: Vec<&str>, list: &mut Vec<String>) -> Resul
                         let raw_path = entry_path.to_str().unwrap();
                         if !ignore.contains(&entry_name.to_str().unwrap()) {
                             if entry_path.is_dir() {
-                                get_files(raw_path, ignore, list)?;
+                                get_files(raw_path, ignore.clone(), list)?;
                             } else {
                                 list.push(raw_path.to_string());
                             }
