@@ -157,7 +157,7 @@ pub fn clear_dir(path: &str, ignore: Vec<&str>) -> Result<(), Errors> {
 }
 
 // 6.1 A more advanced clear_dir() which checks ignored files in sub-directories, sub-directories
-//      that contains ignored files will not be deleted, SEE test_6_clear_dir_adv() OR Example 2 at the end of the code
+//      that contains ignored files will not be deleted, SEE test functiontest_6_clear_dir_adv() at the end of the code
 pub fn clear_dir_adv(path: &str, ignore: Vec<&str>) -> Result<(), Errors> {
     for entry in read_dir(path)? {
         match entry {
@@ -358,7 +358,7 @@ pub fn get_user() -> (u32, String) {
 // 21.
 // USAGE: let mut list_files = vec![];
 //        get_files("path1/path2", &mut list_files);
-pub fn get_files(path: &str, list: &mut Vec<String>) -> Result<(), Errors> {
+pub fn get_files(path: &str, ignore: Vec<&str>, list: &mut Vec<String>) -> Result<(), Errors> {
     match fs::read_dir(path) {
         Ok(paths) => {
             for path in paths {
@@ -366,11 +366,14 @@ pub fn get_files(path: &str, list: &mut Vec<String>) -> Result<(), Errors> {
                     Ok(entry) => {
                         let entry = entry;
                         let entry_path = entry.path();
+                        let entry_name = entry.file_name();
                         let raw_path = entry_path.to_str().unwrap();
-                        if entry_path.is_dir() {
-                            get_files(raw_path, list)?;
-                        } else {
-                            list.push(raw_path.to_string());
+                        if !ignore.contains(&entry_name.to_str().unwrap()) {
+                            if entry_path.is_dir() {
+                                get_files(raw_path, ignore, list)?;
+                            } else {
+                                list.push(raw_path.to_string());
+                            }
                         }
                     },
                     Err(_) => return Err(new_error(ErrorKind::UnexpectedEof, &"get_files: unable to read entries from dir")),
@@ -521,9 +524,9 @@ mod tests_dsr {
     #[test]
     fn test_21_get_parent_name() {
         setup_test_space();
-
+ 
         let mut list = vec![];
-        get_files("dsr_test", &mut list);
+        get_files(".", vec![".git"], &mut list);
         println!("{:?}", list);
         clear_test_space();
     }
@@ -536,32 +539,3 @@ mod tests_dsr {
 
     }
 }
-
-/*
-
-    ====================================
-    Example 2: 
-    dsr_test
-    README.md
-    | -> folder1
-            hi.txt
-            also_hi.txt
-            first_layer.rs
-            | -> folder 2
-                    another_hi.txt
-                    second_layer.rs
-                    | -> folder 3
-                            | -> third_layer.rs
-    | -> folderA
-            cfile.cpp
-            | -> folderB
-                    python.py
-
-    CALL: clear_dir_adv("dsr_test", vec!["hi.txt", "another_hi.txt"])
-
-    dsr_test
-    | -> folder1
-            hi.txt
-            | -> folder 2
-                    another_hi.txt
-*/
