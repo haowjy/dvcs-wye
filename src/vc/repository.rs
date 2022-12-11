@@ -129,7 +129,7 @@ impl Repo {
 
         // update repos
         self.branch_heads.insert(self.current_head.clone().unwrap_or("main".to_string()), id);
-        self.clear_stage().save()
+        self.clear_stage()
     }
 
 
@@ -143,7 +143,7 @@ impl Repo {
     }
 
     
-    pub fn fetch(&mut self, rwd:&str) -> Result<(), Errors> { // fetch from remote
+    pub fn fetch(&self, rwd:&str) -> Result<(), Errors> { // fetch from remote
         let rwd_paths = RepoPaths::new(rwd);
         let mut files:Vec<String> = Vec::new();
         let mut revs: Vec<String> = Vec::new();
@@ -176,9 +176,9 @@ impl Repo {
         &self.stage
     }
 
-    pub fn clear_stage(&mut self) -> &Self {
+    pub fn clear_stage(&mut self) -> Result<(), Errors> {
         self.stage.clear();
-        self
+        self.save()
     }
 
 
@@ -215,7 +215,7 @@ impl Repo {
         let entry = retrieve_info(abs_path)?;
 
         self.stage.to_add.remove(entry.get_file_wd_path());
-        Ok(())
+        self.save()
     }
 
     pub fn remove_files_from_stage(&mut self, abs_paths:  &Vec<String>) -> Result<(), Errors> {
