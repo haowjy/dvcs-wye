@@ -30,7 +30,11 @@ pub fn log(wd: &str,rev_id: &str) -> Result<Option<Vec<String>>, Errors> {//alia
                 for(key,value) in hashmap{
                     string.push(key.to_owned()+ ":"+ &value);
                 }
-                let parent_head = current_head.get_parent_id().unwrap();
+                let mut parent_head = "";
+                let parent_head_pre = current_head.get_parent_id();
+                if  parent_head_pre.is_none(){ return Ok(Some(string));}
+                else {parent_head=parent_head_pre.unwrap(); }
+
                 new_rev = load.get_rev(parent_head).unwrap();
             } else {
                 //
