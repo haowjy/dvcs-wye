@@ -156,13 +156,13 @@ pub fn commit<'a>(wd: &'a str, message:&'a str) -> Result<String, Errors> {
     if head1.is_err() { // is initial commit
         return Ok("initial commit".to_string());
     } else{
-        let rev_id1 = head1.unwrap().get_id().unwrap();
+        let h1 = head1.unwrap();
+        let rev_id1 = h1.get_id().unwrap(); // old rev  
         let rev_id2 = head2.get_id().unwrap(); // new rev
 
-        // TODO: update head
-        // return a RevDiff if successful
+        // TODO: update head? does repo.commit do this already?
         let rev_diff = diff(wd, rev_id1, rev_id2)?;
-        
+        // return which files have been changed
         return Ok(format!("commit success: {}", rev_diff.files.keys().fold("".to_string(), |acc, file| acc + &format!("{} ", file))));
     }
 }
@@ -313,7 +313,7 @@ mod tests {
 
         let com1 = commit(cwd, "test commit");
         println!("com1: {:?}", com1);
-        assert!(com1.is_err());
+        assert!(com1.is_err()); // error because no files added to stage
 
         let _ = add(cwd, "a.txt");
         
