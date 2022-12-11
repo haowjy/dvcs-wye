@@ -275,7 +275,7 @@ fn check_wd(wd_path: &str) -> Option<String> {
 
 // weak untested fn prone to error
 pub (super) fn get_rel_path(abs_path: &str) -> Option<String> {
-    let wd = get_name(&check_wd(&get_wd_path())?)?;
+    let wd = get_name(&check_wd(abs_path)?)?; // search for the shallowest parent dir name that has .dvcs in it
     let rel_path = abs_path.rsplit_once(&wd)?.1.trim_matches('/'); // not tested on windows
     Some(rel_path.to_string())
 }
