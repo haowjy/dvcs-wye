@@ -78,7 +78,7 @@ impl Repo {
 
     pub fn commit(&mut self, message: &str) -> Result<(), Errors> {
         let mut head = self.get_current_head()?;
-        head.manifest.extend(self.stage.to_add.clone()); // *** need to figure out logging to report
+        head.manifest.extend(self.stage.to_add.clone());
         self.stage.to_remove.iter().for_each(|(path, _)| {head.manifest.remove(path);});
         
         // update head and save to repos
@@ -99,7 +99,7 @@ impl Repo {
     }
 
     pub fn new_head(&mut self, head_alias:&str, rev_id:&str) -> Result<(), Errors> { // *** needs revisiting later for error handling
-        self.branch_heads.entry(head_alias.to_string()).or_insert(rev_id.to_string());
+        self.branch_heads.insert(head_alias.to_string(), rev_id.to_string());
         self.save()
     }
 
