@@ -74,8 +74,6 @@ pub struct Wye {
     Merge {
         /// Name of the package to search
         rev_id: String,
-        /// Name of the package to search
-        rev_dest: String,
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
     },
@@ -127,14 +125,14 @@ pub struct Wye {
         #[arg(default_value_t = dsr::get_wd_path())]
         path: String,
     },
-    /// pull the version from server
+    /// pull the changes from another repository
     Pull {
         remote: String,
         head: String,
         #[arg(default_value_t = dsr::get_wd_path())]
         path: String,
     },
-    /// push new version
+    /// push changes into another repository
     Push {
         remote: String,
         head: String,
@@ -236,7 +234,7 @@ impl Wye {
                 Self::input_handling_special(res);
                 println!("message is: {:?}", message)
             }
-            Command::Merge { mut wd_path,rev_id,rev_dest } => {
+            Command::Merge { mut wd_path,rev_id } => {
                 if wd_path.eq("-d") || wd_path.eq("-"){
                     wd_path=default_wd_path;
                 }

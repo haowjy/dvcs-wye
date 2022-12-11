@@ -141,7 +141,11 @@ impl Rev {
         self.message = Some(msg.to_string());
         self
     }
-    
+
+    pub(super) fn set_parent_2(&mut self, parent_2: &str) -> &Self {
+        self.parent_id2 = Some(parent_2.to_string());
+        self
+    }
     fn get_date_time(&self) -> String{
         DateTime::<Local>::from(self.time_stamp).to_string()
     }
