@@ -1,0 +1,38 @@
+# acceptance 1
+mkdir level6
+cd level6
+git init level6-remote
+cd level6-remote
+echo "Hello World" > a.txt
+git add .
+git commit -m "hello world"
+
+cd ..
+mkdir cwd
+cd cwd
+git clone ../level6-remote
+cd level6-remote
+
+# acceptance 2
+sudo rm -r level6
+mkdir level6
+cd level6
+git init level6-remote
+cd level6-remote
+echo "Hello World" > a.txt
+git add .
+git commit -m "hello world"
+echo "File B" > b.txt
+git add .
+git commit -m "b"
+
+git log
+
+git checkout -b firstcommit 2b2462f991a072a2d9565f7d64de42a3ee5ea214
+
+cd ..
+mkdir cwd
+cd cwd
+git clone ../level6-remote
+cd level6-remote
+git branch
