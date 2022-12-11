@@ -190,6 +190,8 @@ impl Repo {
         let mut temp_rev = Rev::new();
         temp_rev.add_file(abs_path)?;
         self.stage.to_add.extend(temp_rev.get_manifest().clone());
+        
+        temp_rev.manifest.iter().try_for_each(|(_, item)| self.save_file_to_repo(item).map(|_s| ()))?;
         self.save()
     }
 
@@ -198,6 +200,8 @@ impl Repo {
         abs_paths.iter().try_for_each(|path| temp_rev.add_file(path))?; // will abort if any errors appear
         
         self.stage.to_add.extend(temp_rev.get_manifest().clone());
+        temp_rev.manifest.iter().try_for_each(|(_, item)| self.save_file_to_repo(item).map(|_s| ()))?;
+
         self.save()
     }
 
@@ -548,5 +552,20 @@ mod tests {
             Ok(())
         }
 
+        
+        // 4.
+        #[test]
+        fn test_get_file_content()-> Result<(), Errors> {
+            let paths = get_test_paths();
+            let mut repo = load(&paths.wd)?;
+            let head = repo.get_current_head()?;
+            let manifest = head.get_manifest();
+            for (k, v) in manifest.iter() {
+                if v.is_file() {
+                    repo.get_file_content(v);
+                }
+            };
+            Ok(())
+        }
 
     }
