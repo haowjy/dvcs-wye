@@ -143,7 +143,29 @@ impl Repo {
     }
 
     
-    // pub fn fetch(&mut self, rwd:&str) -> &Self; // will be removed
+    pub fn fetch(&mut self, rwd:&str) -> Result<(), Errors> { // fetch from remote
+        let rwd_paths = RepoPaths::new(rwd);
+        let mut files:Vec<String> = Vec::new();
+        let mut revs: Vec<String> = Vec::new();
+        get_files(&rwd_paths.files, &mut files)?;
+        get_files(&rwd_paths.revs, &mut revs)?;
+
+        files.iter().try_for_each(|file_path| {
+            let cwd_file_path = path_compose(&self.paths.files, &get_name(file_path).ok_or(Errors::Errstatic("Unknown error when fetching files from remote directory"))?);
+            if !is_path_valid(&cwd_file_path) {
+                copy_file(file_path, &cwd_file_path)?;
+            };
+            Ok(())
+        })?;
+
+        revs.iter().try_for_each(|rev_path| {
+            let cwd_rev_path = path_compose(&self.paths.revs, &get_name(rev_path).ok_or(Errors::Errstatic("Unknown error when fetching revisions from remote directory"))?);
+            if !is_path_valid(&cwd_rev_path) {
+                copy_file(rev_path, &cwd_rev_path)?;
+            };
+            Ok(())
+        })
+    }
 
 // ------ newly added pub functions ------
     pub fn get_file_content(&self, file_id: &str) -> Result<String, Errors> { // support cat 
