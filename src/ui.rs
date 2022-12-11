@@ -49,17 +49,17 @@ pub struct Wye {
 }
 #[derive(Parser,Debug)]
  enum Command {
-    /// add specific files that you want to track
+    /// add specific files(multi files use "," to spilt) that you want to track
     Add {
         /// Name of the package to search
-        path: Vec<String>,
+        path: String,
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
     },
     /// remove specific files from tracking list
     Remove {
         /// Name of the package to search
-        path: Vec<String>,
+        path: String,
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
     },
@@ -185,10 +185,11 @@ impl Wye {
                     println!("path is empty");
                     }
                 else {
-                    path.iter().fold(0, |acc, x| {
-                    if Self::check_file_path_valid(Some(&x))
+                    let path_spoilt:Vec<&str>=path.split(',').collect();
+                    path_spoilt.iter().fold(0, |acc, &x| {
+                    if Self::check_file_path_valid(Some(x))
                     {
-                        res=readwrite::add(&wd_path,&x);
+                        res=readwrite::add(&wd_path,x);
                     }
                     else {
                         res=Err(Errstatic("error file path or unreadable file path"));
@@ -211,10 +212,11 @@ impl Wye {
                     println!("path is empty");
                 }
                 else {
-                    path.iter().fold(0, |acc, x| {
-                        if Self::check_file_path_valid(Some(&*x))
+                    let path_spoilt:Vec<&str>=path.split(',').collect();
+                    path_spoilt.iter().fold(0, |acc, &x| {
+                        if Self::check_file_path_valid(Some(x))
                         {
-                            res=readwrite::remove(&wd_path,&*x);
+                            res=readwrite::remove(&wd_path,x);
                         }
                         else {
                             res=Err(Errstatic("error file path or unreadable file path"));
