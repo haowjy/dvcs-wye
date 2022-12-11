@@ -487,7 +487,7 @@ mod tests {
             assert!(fs::read_dir(paths.revs).is_ok());
 
             assert!(load(&paths.wd).is_ok());
-            create_dir(&path_compose(&paths.wd, "test_dir"));
+            // create_dir(&path_compose(&paths.wd, "test_dir"));
 
             assert!(load(&path_compose(&paths.wd, "test_dir")).is_ok());
 
@@ -628,11 +628,6 @@ mod tests {
             }
             let remote_paths = RepoPaths::new(&remote_dir);
             init(Some(&remote_paths.wd))?;
-            let mut remote_repo = load(&remote_paths.wd)?;
-
-            let paths = get_test_paths();
-            let mut repo = load(&paths.wd)?;
-
 
             let remote_wd_f_path = path_compose(&remote_paths.wd, "remote_file.txt");
             write_file(&remote_wd_f_path, &format!("remote content\n{:?}", SystemTime::now()))?;
