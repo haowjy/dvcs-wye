@@ -4,5 +4,6 @@
 local/
 remoterepo/
 .dvcs/
+vc_test/
 Cargo.lock
 a.txt

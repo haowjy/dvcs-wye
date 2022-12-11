@@ -11,13 +11,6 @@ use crate::vc::repository::*;
 use crate::dsr::*;
 
 
-// static STORAGE_DIR: &str =".dvcs/files"; //relative path hard coded, might change to use lazy_static macro 
-
-// trait Info {
-//     loc_in_wd: String,
-//     content_id: String,
-// }
-
 #[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq)] 
 pub struct ItemInfo {
     name: String, // last component of path. Can be directory?

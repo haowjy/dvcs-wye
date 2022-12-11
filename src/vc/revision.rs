@@ -29,7 +29,6 @@ pub struct Rev {
 
 
 impl Rev {
-    // *** deserialize not implemented, use serde_json for now
     pub fn from(path: &str) -> Result<Rev, Errors> {
         match serde_json::from_str(&read_file_as_string(path)?){
             Ok(rev) => Ok(rev),
@@ -39,7 +38,6 @@ impl Rev {
         // Some(rev)
     }
 
-    // *** serialize not implemented, use serde_json for now
     pub (super) fn save(&self, rev_path: &str) -> Result<(), Errors> { //need to figure out destructor
         match &self.rev_id {
             Some(id) => write_file(&path_compose(rev_path, &id), &serialize(&self)?),
@@ -108,17 +106,6 @@ impl Rev {
         self.time_stamp = SystemTime::now();
         self
     }
-
-    // pub (super) fn store_files(&mut self, path: &str) -> Result<(), Errors> {
-    //     self.manifest.iter().try_for_each(|_, info|{
-    //         info.save_to_repo()?
-
-    //         // info.save_to_repo()?;
-            
-    //     });
-    // //         
-    //     Ok(())
-    // }
 
     pub (super) fn gen_id(&mut self, rev_path: &str) -> Result<String, Errors> {
 
