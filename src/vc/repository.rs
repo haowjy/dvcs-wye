@@ -327,7 +327,7 @@ impl Repo {
 }
 
 // ------ private mod fns ------
-pub (super) fn check_wd(wd_path: &str) -> Option<String> {
+pub fn check_wd(wd_path: &str) -> Option<String> {
     if is_path_valid(&path_compose(wd_path, ".dvcs")) {
         return Some(wd_path.to_string());
     } else {
@@ -467,7 +467,12 @@ mod tests {
 
         fn get_test_paths()-> RepoPaths {
             let wd = get_wd_path();
-            RepoPaths::new(&path_compose(&wd, TEST_PATH))
+            let paths = RepoPaths::new(&path_compose(&wd, TEST_PATH));
+            if !is_path_valid(&paths.wd) {
+                clear_dir(&paths.wd, Vec::new()).unwrap();
+            }
+            paths
+
         }
 
 
@@ -476,7 +481,7 @@ mod tests {
         fn test_init_load() {
             let paths = get_test_paths();
             // delete_dir(&paths.root);
-            clear_dir(&paths.wd, Vec::new());
+
             print!("{}", &paths.revs);
             assert!(init(Some(&paths.wd)).is_ok());
             assert!(fs::read_dir(paths.revs).is_ok());
@@ -524,7 +529,7 @@ mod tests {
             let paths = get_test_paths();
             let mut repo = load(&paths.wd)?;
             let file_path_1 = path_compose(&paths.wd, "branching_test.txt");
-            write_file(&file_path_1, "branching test")?;
+            write_file(&file_path_1, &format!("branching test\n{:?}", SystemTime::now()))?;
             match &repo.current_head {
                 Some(alias) => {
                     if alias != "main" {
@@ -544,7 +549,7 @@ mod tests {
             assert_eq!(&repo.current_head, &Some(new_head_alias.to_string()));
             assert_eq!(&repo.branch_heads.get(new_head_alias), &repo.branch_heads.get("main"));
 
-            write_file(&file_path_1, "test branching")?;
+            write_file(&file_path_1, &format!("branching test\n{:?}", SystemTime::now()))?;
             repo.add_file(&file_path_1)?;
             repo.commit("committed on test branch")?;
             assert!(&repo.branch_heads.get(new_head_alias) != &repo.branch_heads.get("main"));
@@ -560,12 +565,73 @@ mod tests {
             let mut repo = load(&paths.wd)?;
             let head = repo.get_current_head()?;
             let manifest = head.get_manifest();
-            for (k, v) in manifest.iter() {
+            manifest.iter().try_for_each(|(_k, v)| {
                 if v.is_file() {
-                    repo.get_file_content(v);
-                }
-            };
+                    repo.get_file_content(v)?;
+                };
+                Ok(())
+            })?;
+            let new_file = path_compose(&paths.wd, "get_file_content_test.txt");
+            write_file(&new_file, "get file content after add")?;
+
+            repo.add_file(&new_file)?;
+            repo.stage.to_add.iter().try_for_each(|(_k,v)| {
+                if v.is_file() {
+                    repo.get_file_content(v)?;
+                };
+                Ok(())
+            })?;
+            repo.clear_stage()?;
             Ok(())
         }
 
+        // 5.
+        #[test]
+        fn test_remove() -> Result<(), Errors> {
+            let paths = get_test_paths();
+            let mut repo = load(&paths.wd)?;
+            let remove_file = path_compose(&paths.wd, "remove_test.txt");
+            write_file(&remove_file, &format!("test remove\n{:?}", SystemTime::now()))?;
+            repo.add_file(&remove_file)?;
+            repo.commit("commit file to be removed later")?;
+
+            write_file(&remove_file, &format!("test remove\n{:?}", SystemTime::now()))?;
+            repo.add_file(&remove_file)?;
+            repo.remove_file(&remove_file)?;
+            assert_eq!(repo.stage.to_add.len(), 0);
+            assert_eq!(repo.stage.to_remove.len(), 1);
+            Ok(())
+
+        }
+
+        // 6
+        // #[test]
+        // fn test_fetch() -> Result<(), Errors> {
+
+        //     let remote_paths = make_rwd()?;
+        //     let mut remote_repo = load(&remote_paths.wd)?;
+
+        //     remote_repo.add_file(&remote_wd_f_path)?;
+
+        //     let current_rem
+
+        // }
+
+        // fn make_rwd() -> Result<RepoPaths, Errors> {
+        //     let remote_dir = path_compose(&get_wd_path(), "vc_test_remote");
+        //     if !is_path_valid(&remote_dir) {
+        //         create_dir(&remote_dir)?;
+        //     }
+        //     let remote_paths = RepoPaths::new(&remote_dir);
+        //     init(Some(&remote_paths.wd))?;
+        //     let mut remote_repo = load(&remote_paths.wd)?;
+
+        //     let paths = get_test_paths();
+        //     let mut repo = load(&paths.wd)?;
+
+
+        //     let remote_wd_f_path = path_compose(&remote_paths.wd, "remote_file.txt");
+        //     write_file(&remote_wd_f_path, &format!("remote content\n{:?}", SystemTime::now()))?;
+        //     Ok(remote_paths)
+        // }
     }

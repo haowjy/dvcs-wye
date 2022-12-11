@@ -119,10 +119,10 @@ fn get_id(file_path: &str) -> Result<String, Errors> {
     Ok(checked_sha(&content, &repo_storage_dir))
 }
 
-fn get_repo_storage_dir() -> Option<String> {
-    let wd_root = get_wd_root().ok()?;
-    Some(path_compose(&wd_root, ".dvcs/files"))
-}
+// fn get_repo_storage_dir() -> Option<String> {
+//     let wd_root = get_wd_root().ok()?;
+//     Some(path_compose(&wd_root, ".dvcs/files"))
+// }
 
 
 
