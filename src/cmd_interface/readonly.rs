@@ -47,71 +47,83 @@ pub fn log(wd: &str,rev_id: &str) -> Result<Option<Vec<String>>, Errors> {//alia
 }
 
 pub fn status(wd: &str) -> Result<&str, Errors> {
-    //let rev=revision::Rev::from(wd);//got Rev
+    //modified:   a.txt
+    //add
+    //ahead of ?commit
+    //up to date
     let load=repository::load(wd)?;//got Repo以后可以换成？
-    let renew=load.get_current_head()?;//get Rev
-    let stage=load.get_stage();// got stage暂存区里的一个版本
+    //let renew=load.get_current_head()?;//get Rev
+    let stage=load.get_stage();// got stage暂存区
     let stage_inside_add=stage.get_add();
     let stage_inside_remove=stage.get_remove();
     //readall
+let res:&str;
+    let mut count_add =0;
+    let mut count_delete=0;
+    println!("Changes not staged for commit:");
+    for (path, ItemInfo) in stage_inside_add {//stage add
+        //println!("add: {}",ItemInfo.get_file_name());//compare modify or not?
+        let wd_rev=file::retrieve_info(path);
+        if  wd_rev.is_err(){//Cannot find the proper working directory path for file
+            println!("add: {}",ItemInfo.get_file_name());
+        }
+        else {
+            println!("modified: {}",ItemInfo.get_file_name());
+        }
+        /*if ItemInfo.clone()==wd_rev{
+            count_add=count_add+1;
+            println!("eq");
+            //return Ok("need to be commit");
+        }
+        else{ let diff = file_diff(wd_rev.get_content().unwrap(), ItemInfo.get_content().unwrap()).clone();
+            let flag= diff.is_diff();
+            if flag==true {
+                let d= diff.get_patch();
+                println!("add: {},{}",ItemInfo.get_file_name(),d);
+            }
+            else { println!("No difference, same"); }
+        }*/
+    }//stage add end
+    for (path, ItemInfo) in stage_inside_remove {//stage remove
+        let wd_rev=file::retrieve_info(path);
+        if  wd_rev.is_err(){//Cannot find the proper working directory path for file
+            println!("{} already be deleted",ItemInfo.get_file_name());
+        }
+        else {
+            let diff = file_diff(wd_rev.unwrap().get_content().unwrap(), ItemInfo.get_content().unwrap()).clone();
+            let flag= diff.is_diff();
+            if flag==true {
+                let d= diff.get_patch();
+                println!("add: {},{}",ItemInfo.get_file_name(),d);
+            }
+            else { println!("No difference, same"); }
+            println!("delete: {}",ItemInfo.get_file_name());
+        }
+    }//stage remove end
 
-    for (path,iteminfo) in stage_inside_add {
-        let wd_rev=file::retrieve_info(path)?;
-        let wd_rev=file::retrieve_info(path)?;
-    }
+    //commit but not push
     //let wd_rev=file::retrieve_info()?;//ItemInfo, read file path
-    let last_commit= load.get_current_head()?;//Rev
-    let last_commit_file=last_commit.get_manifest().get(wd).unwrap().clone();//iteminfo//TODO???
-    /*if last_commit_file==wd_rev{
-        println!("eq")
-    }*/
-    //iteminfo compare eq, iteminfo use get_content() to get string and use diff compare
-    //let id =rev.as_ref().unwrap().get_id().unwrap();
-    //let revision=load.as_ref().unwrap().get_rev(id);
-    /*
-    let stage=revision::Rev::from_stage();// got stage暂存区里的一个版本
-    if stage==null返回nothing to commit, working tree clean
-    // WD 从  file里的   read, retieve_info, return iteminfo
-    // last commit repo.get_current_head()
-    //
-    read stage: let stage=revision::Rev::from_stage();// got stage's revision
-    read WD: let wd_rev=retieve_info; iteminfo --hashmap read balabala
-    read last commit: let last_commit= repo.get_current_head();
-
-    WD Stage Last
-    1  0      0      add
-    1  1      0      modify?
-    1  1      1      modify->check
-    1  0      1      delete?
-    0  0      1      delete?
-    0  0      0      no change
-    0  1      0      add?
-    0  1      1      modify?
-    else compare with commit最后的一个版本？//aka current head?
-    如果是很多file返回的可能是vec<string>?So read iter() compare?
-
-    let stage=revision::Rev::from_stage();
-    stage.get_files();//获得文件，return hashmap
-    each file get_content();
-
-    //同理
-    get_current head()?
-    ???又是get_revision? getfile???
-    有没有getfilename???和通过filename找到file content的hashmap的key是path
-    path same, compare id; id not same, output;
-    WD's path not exist, deleted.
-    Stage
-
-    VC::Repo::load();
-    VC::Repo::get_rev();//old_revision: &str
-    VC::Rev::new();
-    let diff=CF::file_diff(content1, content2);
-    diff*/
-    //let load=repository::load(wd);//got Repo
-    /* let w=load.get_rev();
-     print!("{:?}",w);*/
-    //let file=load.unwrap().get_file_content(id).unwrap();
-    //let file1="content1".to_string();
+    if stage_inside_add.capacity()!=0 && stage_inside_remove.capacity()!=0 {
+        return Err(Errors::Errstatic("Please commit first!"))
+    }
+    else { //no stage, now compare last commit with wd
+        let last_commit= load.get_current_head()?;//Rev//TODO???
+        let last_commit_hashmap=last_commit.get_manifest();//iteminfo//TODO???
+        for (path, ItemInfo) in last_commit_hashmap {//read last commit
+            let wd_rev=file::retrieve_info(path);
+            if  wd_rev.is_err(){//Cannot find the proper working directory path for file
+                println!("{} is ahead of work directory",ItemInfo.get_file_name());
+            }
+            else {//compare diff
+                if ItemInfo.clone()==wd_rev.unwrap(){
+                    println!("eq, means up to date")
+                }
+                else {
+                    println!("{}is ahead of work directory",ItemInfo.get_file_name());
+                }
+            }
+        }
+    }
     let diff = file_diff("&file1".to_string(), "&file".to_string()).clone();
     //
     let flag= diff.is_diff();
