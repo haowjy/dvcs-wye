@@ -104,7 +104,7 @@ impl Repo {
         self.commit_from(&mut head, msg.unwrap_or(format!("Merged from {}", parent_2).as_str()))
     }
 
-    fn commit_from(&mut self, head: &mut Rev, message: &str) -> Result<(), Errors> {
+    pub fn commit_from(&mut self, head: &mut Rev, message: &str) -> Result<(), Errors> {
         let manifest_copy = head.manifest.clone();
         head.manifest.extend(self.stage.to_add.clone());
         self.stage.to_remove.iter().for_each(|(path, _)| {head.manifest.remove(path);});
