@@ -125,14 +125,14 @@ pub struct Wye {
         #[arg(default_value_t = dsr::get_wd_path())]
         path: String,
     },
-    /// pull the version from server
+    /// pull the changes from another repository
     Pull {
         remote: String,
         head: String,
         #[arg(default_value_t = dsr::get_wd_path())]
         path: String,
     },
-    /// push new version
+    /// push changes into another repository
     Push {
         remote: String,
         head: String,
