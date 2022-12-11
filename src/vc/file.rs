@@ -33,25 +33,8 @@ pub enum EntryType {
 
 use EntryType::{File, Dir, Other};
 
-// #[derive(Debug, Serialize, Deserialize)] 
-// struct FileMetaData {
-//     // created: bool,
-//     // is_file: bool, 
-//     is_dir: bool,
-//     // len: u64,
-// }
-
-// impl FileMetaData {
-//     fn retrieve(&wd_file_path) -> FileMetaData {
-//         let meta = fs::metadata(wd_file_path);
-//         FileMetaData {
-//             is_dir: meta.is_dir();
-//         }
-//     }
-// }
 
 impl ItemInfo {
-    // CHANGE INCOMING: WILL MOVE TO Repo's get_file()
     pub fn get_content(&self) -> Result<String, Errors> { // get cached content
         
         match &self.entry {
@@ -99,34 +82,10 @@ impl ItemInfo {
 
     // // MOVING TO repository
     // pub (super) fn save_to_repo(&mut self) -> Result<(), Errors>{ 
-    //     let wd_root = get_wd_root()?;
-    //     let repo_storage_dir = path_compose(&wd_root, ".dvcs/files");
-
-    //     copy_file(self.
-    //         path_compose(repo_storage_dir, &self.content_id))
-
-    //     let content = read_file_as_string(&path_compose(&wd_root, &self.loc_in_wd))?;
-
-
-    //     let mut new_id = checked_sha(&content, &repo_storage_dir);
-    //     let storage_path = path_compose(&repo_storage_dir, &new_id);
-
-    //     ()
-    //     if !is_path_valid(&storage_path) {
-    //         write_file(&storage_path, &content);
-    //     }
-    //     self.content_id = Some(new_id);
-    //     Ok(())
     // }
 
 }
-// fn resolve_id_conflict(sha_id: &str, pool_path) -> Option<String> {
-//     let repo_storage_path = path_compose(pool_path, sha_id);
-//     if !is_path_valid(repo_storage_path) {
-//         return None;
-//     }
-//     if content_    
-// } 
+
 pub fn retrieve_info(abs_path: &str) -> Result<ItemInfo, Errors> {
     let rel_path = get_rel_path(abs_path).ok_or(Errors::ErrStr(format!("Cannot find the proper working directory path for file {abs_path}")))?;
 
