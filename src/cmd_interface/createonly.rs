@@ -7,13 +7,7 @@ use crate::readwrite::*;
 
 
 pub fn clone<'a>(wd: &'a str, remote:&'a str) -> Result<String, Errors> {
-    // TODO: have options to target the dvcs directory???
-    let cop_res = copy_dir(remote, wd);
-
-    let _ : Result<&str, ()> = match cop_res {
-        Ok(_) => Ok("clone success"),
-        Err(_) => return Err(Errstatic("clone failed: copy_dir failed")),
-    };
+    copy_dir(remote, wd)?;
 
     let head = "HEAD"; // TODO: Connect to VC
 
@@ -44,6 +38,8 @@ pub fn checkout<'a>(wd:&'a str, rev:&'a str, new_branch_alias: Option<String>) -
 }
 
 pub fn pull<'a>(wd:&'a str, remote:&'a str) -> Result<String, Errors> {
+    // check if wd and remote are directories and have same name
+
     // VC::Repo::load(wd)
     // VC::Repo.fetch(remote, head)
     // repo_remote
@@ -56,6 +52,8 @@ pub fn pull<'a>(wd:&'a str, remote:&'a str) -> Result<String, Errors> {
 }
 
 pub fn push<'a>(wd:&'a str, remote:&'a str) -> Result<String, Errors> {
+    // check if wd and remote are directories and have same name
+    
     // VC::Repo::load() // load wd and remote repos
     // diff(Repo.remote/head, remoteRepo.head) // if the remote tracked is different from what is actually on remote, then block and ask to pull
     let diff_res : Result<RevDiff, ()> = match diff(wd,"curRepo.remote/head", "remoteRepo.head") {
