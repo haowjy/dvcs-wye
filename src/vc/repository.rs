@@ -286,15 +286,25 @@ pub fn load(wd:&str) -> Result<Repo, Errors> { // Result<Repo, ()>
     load_repo.paths = paths;
     Ok(load_repo)
 }
+//buggy fn, commented out
+// pub fn get_wd_root() -> Result<String, Errors> { 
+//     let wd = get_wd_path();
+//     match check_wd(&wd) {
+//         Some(path) => Ok(path),
+//         None => Err(Errors::Errstatic("Directory untracked, fail to locate repository"))
+//     }
+// }
 
-pub fn get_wd_root() -> Result<String, Errors> {
-    let wd = get_wd_path();
-    match check_wd(&wd) {
-        Some(path) => Ok(path),
-        None => Err(Errors::Errstatic("Directory untracked, fail to locate repository"))
+pub fn check_wd(wd_path: &str) -> Option<String> {
+    if is_path_valid(&path_compose(wd_path, ".dvcs")) {
+        return Some(wd_path.to_string());
+    } else {
+        match get_parent_name(wd_path) {
+            Some(parent) => check_wd(&parent),
+            None => None
+        }
     }
 }
-
 
 // ------ private Repo fns ------
 impl Repo {
@@ -327,16 +337,6 @@ impl Repo {
 }
 
 // ------ private mod fns ------
-pub fn check_wd(wd_path: &str) -> Option<String> {
-    if is_path_valid(&path_compose(wd_path, ".dvcs")) {
-        return Some(wd_path.to_string());
-    } else {
-        match get_parent_name(wd_path) {
-            Some(parent) => check_wd(&parent),
-            None => None
-        }
-    }
-}
 
 pub (super) fn get_rel_path(abs_path: &str) -> Option<String> {
     let wd = get_name(&check_wd(abs_path)?)?; // search for the shallowest parent dir name that has .dvcs in it
