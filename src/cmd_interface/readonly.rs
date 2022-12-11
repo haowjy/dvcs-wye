@@ -78,6 +78,7 @@ let res:&str;
             println!("{} already be deleted",ItemInfo.get_file_name());
         }
         else {
+            // TODO: use different get content method
             let diff = file_diff(wd_rev.unwrap().get_content().unwrap(), ItemInfo.get_content().unwrap()).clone();
             let flag= diff.is_diff();
             if flag==true {
