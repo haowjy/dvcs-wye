@@ -1,6 +1,7 @@
 #[allow(dead_code)]
 #[allow(unused_imports)]
 use std::collections::HashMap;
+use chrono::format::Item;
 // use std::time::SystemTime;
 // external crates:
 // use petgraph::graphmap::DiGraphMap;
@@ -168,8 +169,11 @@ impl Repo {
     }
 
 // ------ newly added pub functions ------
-    pub fn get_file_content(&self, file_id: &str) -> Result<String, Errors> { // support cat 
-        read_file_as_string(&path_compose(&self.paths.files, file_id))
+    pub fn get_file_content(&self, item: &ItemInfo) -> Result<String, Errors> { // support cat 
+        match item.get_file_id() {
+        Some(id) => read_file_as_string(&path_compose(&self.paths.files, id)),
+        None => Err(Errors::ErrStr(format!("Not a file: {}",item.get_file_name())))
+        }
     }
 
     pub fn get_stage(&self) -> &Stage {
