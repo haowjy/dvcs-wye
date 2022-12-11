@@ -89,12 +89,15 @@ impl Repo {
 
         // update head and save rev to repos
         let user = get_user();
-        let id = head.set_user(&user.1).set_message(message).update_time().gen_id(&self.paths.revs)?;
+        head.set_user(&user.1);
+        head.set_message(message);
+        head.update_time();
+        let id = head.gen_id(&self.paths.revs)?;
         head.save(&self.paths.revs);
 
         // update repos
         
-        self.branch_heads.insert(self.current_head.unwrap_or("main".to_string()), id);
+        self.branch_heads.insert(self.current_head.clone().unwrap_or("main".to_string()), id);
         self.clear_stage().save()
     }
     

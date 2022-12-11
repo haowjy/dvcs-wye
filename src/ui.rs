@@ -74,8 +74,6 @@ pub struct Wye {
     Merge {
         /// Name of the package to search
         rev_id: String,
-        /// Name of the package to search
-        rev_dest: String,
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
     },
@@ -236,7 +234,7 @@ impl Wye {
                 Self::input_handling_special(res);
                 println!("message is: {:?}", message)
             }
-            Command::Merge { mut wd_path,rev_id,rev_dest } => {
+            Command::Merge { mut wd_path,rev_id } => {
                 if wd_path.eq("-d") || wd_path.eq("-"){
                     wd_path=default_wd_path;
                 }
