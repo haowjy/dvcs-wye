@@ -76,48 +76,34 @@ impl Repo {
         Rev::from(&path_compose(&self.paths.revs, rev_id))
     }
 
-    // *** In the process to be rewritten 
     pub fn commit(&mut self, message: &str) -> Result<(), Errors> {
-        Err(Errors::ErrUnknown)
-    }
-    
-    // Result<CommitResult, Errors> { // Result<CommitResult, Errors> *** TODO
-    //     self.stage.to_add.
-
-    //     self.stage.store_files(&self.paths.files)?;// need to figure out logging to report
-    //     self.stage.update_time();
-
-    //     let commit_id = self.stage.gen_id()?;
+        let mut head = self.get_current_head()?;
+        head.manifest.extend(self.stage.to_add.clone()); // *** need to figure out logging to report
+        self.stage.to_remove.iter().for_each(|(path, _)| {head.manifest.remove(path);});
         
-    //     self.stage.save(&self.paths.revs)?; // save to revs 
+        // update head and save to repos
+        let user = get_user();
+        
+        let id = head.set_user(&user.1).set_message(message).update_time().gen_id(&self.paths.revs)?;
+        head.save(&self.paths.revs);
 
-    //     // update head pointers
-    //     match &self.current_head {
-    //         Some(alias) => {if let Some(id) = self.branch_heads.get_mut(self.current_head.as_ref()?) {
-    //             *id = commit_id;
-    //             } // update id
-    //         },
-    //         None => {
-    //             let new_head_alias = "main";
-    //             self.branch_heads.insert(new_head_alias.to_string(), commit_id);
-    //             self.current_head = Some(new_head_alias.to_string());
-    //         }
-    //     }
-    //     self.save();
-    //     Some(())
-    // }
+        // update repos
+        self.clear_stage();
+        self.branch_heads.insert(self.current_head.unwrap_or("main".to_string()), id);
+        self.save()
+    }
     
 
     pub fn get_heads(&self) -> &HashMap<String, String> {
         &self.branch_heads
     }
 
-    pub fn new_head(&mut self, head_alias:&str, rev_id:&str) -> &Self { // *** needs revisiting later for error handling
+    pub fn new_head(&mut self, head_alias:&str, rev_id:&str) -> Result<(), Errors> { // *** needs revisiting later for error handling
         self.branch_heads.entry(head_alias.to_string()).or_insert(rev_id.to_string());
-        self.save();
-        self
+        self.save()
     }
 
+    
     // pub fn fetch(&mut self, rwd:&str) -> &Self; // *** to be implemented
 
 // ------ newly added pub functions ------
@@ -134,13 +120,6 @@ impl Repo {
         self
     }
 
-    // pub fn clone(rwd:&str) -> Option<()> { // clone from a remote repo
-    //     None // *** to be impl
-    //     // needs to update remote head and have data structure tracking the rwd path,
-    // }
-
-
-    // Note: add and remove assumes the paths are already checked
 
     pub fn add_file(&mut self, abs_path: &str) -> Result<(), Errors> {
         let mut temp_rev = Rev::new();
@@ -158,18 +137,28 @@ impl Repo {
     }
 
     pub fn remove_file(&mut self, abs_path:&str) -> Result<(), Errors>{
-        let mut temp_rev = Rev::new();
-        temp_rev.add_file(abs_path)?; // *** iterator operations and branching tbd here
-        self.stage.to_remove.extend(temp_rev.get_manifest().clone());
+        self.remove_file_from_stage(abs_path)?; // automatically remove file in stage as well
+
+        let mut temp_head = self.get_current_head()?;
+        let f_to_remove = temp_head.remove_file(abs_path)?; // get the info from head
+
+        self.stage.to_remove.insert(f_to_remove.get_file_wd_path().to_string(), f_to_remove);
         self.save()
     }
 
     pub fn remove_files(&mut self, abs_paths: &Vec<String>)-> Result<(), Errors> {
-        let mut temp_rev = Rev::new();
-        abs_paths.iter().try_for_each(|path| temp_rev.add_file(path))?; // will abort if any errors appear
-        
-        self.stage.to_remove.extend(temp_rev.get_manifest().clone());
-        self.save()    
+        abs_paths.iter().try_for_each(|path| self.remove_file(path))
+    }
+
+    pub fn remove_file_from_stage(&mut self, abs_path: &str) -> Result<(), Errors> {
+        let entry = retrieve_info(abs_path)?;
+
+        self.stage.to_add.remove(entry.get_file_wd_path());
+        Ok(())
+    }
+
+    pub fn remove_files_from_stage(&mut self, abs_paths:  &Vec<String>) -> Result<(), Errors> {
+        abs_paths.iter().try_for_each(|path| self.remove_file_from_stage(path))
     }
 
 
@@ -183,6 +172,10 @@ impl Repo {
         }
         self.current_head = Some(set_head_to.to_string());
         self.save()
+    }
+
+    pub fn get_current_head_alias(&self) -> Option<&str> {
+        self.current_head.as_deref()
     }
 }
 
@@ -248,6 +241,24 @@ impl Repo {
         // write_file(&self.paths.branch_heads, &serde_json::to_string(&self.branch_heads).ok()?).ok()?;
         // write_file(&self.paths.branch_heads, &serde_json::to_string(&self.branch_heads).ok()?).ok()?;
     }
+
+    fn save_file_to_repo(&self, file: &ItemInfo) -> Result<&'static str, Errors>{
+        let src = path_compose(&self.paths.wd, &file.get_file_wd_path());
+        let dest = match file.get_file_id() {
+            Some(id) => path_compose(&self.paths.files, id),
+            None => return Ok("Not a file")
+        };
+
+        if is_path_valid(&dest) {
+            return Ok("Exact file exists in repository");
+        }
+
+        match copy_file(&src, &dest) {
+            Ok(_) => Ok("Successfully saved to repository"),
+            Err(e) => Err(e)
+        }
+    }
+
 }
 
 // ------ private mod fns ------
@@ -277,6 +288,7 @@ pub (super) fn get_abs_path(rel_path: &str) -> Option<String> {
 pub (super) fn sha<T: AsRef<[u8]> + ?Sized> (data: &T) -> String {
     format!("{:x}", Sha256::digest(data))
 }
+
 
 // // preliminary fn might change later or make a trait
 // pub (super) fn sha_match<'a, T: Clone + Iterator + Iterator<Item=&'a str>> (sha: &'a str, pool: T) -> Vec<&'a str> {

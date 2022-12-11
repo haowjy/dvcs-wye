@@ -25,7 +25,7 @@ pub struct Rev {
     user_id: Option<String>,
     time_stamp: SystemTime,
     message: Option<String>, // to be added
-    manifest: HashMap<String, ItemInfo>,  // Hashmap<K: wd_relative_path, V: ItemInfo: file content id and metadata id
+    pub (super) manifest: HashMap<String, ItemInfo>,  // Hashmap<K: wd_relative_path, V: ItemInfo: file content id and metadata id
 }
 
 
@@ -97,14 +97,13 @@ impl Rev {
         Ok(())
     }
 
-    pub (super) fn remove_file(&mut self, abs_path: &str) -> Result<(), Errors>{
+    pub (super) fn remove_file(&mut self, abs_path: &str) -> Result<ItemInfo, Errors>{
         let entry = retrieve_info(abs_path)?;
         let entry_loc_path = entry.get_file_wd_path();
         if !self.manifest.contains_key(entry_loc_path) {
             return Err(Errors::Errstatic("Unable to remove untracked file"));
         }
-        self.manifest.remove(entry_loc_path);
-        Ok(())
+        self.manifest.remove(entry_loc_path).ok_or(Errors::Errstatic("Unable to remove untracked file"))
     } 
 
     pub (super) fn update_time(&mut self) -> &Self {
@@ -112,31 +111,34 @@ impl Rev {
         self
     }
 
-    // *** To be Changed
-    pub (super) fn store_files(&mut self, path: &str) -> Result<(), Errors> {
-        for (_, info) in self.manifest.iter_mut() {
-            ()
-            // info.save_to_repo()?;
-            
-        }
-    //         
-        Ok(())
-    }
+    // pub (super) fn store_files(&mut self, path: &str) -> Result<(), Errors> {
+    //     self.manifest.iter().try_for_each(|_, info|{
+    //         info.save_to_repo()?
 
-    pub (super) fn gen_id(&mut self) -> Result<String, Errors> {
-        let wd = get_wd_root()?;
-        let revs_dir = path_compose(&path_compose(&wd, ".dvcs"), "revs");
+    //         // info.save_to_repo()?;
+            
+    //     });
+    // //         
+    //     Ok(())
+    // }
+
+    pub (super) fn gen_id(&mut self, rev_path: &str) -> Result<String, Errors> {
 
         self.parent_id = self.rev_id.clone(); // "inheritance"
         self.rev_id = None;
 
-        let id = checked_sha(&serialize(&self.clone())?, &revs_dir);
+        let id = checked_sha(&serialize(&self.clone())?, &rev_path);
         self.rev_id = Some(id.clone());
         Ok(id)
     }
 
     pub(super) fn set_user(&mut self, user_info: &str) -> &Self {
         self.user_id = Some(user_info.to_string());
+        self
+    }
+
+    pub(super) fn set_message(&mut self, msg: &str) -> &Self {
+        self.message = Some(msg.to_string());
         self
     }
     
