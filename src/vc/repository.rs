@@ -319,7 +319,7 @@ impl Repo {
 }
 
 // ------ private mod fns ------
-fn check_wd(wd_path: &str) -> Option<String> {
+pub (super) fn check_wd(wd_path: &str) -> Option<String> {
     if is_path_valid(&path_compose(wd_path, ".dvcs")) {
         return Some(wd_path.to_string());
     } else {
@@ -450,15 +450,25 @@ pub(super) fn serialize<T: Serialize> (data_struct: &T) -> Result<String, Errors
 #[cfg(test)]
 mod tests {
         use super::*;
-        use std::fs;
+        use std::{fs, time::SystemTime};
         // might have cuncurrency issues when running tests in batch or use cargo test. Test one by one in order should work.
+        // running individual tests multiple times could also fail because of certain duplication prevention
 
         static TEST_PATH: &str = "vc_test";
+
+
+        fn get_test_paths()-> RepoPaths {
+            let wd = get_wd_path();
+            RepoPaths::new(&path_compose(&wd, TEST_PATH))
+        }
+
+
+        // 1.
         #[test]
         fn test_init_load() {
-            let wd = get_wd_path();
-            let paths = RepoPaths::new(&path_compose(&wd, TEST_PATH));
-            delete_dir(&paths.root);
+            let paths = get_test_paths();
+            // delete_dir(&paths.root);
+            clear_dir(&paths.wd, Vec::new());
             print!("{}", &paths.revs);
             assert!(init(Some(&paths.wd)).is_ok());
             assert!(fs::read_dir(paths.revs).is_ok());
@@ -469,45 +479,70 @@ mod tests {
             assert!(load(&path_compose(&paths.wd, "test_dir")).is_ok());
 
         }
-        // #[test]
-        // fn test_add_stage_commit() -> Result<(), Errors> {
-        //     let wd = get_wd_path();
-        //     let mut repo = load(&wd)?;
-        //     repo.clear_stage();
-        //     let abs_path1 = path_compose(&wd, "Cargo.toml");
-        //     repo.add_file(&abs_path1)?;
-        //     assert_eq!(repo.stage.get_add().len(), 1);
-        //     repo.commit("test add commit")?;
-        //     assert!(repo.stage.is_empty());
-        //     Ok(())
-        // }
 
-        // #[test]
-        // fn test_branching() -> Result<(), Errors> {
-        //     let wd = get_wd_path();
-        //     let mut repo = load(&wd)?;
-        //     let abs_path1 = path_compose(&wd, "predef_file.txt");
-            
-        //     // repo.set_current_head("main")?;
-        //     repo.add_file(&abs_path1)?;
-        //     repo.commit("test branching")?;
-        //     let head = repo.get_current_head()?;
+        // 2.
+        #[test]
+        fn test_add_stage_commit() -> Result<(), Errors> {
+            let paths = get_test_paths();
+            let mut repo = load(&paths.wd)?;
+            repo.clear_stage()?;
 
-        //     let new_head_alias = "branching-test";
-        //     repo.new_head(new_head_alias,head.get_id().unwrap())?;
-        //     assert_eq!(repo.branch_heads.len(), 2);
-        //     repo.set_current_head(new_head_alias)?;
-        //     assert_eq!(repo.current_head, Some(new_head_alias.to_string()));
-        //     assert_eq!(repo.branch_heads.get(new_head_alias), (repo.branch_heads.get("main")));
+            let sub_dir = path_compose(&paths.wd, "nested");
+            if !is_path_valid(&sub_dir) {
+                create_dir(&sub_dir)?;
+            }
 
-        //     let abs_path2 = path_compose(&wd, "Cargo.lock");
-        //     repo.add_file(&abs_path2)?;
-        //     repo.commit("committed on test branch")?;
-        //     assert!(repo.branch_heads.get(new_head_alias) != (repo.branch_heads.get("main")));
-        //     repo.set_current_head("main")?;
-        //     Ok(())
+            // writing files
+            let file_path_1 = path_compose(&paths.wd, "test_file1.txt");
+            let file_path_nested = path_compose(&sub_dir, "test_file_nested.txt");
+            // println!("debug print\nfile_path_1: {}",file_path_1);
+            write_file(&file_path_1, &format!("test file root\n{:?}", SystemTime::now()))?;
+            write_file(&file_path_nested, &format!("test file nested\n{:?}", SystemTime::now()))?;
 
-        // }
+            repo.add_file(&file_path_1)?;
+            assert_eq!(repo.stage.get_add().len(), 1);
+            repo.commit("test add commit")?;
+            assert!(repo.stage.is_empty());
+
+            repo.add_file(&file_path_nested)?;
+            repo.add_files(&vec![file_path_1, file_path_nested])?;
+            assert_eq!(repo.stage.get_add().len(), 2);
+            repo.commit("test add commit 2")
+        }
+
+        // 3.
+        #[test]
+        fn test_branching() -> Result<(), Errors> {
+            let paths = get_test_paths();
+            let mut repo = load(&paths.wd)?;
+            let file_path_1 = path_compose(&paths.wd, "branching_test.txt");
+            write_file(&file_path_1, "branching test")?;
+            match &repo.current_head {
+                Some(alias) => {
+                    if alias != "main" {
+                        repo.set_current_head("main")?
+                    }
+                },
+                None => ()
+            };
+            repo.add_file(&file_path_1)?;
+            repo.commit("test branching")?;
+            let head = repo.get_current_head()?;
+
+            let new_head_alias = "branching-test";
+            repo.new_head(new_head_alias,head.get_id().unwrap())?;
+            assert_eq!(repo.branch_heads.len(), 2);
+            repo.set_current_head(new_head_alias)?;
+            assert_eq!(&repo.current_head, &Some(new_head_alias.to_string()));
+            assert_eq!(&repo.branch_heads.get(new_head_alias), &repo.branch_heads.get("main"));
+
+            write_file(&file_path_1, "test branching")?;
+            repo.add_file(&file_path_1)?;
+            repo.commit("committed on test branch")?;
+            assert!(&repo.branch_heads.get(new_head_alias) != &repo.branch_heads.get("main"));
+            repo.set_current_head("main")?;
+            Ok(())
+        }
 
 
     }

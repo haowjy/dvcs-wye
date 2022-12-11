@@ -111,7 +111,7 @@ pub fn retrieve_info(abs_path: &str) -> Result<ItemInfo, Errors> {
 
 
 fn get_id(file_path: &str) -> Result<String, Errors> {
-    let wd_root = get_wd_root()?;
+    let wd_root = check_wd(file_path).ok_or(Errors::ErrStr(format!("unable to locate a repository in {}", file_path)))?;
     let repo_storage_dir = path_compose(&wd_root, ".dvcs/files");
 
     let content = read_file_as_string(file_path)?;
