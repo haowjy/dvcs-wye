@@ -51,11 +51,17 @@ pub fn status(wd: &str) -> Result<&str, Errors> {
     let load=repository::load(wd)?;//got Repo以后可以换成？
     let renew=load.get_current_head()?;//get Rev
     let stage=load.get_stage();// got stage暂存区里的一个版本
-    let stage_inside_add=stage.get_add().get(wd);
-    let stage_inside_remove=stage.get_remove().get(wd);
-    let wd_rev=file::retrieve_info(wd)?;//ItemInfo
+    let stage_inside_add=stage.get_add();
+    let stage_inside_remove=stage.get_remove();
+    //readall
+
+    for (path,iteminfo) in stage_inside_add {
+        let wd_rev=file::retrieve_info(path)?;
+        let wd_rev=file::retrieve_info(path)?;
+    }
+    //let wd_rev=file::retrieve_info()?;//ItemInfo, read file path
     let last_commit= load.get_current_head()?;//Rev
-    let last_commit_file=last_commit.get_manifest().get(wd).unwrap();//iteminfo//TODO???
+    let last_commit_file=last_commit.get_manifest().get(wd).unwrap().clone();//iteminfo//TODO???
     /*if last_commit_file==wd_rev{
         println!("eq")
     }*/
