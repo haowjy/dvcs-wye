@@ -371,7 +371,7 @@ impl Wye {
             parse_error(return_result.unwrap_err());
         }
         else {
-            println!("{:?}",return_result);
+            println!("{:?}",return_result.unwrap());
         }
     }
     fn input_handling_status(return_result:Result<&str,Errors>){

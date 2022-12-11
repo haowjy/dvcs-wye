@@ -51,6 +51,14 @@ pub fn status(wd: &str) -> Result<&str, Errors> {
     //add
     //ahead of ?commit
     //up to date
+    println!("Changes to be committed:");
+    //already add file but modified, so just need commit
+    println!("Changes not staged for commit:");
+    //need add first, then commit
+    //
+    //last commit has, stage has in add, but not commit yet, so not in wd
+    println!("Untracked files:");
+    //working directory has, stage don't have. last commit has not,never shows forever
     let load=repository::load(wd)?;//got Repo以后可以换成？
     //let renew=load.get_current_head()?;//get Rev
     let stage=load.get_stage();// got stage暂存区
@@ -78,8 +86,8 @@ let res:&str;
             println!("{} already be deleted",ItemInfo.get_file_name());
         }
         else {
-            // TODO: use different get content method
-            let diff = file_diff(wd_rev.unwrap().get_content().unwrap(), ItemInfo.get_content().unwrap()).clone();
+            // TODO: use different get content method,use repo to get_content
+            let diff = file_diff("wd_rev.unwrap().get_content().unwrap()".to_string(), ItemInfo.get_content().unwrap()).clone();
             let flag= diff.is_diff();
             if flag==true {
                 let d= diff.get_patch();
@@ -95,7 +103,7 @@ let res:&str;
     if stage_inside_add.capacity()!=0 && stage_inside_remove.capacity()!=0 {
         return Err(Errors::Errstatic("Please commit first!"))
     }
-    else { //no stage, now compare last commit with wd
+    else { //no stage, now compare last commit with wd//untrack, create a new file
         let last_commit= load.get_current_head();//Rev//TODO???
         if  last_commit.is_err(){ println!("no head, means last commit is empty");}
         else
@@ -105,7 +113,7 @@ let res:&str;
         for (path, ItemInfo) in last_commit_hashmap {//read last commit
             let wd_rev=file::retrieve_info(path);
             if  wd_rev.as_ref().is_err(){//Cannot find the proper working directory path for file
-                println!("{} is ahead of work directory",ItemInfo.get_file_name());
+                println!("{} is ahead of working directory",ItemInfo.get_file_name());
             }
             else {//compare diff
                 if ItemInfo.clone()==wd_rev.as_ref().unwrap().clone(){
@@ -115,7 +123,7 @@ let res:&str;
                     let diff = file_diff(ItemInfo.get_content().unwrap(), wd_rev.unwrap().get_content().unwrap());
                     let flag= diff.is_diff();
                     if flag==true {
-                        println!("{}is ahead of work directory",ItemInfo.get_file_name());
+                        println!("{}is ahead of working directory",ItemInfo.get_file_name());
                         return Err(Errors::Errstatic("Please push first!"))
                     }
                     else {
