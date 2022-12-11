@@ -24,9 +24,9 @@ pub enum Errors {
 use Errors::{ErrSerde,ErrIo,ErrSys, ErrStr,Errstatic, ErrUnknown};
 fn parse_error(res: Errors) -> String {
     match res {
-        ErrSerde(Error) => {println!("{:?}", Error);Error.to_string()},
-        ErrIo(Error) => {println!("{:?}", Error);Error.to_string()},
-        ErrSys(Error) => {println!("{:?}", Error);Error.to_string()},
+        ErrSerde(Error) => {println!("{}", Error);Error.to_string()},
+        ErrIo(Error) => {println!("{}", Error);Error.to_string()},
+        ErrSys(Error) => {println!("{}", Error);Error.to_string()},
         ErrStr(String) => {println!("{}", String);String},
         Errstatic(Str) => {println!("{}", Str);Str.to_string()},
         ErrUnknown => {println!("ErrUnknown");"ErrUnknown".to_string()},
@@ -332,7 +332,7 @@ impl Wye {
                 let init=crate::vc::repository::init(opt_path);
                 match init { Ok(string)=>{res=Ok(string);}
                     Err(String)=>{res=Err(String)} }
-                Self::input_handling(res);
+                Self::input_handling_new_String(res);
             }
             Command::Test { wd_path } => {
                 match wd_path{
@@ -363,7 +363,7 @@ impl Wye {
             parse_error(return_result.unwrap_err());
         }
         else {
-            println!("{:?}",return_result.unwrap());
+            println!("{}",return_result.unwrap());
         }
     }
     fn input_handling_new_String(return_result:Result<String,Errors>){
@@ -371,7 +371,7 @@ impl Wye {
             parse_error(return_result.unwrap_err());
         }
         else {
-            println!("{:?}",return_result.unwrap());
+            println!("{}",return_result.unwrap());
         }
     }
     fn input_handling_status(return_result:Result<&str,Errors>){
