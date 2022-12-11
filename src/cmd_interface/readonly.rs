@@ -70,20 +70,8 @@ let res:&str;
         else {
             println!("modified: {}",ItemInfo.get_file_name());
         }
-        /*if ItemInfo.clone()==wd_rev{
-            count_add=count_add+1;
-            println!("eq");
-            //return Ok("need to be commit");
-        }
-        else{ let diff = file_diff(wd_rev.get_content().unwrap(), ItemInfo.get_content().unwrap()).clone();
-            let flag= diff.is_diff();
-            if flag==true {
-                let d= diff.get_patch();
-                println!("add: {},{}",ItemInfo.get_file_name(),d);
-            }
-            else { println!("No difference, same"); }
-        }*/
     }//stage add end
+
     for (path, ItemInfo) in stage_inside_remove {//stage remove
         let wd_rev=file::retrieve_info(path);
         if  wd_rev.is_err(){//Cannot find the proper working directory path for file
@@ -111,32 +99,29 @@ let res:&str;
         let last_commit_hashmap=last_commit.get_manifest();//iteminfo//TODO???
         for (path, ItemInfo) in last_commit_hashmap {//read last commit
             let wd_rev=file::retrieve_info(path);
-            if  wd_rev.is_err(){//Cannot find the proper working directory path for file
+            if  wd_rev.as_ref().is_err(){//Cannot find the proper working directory path for file
                 println!("{} is ahead of work directory",ItemInfo.get_file_name());
             }
             else {//compare diff
-                if ItemInfo.clone()==wd_rev.unwrap(){
-                    println!("eq, means up to date")
+                if ItemInfo.clone()==wd_rev.as_ref().unwrap().clone(){
+                    return Err(Errors::Errstatic("No difference, same, means up to date"))
                 }
                 else {
-                    println!("{}is ahead of work directory",ItemInfo.get_file_name());
-                }
+                    let diff = file_diff(ItemInfo.get_content().unwrap(), wd_rev.unwrap().get_content().unwrap());
+                    let flag= diff.is_diff();
+                    if flag==true {
+                        println!("{}is ahead of work directory",ItemInfo.get_file_name());
+                        return Err(Errors::Errstatic("Please push first!"))
+                    }
+                    else {
+                        return Ok("No difference, same, means up to date")
+                    }
             }
         }
     }
-    let diff = file_diff("&file1".to_string(), "&file".to_string()).clone();
-    //
-    let flag= diff.is_diff();
-    if flag==true {
-        let d= diff.get_patch();
-        println!("{}",d);
-        return Ok("diff")
-    }
-    else { println!("No difference, same");
-        Err(Errors::Errstatic("diff"))
-    }
-    //diff
-    //Ok(diff)
+
+}//commit but not push end
+    Ok("???")
 }
 
 #[cfg(test)]
