@@ -148,8 +148,8 @@ impl Repo {
         let rwd_paths = RepoPaths::new(rwd);
         let mut files:Vec<String> = Vec::new();
         let mut revs: Vec<String> = Vec::new();
-        get_files(&rwd_paths.files, &mut files)?;
-        get_files(&rwd_paths.revs, &mut revs)?;
+        get_files(&rwd_paths.files, Vec::<&str>::new(), &mut files)?;
+        get_files(&rwd_paths.revs, Vec::<&str>::new(), &mut revs,)?;
 
         files.iter().try_for_each(|file_path| {
             let cwd_file_path = path_compose(&self.paths.files, &get_name(file_path).ok_or(Errors::Errstatic("Unknown error when fetching files from remote directory"))?);
