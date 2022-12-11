@@ -78,13 +78,28 @@ impl Repo {
 
     pub fn commit(&mut self, message: &str) -> Result<(), Errors> {
         let mut head = self.get_current_head()?;
+        self.commit_from(&mut head, message)
+    }
+    
+    pub fn merge_commit(&mut self, parent_1: &str, parent_2: &str, msg: Option<&str>) -> Result<(), Errors> {
+        let mut head = self.get_current_head()?;
+
+        if head.get_id().unwrap_or_default() != parent_1 {
+            return Err(Errors::Errstatic("merge destination is not current head"));
+        }
+
+        head.set_parent_2(parent_2);
+        self.commit_from(&mut head, msg.unwrap_or(format!("Merged from {}", parent_2).as_str()))
+    }
+
+    fn commit_from(&mut self, head: &mut Rev, message: &str) -> Result<(), Errors> {
         head.manifest.extend(self.stage.to_add.clone());
         self.stage.to_remove.iter().for_each(|(path, _)| {head.manifest.remove(path);});
         
         // save files to repos
         head.manifest.iter().try_for_each(
             |(_, entry)| 
-                self.save_file_to_repo(entry).map(|s| ()) // map different ok strings to ()
+                self.save_file_to_repo(entry).map(|_s| ()) // map different ok strings to ()
         )?;
 
         // update head and save rev to repos
@@ -96,11 +111,10 @@ impl Repo {
         head.save(&self.paths.revs);
 
         // update repos
-        
         self.branch_heads.insert(self.current_head.clone().unwrap_or("main".to_string()), id);
         self.clear_stage().save()
     }
-    
+
 
     pub fn get_heads(&self) -> &HashMap<String, String> {
         &self.branch_heads
@@ -169,10 +183,6 @@ impl Repo {
         abs_paths.iter().try_for_each(|path| self.remove_file_from_stage(path))
     }
 
-
-    pub fn merge_commit(&mut self, parent_1: &str, parent_2: &str, msg: Option<&str>) -> Result<(), Errors> {
-        Ok(()) // *** to be impl
-    }
 
     pub fn set_current_head(&mut self, set_head_to: &str) -> Result<(),Errors> {
         if !self.branch_heads.contains_key(set_head_to) {
