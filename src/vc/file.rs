@@ -46,6 +46,9 @@ impl ItemInfo {
         }
     }
 
+    pub fn get_file_name(&self) -> &str {
+        &self.name
+    }
     pub fn get_file_wd_path(&self) -> &str {
         &self.loc_in_wd
     }
