@@ -53,6 +53,13 @@ impl ItemInfo {
         &self.loc_in_wd
     }
 
+    pub fn is_file(&self) -> bool {
+        match &self.entry {
+            File(_) => true,
+            _ => false
+        }
+    }
+    
     pub fn get_file_id(&self) -> Option<&str> {
         match &self.entry {
             File(id) => Some(&id),
