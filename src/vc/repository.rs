@@ -61,7 +61,6 @@ impl Stage {
 
 impl Repo {
     pub fn get_current_head(&self) -> Result<Rev, Errors> {
-
         match &self.current_head {
             Some(alias) => {
                 match self.branch_heads.get(alias) {
@@ -78,7 +77,7 @@ impl Repo {
     }
 
     // *** In the process to be rewritten 
-    pub fn commit(&mut self) -> Result<(), Errors> {
+    pub fn commit(&mut self, message: &str) -> Result<(), Errors> {
         Err(Errors::ErrUnknown)
     }
     
@@ -107,14 +106,15 @@ impl Repo {
     //     self.save();
     //     Some(())
     // }
-
+    
 
     pub fn get_heads(&self) -> &HashMap<String, String> {
         &self.branch_heads
     }
 
-    pub fn new_head(&mut self, head_alias:&str, rev_id:&str) -> &Self { // *** needs revisiting later
+    pub fn new_head(&mut self, head_alias:&str, rev_id:&str) -> &Self { // *** needs revisiting later for error handling
         self.branch_heads.entry(head_alias.to_string()).or_insert(rev_id.to_string());
+        self.save();
         self
     }
 
@@ -134,16 +134,25 @@ impl Repo {
         self
     }
 
-    pub fn clone(rwd:&str) -> Option<()> { // clone from a remote repo
-        None // *** to be impl
-        // needs to update remote head and have data structure tracking the rwd path,
+    // pub fn clone(rwd:&str) -> Option<()> { // clone from a remote repo
+    //     None // *** to be impl
+    //     // needs to update remote head and have data structure tracking the rwd path,
+    // }
+
+
+    // Note: add and remove assumes the paths are already checked
+
+    pub fn add_file(&mut self, abs_path: &str) -> Result<(), Errors> {
+        let mut temp_rev = Rev::new();
+        temp_rev.add_file(abs_path)?;
+        self.stage.to_add.extend(temp_rev.get_manifest().clone());
+        self.save()
     }
 
-    // pub fn add_files(&mut self, abs_paths: Vec<&str>) -> Option<()> { // *** list version to be impl
-    pub fn add_file(&mut self, abs_path: &str) -> Result<(), Errors> {
-        // abs_paths.iter()
+    pub fn add_files(&mut self, abs_paths: &Vec<String>) -> Result<(), Errors> {   
         let mut temp_rev = Rev::new();
-        temp_rev.add_file(abs_path)?; // *** iterator operations and branching tbd here
+        abs_paths.iter().try_for_each(|path| temp_rev.add_file(path))?; // will abort if any errors appear
+        
         self.stage.to_add.extend(temp_rev.get_manifest().clone());
         self.save()
     }
@@ -155,26 +164,43 @@ impl Repo {
         self.save()
     }
 
+    pub fn remove_files(&mut self, abs_paths: &Vec<String>)-> Result<(), Errors> {
+        let mut temp_rev = Rev::new();
+        abs_paths.iter().try_for_each(|path| temp_rev.add_file(path))?; // will abort if any errors appear
+        
+        self.stage.to_remove.extend(temp_rev.get_manifest().clone());
+        self.save()    
+    }
+
 
     pub fn merge_commit(&mut self, parent_1: &str, parent_2: &str, msg: Option<&str>) -> Result<(), Errors> {
         Ok(()) // *** to be impl
+    }
+
+    pub fn set_current_head(&mut self, set_head_to: &str) -> Result<(),Errors> {
+        if !self.branch_heads.contains_key(set_head_to) {
+            return Err(Errors::ErrStr(format!("Repository doesn't have the branch {}.", set_head_to)))
+        }
+        self.current_head = Some(set_head_to.to_string());
+        self.save()
     }
 }
 
 
 // ------ pub mod fns ------
-pub fn init(opt_path: Option<&str>) -> Result<(), Errors> {
+pub fn init(opt_path: Option<&str>) -> Result<String, Errors> {
     let wd = match opt_path {
         Some(path) => path.to_string(),
         None => get_wd_path()
     };
+
     let paths = RepoPaths::new(&wd);
     if !is_path_valid(&paths.root) { // bypass recreating dirs if .dvcs already exists
         create_dir(&paths.files)?;
         create_dir(&paths.revs)?;
     }
 
-    if !is_path_valid(&paths.repos) {
+    if !is_path_valid(&paths.repos) { // bypassing reinitializing repos if repos already exists
         let new_repo = Repo {
             current_head: None, // Some("main".to_string())
             branch_heads: HashMap::new(),
@@ -183,8 +209,10 @@ pub fn init(opt_path: Option<&str>) -> Result<(), Errors> {
             // remote_head: None,
         };
         new_repo.save()?;
+        Ok(format!("Successfully created new repository at {}", wd))
+    } else {
+        Ok(format!("Repository already exists at {}", wd))
     }
-    return Ok(());
 }
 
 pub fn load(wd:&str) -> Result<Repo, Errors> { // Result<Repo, ()>
@@ -205,7 +233,7 @@ pub fn get_wd_root() -> Result<String, Errors> {
     let wd = get_wd_path();
     match check_wd(&wd) {
         Some(path) => Ok(path),
-        None => Err(Errors::ErrStr("Directory untracked, fail to locate repository".to_string()))
+        None => Err(Errors::Errstatic("Directory untracked, fail to locate repository"))
     }
 }
 
@@ -302,9 +330,6 @@ impl RepoPaths {
             revs: path_compose(&root, "revs"),
             repos: path_compose(&root, "repos")
 
-            // head: path_compose(&root, "head"),
-            // branch_heads: path_compose(&root, "branches"),
-            // stage: path_compose(&root, "stage"),
         }
     }
 

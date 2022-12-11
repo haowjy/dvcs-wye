@@ -88,23 +88,24 @@ impl Rev {
 
     // NOTE: current vc doesn't track files moving from one subdirectory to another, 
     pub (super) fn add_file(&mut self, abs_path: &str) -> Result<(), Errors> {
-        Err(Errors::ErrUnknown) // *** TO BE IMPL
+        let new_entry = retrieve_info(abs_path)?;
+        // if self.manifest.contains_key(new_entry.get_file_wd_path()) {
+        // }
 
-    // pub (super) fn add_file(&mut self, staged_add: ItemInfo) -> Result<(), Errors> {
-    //     let wd_path = staged_add.get_file_wd_path();
-    //     self.manifest.
-    // }
-    //     let rel_path = get_rel_path(abs_path).ok_or(Errors::ErrUnknown)?; // change later
-    //     if self.manifest.contains_key(&rel_path) {
-    //         return None;
-    //     }
-
-    //     let new_entry:ItemInfo = retrieve_info(abs_path)?;
-    //     self.manifest.insert(rel_path, new_entry);
-    //     return Some(());
+        self.manifest.insert(new_entry.get_file_wd_path().to_string(), new_entry);
+        
+        Ok(())
     }
 
-    pub (super) fn remove_file(&mut self, abs_path: &str) -> Option<()> {None} // *** to be impl 
+    pub (super) fn remove_file(&mut self, abs_path: &str) -> Result<(), Errors>{
+        let entry = retrieve_info(abs_path)?;
+        let entry_loc_path = entry.get_file_wd_path();
+        if !self.manifest.contains_key(entry_loc_path) {
+            return Err(Errors::Errstatic("Unable to remove untracked file"));
+        }
+        self.manifest.remove(entry_loc_path);
+        Ok(())
+    } 
 
     pub (super) fn update_time(&mut self) -> &Self {
         self.time_stamp = SystemTime::now();
