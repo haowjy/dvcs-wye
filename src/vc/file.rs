@@ -28,16 +28,16 @@ use EntryType::{File, Dir, Other};
 
 
 impl ItemInfo {
-    pub fn get_content(&self) -> Result<String, Errors> { // get cached content
+    // pub fn get_content(&self) -> Result<String, Errors> { // get cached content
         
-        match &self.entry {
-            File(id) => {
-                let repo_storage_dir = get_repo_storage_dir().ok_or(Errors::ErrUnknown)?;
-                read_file_as_string(&path_compose(&repo_storage_dir, &id))
-            },
-            _ => Err(Errors::ErrStr(format!("{}Not a File", self.name)))
-        }
-    }
+    //     match &self.entry {
+    //         File(id) => {
+    //             let repo_storage_dir = get_repo_storage_dir().ok_or(Errors::ErrUnknown)?;
+    //             read_file_as_string(&path_compose(&repo_storage_dir, &id))
+    //         },
+    //         _ => Err(Errors::ErrStr(format!("{}Not a File", self.name)))
+    //     }
+    // }
 
     pub fn get_file_name(&self) -> &str {
         &self.name
