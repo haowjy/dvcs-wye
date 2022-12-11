@@ -229,9 +229,9 @@ impl Wye {
                 if wd_path.eq("-d") || wd_path.eq("-"){
                     wd_path=default_wd_path;
                 }
-                let mut res:Result<RevDiff,Errors>=Err(Errstatic("1"));
-                res=readwrite::commit(&wd_path,&message);
-                Self::input_handling_special(res);
+                //let mut res:Result<RevDiff,Errors>=Err(Errstatic("1"));
+                let res=readwrite::commit(&wd_path,&message);
+                Self::input_handling_new_String(res);
                 println!("message is: {:?}", message)
             }
             Command::Merge { mut wd_path,rev_id } => {
@@ -359,6 +359,14 @@ impl Wye {
     }
 
     fn input_handling_new(return_result:Result<&str,Errors>){
+        if return_result.is_err() {
+            parse_error(return_result.unwrap_err());
+        }
+        else {
+            println!("{:?}",return_result);
+        }
+    }
+    fn input_handling_new_String(return_result:Result<String,Errors>){
         if return_result.is_err() {
             parse_error(return_result.unwrap_err());
         }
