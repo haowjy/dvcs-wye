@@ -138,6 +138,7 @@ pub fn find_unmerged<'a>(content: String) -> Result<(), String> {
         }
         Some(marker)
     }).is_none();
+    
     if is_unmerged {
         let i = content.split("\n").into_iter().position(|line| line == "<<<<<<< ours");
         return Err(["File is unmerged at line", &i.unwrap().to_string()].join(" "));

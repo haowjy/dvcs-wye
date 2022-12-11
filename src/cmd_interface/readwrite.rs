@@ -47,14 +47,14 @@ pub fn diff<'a>(wd: &'a str, rev1_id:&'a str, rev2_id:&'a str) -> Result<RevDiff
     let rev2_manifest = rev2.get_manifest();
 
     for (file1, info1) in rev1_manifest.clone() {
-        let content1 = info1.get_content()?;
+        let content1 = repo.get_file_content(&info1)?;
 
         let file2_opt = rev2_manifest.get(&file1);
         if file2_opt.is_none() { // file deleted
             let file_diff = file_diff(content1, "".to_string());
             rev_diff.files.insert(file1.clone(), file_diff);
         } else { // file modified or unchanged
-            let content2 = file2_opt.unwrap().get_content()?;
+            let content2 = repo.get_file_content(file2_opt.unwrap())?;
             rev_diff.files.insert(file1.clone(), file_diff(content1, content2));
         }
     }
@@ -62,7 +62,7 @@ pub fn diff<'a>(wd: &'a str, rev1_id:&'a str, rev2_id:&'a str) -> Result<RevDiff
         // if file in rev_diff, skip
         if rev_diff.files.contains_key(file2) { continue; }
 
-        let content2 = info2.get_content()?;
+        let content2 = repo.get_file_content(info2)?;
 
         // If not in rev_diff, that means it does not exist in rev1_manifest
         // So it is a new file
@@ -85,7 +85,7 @@ pub fn cat<'a>(wd: &'a str, rev_id:&'a str, path:&'a str) -> Result<String, Erro
         return Err(Errstatic("file not found"));
     }else{
         let file_info = file_info.unwrap();
-        let content = file_info.get_content()?;
+        let content = repo.get_file_content(file_info)?;
         return Ok(content);
     }
 }
@@ -108,28 +108,30 @@ pub fn remove<'a>(wd: &'a str, path:&'a str) -> Result<String, Errors>{
     Ok("remove success".to_string())
 }
 
-fn find_conflict_files(stage:&Stage) -> Option<Vec<(String, String)>> {
+fn find_conflict_files(repo: &Repo, stage:&Stage) -> Result<Option<Vec<(String, String)>>, Errors> {
 
     let mut conflict_files = Vec::new();
 
     for (file, info) in stage.get_add() {
-        let content = info.get_content().unwrap();
+        let content = repo.get_file_content(info)?;
         let res_unmerged = find_unmerged(content);
         if res_unmerged.is_ok() {continue;}
         conflict_files.push((file.to_owned(), res_unmerged.unwrap_err()));
     }
+
     // let conflict_files:Vec<(String, String)> = stage.get_add().iter()
     // .filter_map(|(file, info)| {
-    //     let content = info.get_content().unwrap();
+    //     let content = repo.get_file_content(info)?;
+    //     println!("content: {}", content);
     //     let res_unmerged = find_unmerged(content);
     //     if res_unmerged.is_ok() {return None;}
     //     Some((file.to_owned(), res_unmerged.unwrap_err()))
     // }).collect();
 
     if conflict_files.len() > 0 {
-        return Some(conflict_files);
+        return Ok(Some(conflict_files));
     } else {
-        return None;
+        return Ok(None);
     }
 }
 
@@ -145,7 +147,7 @@ pub fn commit<'a>(wd: &'a str, message:&'a str) -> Result<String, Errors> {
     }
     
     // block if we find a conflict
-    let conflicted_files = find_conflict_files(stage);
+    let conflicted_files = find_conflict_files(&repo, stage)?;
     if conflicted_files.is_some() {
         conflicted_files.unwrap().iter().fold("".to_string(), |acc, (file, content)| {
             acc + &format!("conflict in file {}\n{}\n", file, content)
@@ -305,7 +307,9 @@ mod tests {
     #[test]
     fn test_commit() {
         // let cwd = "./test_repo";
-        let cwd = &path_compose(&get_wd_path(), "test_repo");
+        
+        // let cwd = &path_compose(&get_wd_path(), "test_repo");
+        let cwd = &get_wd_path();
 
         let _ = dsr::delete_dir(&path_compose(cwd, ".dvcs"));
         let _ = dsr::delete_file(&path_compose(cwd, "a.txt"));
