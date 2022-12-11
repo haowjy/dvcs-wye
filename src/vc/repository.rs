@@ -102,9 +102,14 @@ impl Repo {
     }
 
     fn commit_from(&mut self, head: &mut Rev, message: &str) -> Result<(), Errors> {
+        let manifest_copy = head.manifest.clone();
         head.manifest.extend(self.stage.to_add.clone());
         self.stage.to_remove.iter().for_each(|(path, _)| {head.manifest.remove(path);});
         
+        if manifest_copy == head.manifest {
+            return Err(Errors::Errstatic("No changes added to commit."))
+        }
+
         // save files to repos
         head.manifest.iter().try_for_each(
             |(_, entry)| 
