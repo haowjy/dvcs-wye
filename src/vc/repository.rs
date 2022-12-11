@@ -72,7 +72,10 @@ impl Repo {
     }
 
     pub fn get_rev(&self, rev_id: &str) -> Result<Rev, Errors>  {
-        Rev::from(&path_compose(&self.paths.revs, rev_id))
+        match self.branch_heads.get(rev_id) {
+            Some(id) => Rev::from(&path_compose(&self.paths.revs, id)),
+            None => Rev::from(&path_compose(&self.paths.revs, rev_id))
+        }
     }
 
     pub fn commit(&mut self, message: &str) -> Result<(), Errors> {
@@ -436,10 +439,12 @@ mod tests {
             delete_dir(&paths.root);
             print!("{}", &paths.revs);
             assert!(init(Some(&paths.wd)).is_ok());
-            // assert!(fs::read_dir(paths.revs).is_ok());
+            assert!(fs::read_dir(paths.revs).is_ok());
 
-            // assert!(load(&paths.wd).is_ok());
-            // assert!(load(&path_compose(&paths, "src")).is_ok());
+            assert!(load(&paths.wd).is_ok());
+            create_dir(&path_compose(&paths.wd, "test_dir"));
+
+            assert!(load(&path_compose(&paths.wd, "test_dir")).is_ok());
 
         }
         // #[test]
