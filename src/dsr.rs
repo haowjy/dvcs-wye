@@ -517,7 +517,7 @@ mod tests_dsr {
         setup_test_space();
  
         let mut list = vec![];
-        get_files(".", vec![".git"], &mut list);
+        get_files(".", vec![".git", "target", "test_repo"], &mut list);
         println!("{:?}", list);
         clear_test_space();
     }
