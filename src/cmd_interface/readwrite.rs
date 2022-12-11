@@ -90,14 +90,11 @@ pub fn cat<'a>(wd: &'a str, rev_id:&'a str, path:&'a str) -> Result<String, Erro
     }
 }
 
-// TODO: test
 pub fn add<'a>(wd: &'a str, path:&'a str) -> Result<String, Errors>{
-    println!("wd: {:?}", wd);
     let mut repo = repository::load(wd)?;
     
     let abs_path = path_compose(wd, path);
-    println!("abs_path: {:?}", abs_path);
-    let res = repo.add_file(&abs_path)?;
+    repo.add_file(&abs_path)?;
     Ok("add success".to_string())
 }
 
@@ -112,14 +109,22 @@ pub fn remove<'a>(wd: &'a str, path:&'a str) -> Result<String, Errors>{
 }
 
 fn find_conflict_files(stage:&Stage) -> Option<Vec<(String, String)>> {
-    // let mut conflict_files = Vec::new();
-    let conflict_files:Vec<(String, String)> = stage.get_add().iter()
-    .filter_map(|(file, info)| {
+
+    let mut conflict_files = Vec::new();
+
+    for (file, info) in stage.get_add() {
         let content = info.get_content().unwrap();
         let res_unmerged = find_unmerged(content);
-        if res_unmerged.is_ok() {return None;}
-        Some((file.to_owned(), res_unmerged.unwrap_err()))
-    }).collect();
+        if res_unmerged.is_ok() {continue;}
+        conflict_files.push((file.to_owned(), res_unmerged.unwrap_err()));
+    }
+    // let conflict_files:Vec<(String, String)> = stage.get_add().iter()
+    // .filter_map(|(file, info)| {
+    //     let content = info.get_content().unwrap();
+    //     let res_unmerged = find_unmerged(content);
+    //     if res_unmerged.is_ok() {return None;}
+    //     Some((file.to_owned(), res_unmerged.unwrap_err()))
+    // }).collect();
 
     if conflict_files.len() > 0 {
         return Some(conflict_files);
@@ -130,6 +135,7 @@ fn find_conflict_files(stage:&Stage) -> Option<Vec<(String, String)>> {
 
 // TODO: test
 pub fn commit<'a>(wd: &'a str, message:&'a str) -> Result<String, Errors> {
+    println!("commiting {} {}...", wd, message);
     let mut repo = repository::load(wd)?;
 
     // blocks if there are no changes
@@ -283,15 +289,12 @@ mod tests {
         let _ = dsr::create_file(&path_compose(cwd, "a.txt"));
         let _ = dsr::write_file(&path_compose(cwd, "a.txt"), "hello world");
         
-        // TODO: this add doesn't seem to add anything to repos file
         let add1 = add(&cwd, "a.txt");
-        println!("add1: {:?}", add1);
-        // // It doesn't actually add the file to the index branch?
-        // assert!(add1.is_ok());
+        // It doesn't actually add the file to the index branch?
+        assert!(add1.is_ok());
 
-        // let nodef = add(&cwd, "nodef_file.txt");
-        // println!("nodef: {:?}", nodef);
-        // assert!(nodef.is_err());
+        let nodef = add(&cwd, "nodef_file.txt");
+        assert!(nodef.is_err());
     }
 
     #[test]
@@ -301,7 +304,8 @@ mod tests {
 
     #[test]
     fn test_commit() {
-        let cwd = "./test_repo";
+        // let cwd = "./test_repo";
+        let cwd = &path_compose(&get_wd_path(), "test_repo");
 
         let _ = dsr::delete_dir(&path_compose(cwd, ".dvcs"));
         let _ = dsr::delete_file(&path_compose(cwd, "a.txt"));
@@ -312,13 +316,13 @@ mod tests {
         let _ = dsr::write_file(&path_compose(cwd, "a.txt"), "hello world");
 
         let com1 = commit(cwd, "test commit");
-        println!("com1: {:?}", com1);
+        println!("com1 should be error: {:?}", com1);
         assert!(com1.is_err()); // error because no files added to stage
 
         let _ = add(cwd, "a.txt");
         
         let com2 = commit(cwd, "test commit");
-        println!("com2: {:?}", com2);
+        println!("com2 should be ok: {:?}", com2);
         assert!(com2.is_ok());
     }
 
