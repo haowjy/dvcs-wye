@@ -87,7 +87,7 @@ let res:&str;
         }
         else {
             // TODO: use different get content method,use repo to get_content
-            let diff = file_diff("wd_rev.unwrap().get_content().unwrap()".to_string(), ItemInfo.get_content().unwrap()).clone();
+            let diff = file_diff("wd_rev.unwrap().get_content().unwrap()".to_string(), "ItemInfo.get_content().unwrap()".to_string()).clone();
             let flag= diff.is_diff();
             if flag==true {
                 let d= diff.get_patch();
@@ -120,7 +120,7 @@ let res:&str;
                     return Err(Errors::Errstatic("No difference, same, means up to date"))
                 }
                 else {
-                    let diff = file_diff(ItemInfo.get_content().unwrap(), wd_rev.unwrap().get_content().unwrap());
+                    let diff = file_diff("ItemInfo.get_content().unwrap()".to_string(), "wd_rev.unwrap().get_content().unwrap()".to_string());
                     let flag= diff.is_diff();
                     if flag==true {
                         println!("{}is ahead of working directory",ItemInfo.get_file_name());
