@@ -129,10 +129,8 @@ fn find_conflict_files(stage:&Stage) -> Option<Vec<(String, String)>> {
 }
 
 // TODO: test
-pub fn commit<'a>(wd: &'a str, message:&'a str) -> Result<RevDiff, Errors> {
+pub fn commit<'a>(wd: &'a str, message:&'a str) -> Result<String, Errors> {
     let mut repo = repository::load(wd)?;
-    let head1 = repo.get_current_head()?;
-    let rev_id1 = head1.get_id().unwrap();
 
     // blocks if there are no changes
     let stage = repo.get_stage();
@@ -149,19 +147,24 @@ pub fn commit<'a>(wd: &'a str, message:&'a str) -> Result<RevDiff, Errors> {
         return Err(Errstatic("conflict found"));
     }
 
-    repo.commit(message)?;
+    let head1 = repo.get_current_head();
+
+    repo.commit(message)?; // creates new head called "main" if initial commit
+
+    
     let head2 = repo.get_current_head()?;
-    let rev_id2 = head2.get_id().unwrap();
+    if head1.is_err() { // is initial commit
+        return Ok("initial commit".to_string());
+    } else{
+        let rev_id1 = head1.unwrap().get_id().unwrap();
+        let rev_id2 = head2.get_id().unwrap(); // new rev
 
-    // TODO: write to log
-    // TODO: update head
-
-    // commit the index branch to the head branch, create a new revision and update the head
-    // write to log -> where would this be?
-
-    // return a RevDiff if successful
-
-    diff(wd, rev_id1, rev_id2)
+        // TODO: update head
+        // return a RevDiff if successful
+        let rev_diff = diff(wd, rev_id1, rev_id2)?;
+        
+        return Ok(format!("commit success: {}", rev_diff.files.keys().fold("".to_string(), |acc, file| acc + &format!("{} ", file))));
+    }
 }
 
 // TODO: test
