@@ -82,7 +82,7 @@ impl Rev {
         log.insert("id", self.rev_id.clone().unwrap_or_default());
         log.insert("user", self.user_id.clone().unwrap_or("Unknown".to_string()));
         log.insert("time", self.get_date_time());
-        // log.insert("message", _) // MESSAGE TO BE ADDED
+        log.insert("message", self.message.clone().unwrap_or_default());
         log
     }
 
