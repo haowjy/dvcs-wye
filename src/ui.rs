@@ -363,7 +363,7 @@ impl Wye {
             parse_error(return_result.unwrap_err());
         }
         else {
-            println!("{:?}",return_result);
+            println!("{:?}",return_result.unwrap());
         }
     }
     fn input_handling_new_String(return_result:Result<String,Errors>){
