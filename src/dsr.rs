@@ -167,7 +167,7 @@ pub fn clear_dir_adv(path: &str, ignore: Vec<&str>) -> Result<(), Errors> {
                 let entry_name = entry.file_name();
                 let raw_path = entry_path.to_str().unwrap();
 
-                if entry_path.is_dir() {
+                if entry_path.is_dir() && !ignore.contains(&entry_name.to_str().unwrap()) {
                     let mut isin = false;
                     for file in &ignore {
                         if is_in(raw_path, file) {
@@ -493,7 +493,7 @@ mod tests_dsr {
         setup_test_space();
 
         // success
-        match clear_dir_adv("dsr_test", vec!["hi.txt", "another_hi.txt"]) {
+        match clear_dir_adv("dsr_test", vec!["hi.txt", "another_hi.txt", "folderA"]) {
             Ok(_) => println!("clear (dsr_test without hi.txt, another_hi.txt) success"),
             Err(e) => println!("error: {:?}", e),
         }
