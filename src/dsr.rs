@@ -395,22 +395,47 @@ mod tests_dsr {
     fn setup_test_space() {
         create_dir("dsr_test/folder1/folder2/folder3");
         create_dir("dsr_test/folderA/folderB");
+        create_dir("dsr_test/folderA/folderC");
+        create_dir("dsr_test/folderA/folderD");
+        create_dir("dsr_test/folderA/folderD/folderE");
 
         create_file("dsr_test/README.md");
-        create_file("dsr_test/folder1/hi.txt");
-        create_file("dsr_test/folder1/also_hi.txt");
-        create_file("dsr_test/folder1/first_layer.rs");
-        create_file("dsr_test/folder1/folder2/another_hi.txt");
-        create_file("dsr_test/folder1/folder2/second_layer.rs");
-        create_file("dsr_test/folder1/folder2/folder3/third_layer.rs");
-        create_file("dsr_test/folderA/cfile.cpp");
-        create_file("dsr_test/folderA/folderB/python.py");
+        create_file("dsr_test/root.rs");
+        create_file("dsr_test/folder1/f1_1.rs");
+        create_file("dsr_test/folder1/f1_2.rs");
+        create_file("dsr_test/folder1/f1_3.rs");
+        create_file("dsr_test/folder1/folder2/f2_1.rs");
+        create_file("dsr_test/folder1/folder2/f2_2.rs");
+        create_file("dsr_test/folder1/folder2/f3_3.rs");
+        create_file("dsr_test/folder1/folder2/folder3/f3_1.rs");
+        create_file("dsr_test/folder1/folder2/folder3/f3_2.rs");
+        create_file("dsr_test/folder1/folder2/folder3/f3_3.rs");
+        create_file("dsr_test/folder1/folder2/folder3/f3_4.rs");
+        create_file("dsr_test/folderA/fA_1.rs");
+        create_file("dsr_test/folderA/folderB/fB_1.rs");
+        create_file("dsr_test/folderA/folderB/fB_2.rs");
+        create_file("dsr_test/folderA/folderC/fC_1.rs");
+        create_file("dsr_test/folderA/folderC/fC_2.rs");
+        create_file("dsr_test/folderA/folderD/fD_1.rs");
+        create_file("dsr_test/folderA/folderD/folderE/fE_1.rs");
     }
 
     #[allow(unused_must_use)]
     fn clear_test_space() {
         delete_dir("dsr_test");
     }
+
+    #[test]
+    fn test_6_clear_dir_adv() {
+        setup_test_space();
+        // success
+        match clear_dir_adv("dsr_test", vec!["f1_1.rs", "f3_3.rs", "folder2", "folderC"]) {
+            Ok(_) => println!("clear success"),
+            Err(e) => println!("error: {:?}", e),
+        }
+        clear_test_space();
+    }
+
 
     #[test]
     fn test_3_create_dir() {
@@ -489,20 +514,6 @@ mod tests_dsr {
     }
 
     #[test]
-    fn test_6_clear_dir_adv() {
-        setup_test_space();
-
-        // success
-        match clear_dir_adv("dsr_test", vec!["hi.txt", "another_hi.txt", "folderA"]) {
-            Ok(_) => println!("clear (dsr_test without hi.txt, another_hi.txt) success"),
-            Err(e) => println!("error: {:?}", e),
-        }
-
-        //clear_test_space();
-    }
-
-
-    #[test]
     fn test_13_is_path_valid() {
         setup_test_space();
     }
@@ -521,13 +532,8 @@ mod tests_dsr {
     fn test_priv_is_in() {
         setup_test_space();
 
-        assert_eq!(is_in("dsr_test", "README.md"), true);
-        assert_eq!(is_in("dsr_test", "second_layer.rs"), true);
-        assert_eq!(is_in("dsr_test/folder1/folder2", "hi.txt"), false);
-        assert_eq!(is_in("dsr_test/folderA", "python.py"), true);
-        assert_eq!(is_in("dsr_test/folderA/folderB", "cfile.cpp"), false);
+        assert_eq!(is_in("dsr_test/folderA", "folderC"), true);
 
-        clear_test_space();
     }
 }
 
