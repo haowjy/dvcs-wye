@@ -149,17 +149,25 @@ impl Rev {
 mod tests {
     use super::*;
 
+    // 1.
     #[test]
-    fn serialize_deserialize() { // with serde_json
-        let rev = Rev::new();
-        let json_str = serde_json::to_string(&rev).unwrap();
-        // println!("{}", json_str);
-        let rev_other: Rev = serde_json::from_str(&json_str).unwrap();
-        assert_eq!(rev.time_stamp, rev_other.time_stamp); // since Eq not derived
+    fn test_log() {
+        let mut rev = Rev::new();
+        let log = rev.get_log();
+        assert!(log.get("id").is_some());
+        assert!(log.get("time").is_some());
+        assert_eq!(log.get("message").unwrap(), "");
+
+        let new_msg = "some message";
+        rev.set_message(new_msg);
+        let log = rev.get_log();
+        assert_eq!(log.get("message").unwrap(), new_msg);
+
     }
-    
+
+    // 2.
     #[test]
-    fn get_data_types() {
+    fn test_gets() {
         let mut rev = Rev::new();
         rev.rev_id = Some("sha_string".to_string());
         rev.parent_id = Some("sha_string_parent".to_string());
@@ -168,9 +176,10 @@ mod tests {
         rev.get_id(); // assure the struct is intact after get 
     }
 
+    // 3.
     #[test]
     #[should_panic]
-    fn time_update() {
+    fn test_time_update() {
         let mut rev = Rev::new();
         let time = rev.time_stamp.clone();
         assert_eq!(&time, &rev.time_stamp); // won't panic
@@ -178,13 +187,43 @@ mod tests {
         assert_eq!(time, rev.time_stamp); // panic
     }
 
-    // #[test]
-    // fn file_add() {
-    //     let mut rev = Rev::new();
-    //     let add_result = rev.add_file("./src/vc/repository.rs");
-    //     assert_eq!(add_result, Some(()));
-    //     let add_result2 = rev.add_file("./src/vc/repository.rs");
-    //     assert_eq!(add_result2, None);
-    // }
+    // 4.
+    #[test]
+    fn file_add_remove() -> Result<(), Errors> {
+        let mut rev = Rev::new();
+        let file_path = "./vc_test/test_file1.txt"; // relative path is fine
+        rev.add_file(file_path)?;
+        assert_eq!(rev.manifest.len(), 1);
+
+        rev.remove_file(file_path)?;
+        assert_eq!(rev.manifest.len(), 0);
+        Ok(())
+    }
+
+    // 5.
+    #[test]
+    fn test_gen_id_parent_update() -> Result<(), Errors> {
+        let mut rev = Rev::new();
+        let rev_path = "./vc_test/.dvcs/revs";
+        let id1 = rev.gen_id(rev_path)?;
+        assert!(&rev.parent_id.is_none());
+
+        let id2 = rev.gen_id(rev_path)?;
+        assert!(&id1 != &id2);
+        assert_eq!(&rev.parent_id.unwrap(), &id1);
+
+        Ok(())
+    }
+
+    // 6.
+    #[test]
+    fn test_save() -> Result<(), Errors> {
+        let mut rev = Rev::new();
+        let rev_path = "./vc_test/.dvcs/revs";
+        let id = rev.gen_id(rev_path)?;
+        rev.save(rev_path)?;
+        assert!(is_path_valid(&path_compose(rev_path, &id)));
+        Ok(())
+    }
 }
 
