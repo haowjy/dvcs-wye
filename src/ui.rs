@@ -168,7 +168,7 @@ impl Wye {
     pub fn input_command() ->io::Result<()>{//start here temporary
         //cli start here
         let args = Wye::parse();
-        println!("args {:?}!", args);
+        //println!("args {:?}!", args);
         let default_wd_path=dsr::get_wd_path();
         match args.command {
             Command::Add { mut wd_path,mut path } => {

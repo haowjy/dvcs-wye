@@ -1,4 +1,6 @@
 use crate::cmd_function::{file_diff, FileDiff};
+use crate::dsr;
+use crate::dsr::get_files;
 use crate::vc::{file, repository, revision};
 use crate::vc::revision::Rev;
 use crate::ui::Errors;
@@ -47,25 +49,87 @@ pub fn log(wd: &str,rev_id: &str) -> Result<Option<Vec<String>>, Errors> {//alia
 }
 
 pub fn status(wd: &str) -> Result<&str, Errors> {
+    let load=repository::load(wd)?;//got Repo
+    //let renew=load.get_current_head()?;//get Rev
+    let stage=load.get_stage();// got stage
+    let stage_inside_add=stage.get_add();
+    let stage_inside_remove=stage.get_remove();
     //modified:   a.txt
     //add
     //ahead of ?commit
     //up to date
-    println!("Changes to be committed:");
+ //   println!("Changes to be committed:");
     //already add file but modified, so just need commit
+    //commit delete stage, last commit
+//    println!("Changes not staged for commit:");
+    //need add first, then commit
+    //
+    //last commit has, stage has in add, but not commit yet, so not in wd
+ //   println!("Untracked files:");
+    //working directory has, stage don't have. last commit has not,never shows forever
+    //
+    let mut list_files:Vec<String> = vec![];
+    let mut ignore:Vec<&str> = vec![];
+    ignore.push(".dvcs");
+    get_files(wd,ignore,&mut list_files);//file from fd
+    //compare between wd and stage and last commit
+    //println!("{:?}",list_files);
+    let mut untrack:Vec<String>=vec![];
+    let mut Changes_to_be_committed:Vec<String>=vec![];
+    let mut Changes_not_staged_for_commit:Vec<String>=vec![];
+    let a =list_files.iter().fold(0,|acc,x1| {
+        let name=dsr::get_name(x1).unwrap();
+       let contain_add= stage_inside_add.contains_key(&name);
+       /* if contain_add==true { println!("wd has, stage has");}
+        else { println!("wd has, stage has not->maybe untrack file{}",x1); }*/
+        let contain_remove= stage_inside_remove.contains_key(&name);
+        /*if contain_remove { println!("wd has, stage has");}
+        else { println!("wd has, stage has not->maybe untrack file{}",x1); }*/
+        let last_commit= load.get_current_head();//Rev
+        let mut contain_last_commit =false;
+        if  last_commit.is_err(){ //println!("no head, means last commit is empty");
+        }
+        else
+        {
+            let last_commit_file=last_commit.unwrap();
+            let last_commit_hashmap=last_commit_file.get_manifest();//iteminfo
+            contain_last_commit= last_commit_hashmap.contains_key(&name);
+            if contain_last_commit { println!("wd has, last commit has");}
+            else { println!("wd has, last commit has not->maybe untrack file{}",x1); }
+        }
+
+        //so
+        if contain_add==false && contain_remove==false && contain_last_commit==false{
+            untrack.push(name);
+        } else if contain_add==true && contain_last_commit==false {
+            Changes_to_be_committed.push("Add new file: ".to_owned()+&name);
+            //println!("Add new file{}",name);
+            //Changes to be committed:
+        }
+        else if contain_add==true && contain_last_commit==true { println!("Modified file{}",name);
+            //compare inside content see modify
+        }
+        else if contain_remove==true && contain_last_commit==false {
+            Changes_to_be_committed.push("Remove file: ".to_owned()+&name);
+            //Changes to be committed:
+        }
+        else if contain_remove==true && contain_last_commit==true { println!("Modified file{}",name);
+        //compare inside content see modify
+        }
+    0});
+    //还差wd没有，stage和commit有没有？
+    println!("Changes to be committed:");
+    println!("{:?}",Changes_to_be_committed);
+    //already add file but modified, so just need commit
+    //commit delete stage, last commit
     println!("Changes not staged for commit:");
     //need add first, then commit
     //
     //last commit has, stage has in add, but not commit yet, so not in wd
     println!("Untracked files:");
-    //working directory has, stage don't have. last commit has not,never shows forever
-    let load=repository::load(wd)?;//got Repo以后可以换成？
-    //let renew=load.get_current_head()?;//get Rev
-    let stage=load.get_stage();// got stage暂存区
-    let stage_inside_add=stage.get_add();
-    let stage_inside_remove=stage.get_remove();
+    println!("{:?}",untrack);
     //readall
-let res:&str;
+/*let res:&str;
     let mut count_add =0;
     let mut count_delete=0;
     println!("Changes not staged for commit:");
@@ -86,6 +150,7 @@ let res:&str;
             println!("{} already be deleted",ItemInfo.get_file_name());
         }
         else {
+            let a=load.get_file_content(ItemInfo);
             // TODO: use different get content method,use repo to get_content
             let diff = file_diff("wd_rev.unwrap().get_content().unwrap()".to_string(), "ItemInfo.get_content().unwrap()".to_string()).clone();
             let flag= diff.is_diff();
@@ -134,7 +199,7 @@ let res:&str;
     }
         }
 
-}//commit but not push end
+}//commit but not push end*/
     Ok("???")
 }
 
