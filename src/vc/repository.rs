@@ -81,16 +81,21 @@ impl Repo {
         head.manifest.extend(self.stage.to_add.clone());
         self.stage.to_remove.iter().for_each(|(path, _)| {head.manifest.remove(path);});
         
-        // update head and save to repos
+        // save files to repos
+        head.manifest.iter().try_for_each(
+            |(_, entry)| 
+                self.save_file_to_repo(entry).map(|s| ()) // map different ok strings to ()
+        )?;
+
+        // update head and save rev to repos
         let user = get_user();
-        
         let id = head.set_user(&user.1).set_message(message).update_time().gen_id(&self.paths.revs)?;
         head.save(&self.paths.revs);
 
         // update repos
-        self.clear_stage();
+        
         self.branch_heads.insert(self.current_head.unwrap_or("main".to_string()), id);
-        self.save()
+        self.clear_stage().save()
     }
     
 
@@ -104,7 +109,7 @@ impl Repo {
     }
 
     
-    // pub fn fetch(&mut self, rwd:&str) -> &Self; // *** to be implemented
+    // pub fn fetch(&mut self, rwd:&str) -> &Self; // will be removed
 
 // ------ newly added pub functions ------
     pub fn get_file_content(&self, file_id: &str) -> Result<String, Errors> { // support cat 
