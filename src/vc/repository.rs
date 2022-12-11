@@ -13,7 +13,6 @@ use crate::vc::revision::*;
 use crate::ui::Errors;
 
 
-
 #[derive(Debug, Serialize, Deserialize)] 
 pub struct Repo {
     current_head: Option<String>, // alias 
@@ -65,10 +64,10 @@ impl Repo {
             Some(alias) => {
                 match self.branch_heads.get(alias) {
                     Some(id) => self.get_rev(id),
-                    None => Err(Errors::ErrStr("Unable to locate current head by alias".to_string()))
+                    None => Err(Errors::Errstatic("Unable to locate current head by alias"))
                 }
             },
-            None => Err(Errors::ErrStr("Null current head".to_string()))
+            None => Err(Errors::Errstatic("Null current head"))
         }
     }
 
@@ -77,7 +76,17 @@ impl Repo {
     }
 
     pub fn commit(&mut self, message: &str) -> Result<(), Errors> {
-        let mut head = self.get_current_head()?;
+        let mut head = match self.get_current_head() {
+            Ok(rev) => rev,
+            Err(e) => {match e {
+                Errors::Errstatic("Null current head") => { // handling first commit
+                    self.current_head = Some("main".to_string());
+                    Rev::new()
+                },
+                err => return Err(err)
+                }
+            }
+        };
         self.commit_from(&mut head, message)
     }
     
@@ -108,7 +117,7 @@ impl Repo {
         head.set_message(message);
         head.update_time();
         let id = head.gen_id(&self.paths.revs)?;
-        head.save(&self.paths.revs);
+        head.save(&self.paths.revs)?;
 
         // update repos
         self.branch_heads.insert(self.current_head.clone().unwrap_or("main".to_string()), id);
@@ -323,7 +332,7 @@ pub (crate) fn checked_sha(data: &str, matching_pool_path: &str) -> String {
     let mut sha_id = format!("{:x}", Sha256::digest(data));
 
     while is_path_valid(&path_compose(&matching_pool_path, &sha_id)) { // if same sha_id already exists 
-        let compare_content = read_file_as_string(&path_compose(&matching_pool_path, &sha_id)).unwrap();
+        let compare_content = read_file_as_string(&path_compose(&matching_pool_path, &sha_id)).unwrap_or_default();
         if &compare_content == data {
             break;
         }
@@ -412,25 +421,56 @@ pub(super) fn serialize<T: Serialize> (data_struct: &T) -> Result<String, Errors
 mod tests {
         use super::*;
         use std::fs;
-        // #[test]
-        // fn test_make_repo_paths() {
-        //     use std::path::PathBuf;
-        //     let wd = get_wd_path();
-
-        //     let paths = RepoPaths::new(&wd);
-        //     print!("{}",paths.root);
-        //     let mut path = PathBuf::from(&wd);
-        //     path.push(".dvcs");
-        //     assert_eq!(paths.root, path.to_str().unwrap());
-        // }
 
         #[test]
-        fn test_init() {
+        fn test_init_load() {
             let wd = get_wd_path();
             let paths = RepoPaths::new(&wd);
             print!("{}", &paths.revs);
-            init(None);
+            assert!(init(None).is_ok());
             assert!(fs::read_dir(paths.revs).is_ok());
-            assert!(delete_dir(&paths.root).is_ok());
+
+            assert!(load(&wd).is_ok());
+            assert!(load(&path_compose(&wd, "src")).is_ok());
+
         }
+        #[test]
+        fn test_add_stage_commit() -> Result<(), Errors> {
+            let wd = get_wd_path();
+            let mut repo = load(&wd)?;
+            repo.clear_stage();
+            let abs_path1 = path_compose(&wd, "Cargo.toml");
+            repo.add_file(&abs_path1)?;
+            assert_eq!(repo.stage.get_add().len(), 1);
+            repo.commit("test add commit")?;
+            assert!(repo.stage.is_empty());
+            Ok(())
+        }
+
+        #[test]
+        fn test_branching() -> Result<(), Errors> {
+            let wd = get_wd_path();
+            let mut repo = load(&wd)?;
+            let abs_path1 = path_compose(&wd, "predef_file.txt");
+            repo.set_current_head("main")?;
+            repo.add_file(&abs_path1)?;
+            repo.commit("test branching")?;
+            let head = repo.get_current_head()?;
+
+            let new_head_alias = "branching-test";
+            repo.new_head(new_head_alias,head.get_id().unwrap())?;
+            assert_eq!(repo.branch_heads.len(), 2);
+            repo.set_current_head(new_head_alias)?;
+            assert_eq!(repo.current_head, Some(new_head_alias.to_string()));
+            assert_eq!(repo.branch_heads.get(new_head_alias), (repo.branch_heads.get("main")));
+
+            repo.add_file(&abs_path1)?;
+            repo.commit("committed on test branch")?;
+            assert!(repo.branch_heads.get(new_head_alias) != (repo.branch_heads.get("main")));
+            repo.set_current_head("main")?;
+            Ok(())
+
+        }
+
+
     }

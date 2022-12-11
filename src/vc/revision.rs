@@ -14,8 +14,6 @@ use crate::ui::Errors;
 use crate::vc::repository::*;
 use crate::vc::file::*;
 
-static REV_DIR: &str =".dvcs/revs"; //relative path hard coded, might change to use lazy_static macro 
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)] // might impl Drop trait for save safety
 pub struct Rev {
