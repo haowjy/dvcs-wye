@@ -95,8 +95,12 @@ let res:&str;
         return Err(Errors::Errstatic("Please commit first!"))
     }
     else { //no stage, now compare last commit with wd
-        let last_commit= load.get_current_head()?;//Rev//TODO???
-        let last_commit_hashmap=last_commit.get_manifest();//iteminfo//TODO???
+        let last_commit= load.get_current_head();//Rev//TODO???
+        if  last_commit.is_err(){ println!("no head, means last commit is empty");}
+        else
+        {
+            let last_commit_file=last_commit.unwrap();
+        let last_commit_hashmap=last_commit_file.get_manifest();//iteminfo
         for (path, ItemInfo) in last_commit_hashmap {//read last commit
             let wd_rev=file::retrieve_info(path);
             if  wd_rev.as_ref().is_err(){//Cannot find the proper working directory path for file
@@ -119,6 +123,7 @@ let res:&str;
             }
         }
     }
+        }
 
 }//commit but not push end
     Ok("???")
@@ -127,21 +132,33 @@ let res:&str;
 #[cfg(test)]
 mod test {
     use crate::dsr;
+    use crate::readwrite::{add, commit};
+    use crate::vc::repository::init;
     use super::*;
 
     #[test]
     fn test_heads() {
         let wd = dsr::get_wd_path();
-        let res = heads(&wd).unwrap();
-        println!("{:?}", res);
-        //assert_eq!(res.get_parent_id().unwrap(), "VC::Repository::get_current_head()");
+        init(None);
+        add(&wd,"src");
+        let res = heads(&wd).is_err();
+        assert_eq!(res, true);
+    }
+    #[test]
+    fn test_heads_2() {
+        let wd = dsr::get_wd_path();
+        init(None);
+        add(&wd,"src");
+        commit(&wd,"test");
+        let res = heads(&wd).is_err();
+        assert_eq!(res, false);
     }
 
     #[test]
     fn test_logs() {
         let wd = dsr::get_wd_path();
         let res = log(&wd,"");
-        println!("{:?}", res.unwrap().unwrap());
+        println!("{:?}", res.is_ok());
         //assert_eq!(res.unwrap(), "load.crate::vc::repository:get_log(),log information, information");
     }
 

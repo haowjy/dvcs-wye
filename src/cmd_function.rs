@@ -145,10 +145,10 @@ pub fn find_unmerged<'a>(content: String) -> Result<(), String> {
     Ok(())
 }
 
-fn get_all_rev_ancestors(repo:Repo, rev:Rev) -> Result<Vec<Rev>, Errors> {
+fn get_all_rev_ancestors<'a>(repo: &'a Repo, rev: Rev) -> Result<Vec<Rev>, Errors> {
     let mut revs:Vec<Rev> = Vec::new();
 
-    let q = VecDeque::new();
+    let mut q = VecDeque::new();
     q.push_back(rev);
 
     while !q.is_empty() {
@@ -159,7 +159,7 @@ fn get_all_rev_ancestors(repo:Repo, rev:Rev) -> Result<Vec<Rev>, Errors> {
             let p = parent.unwrap().to_string();
             let parent_rev = repo.get_rev(p.as_str())?; // NOTE: getting parent_rev from repo will return erorr if it fails
 
-            revs.push(parent_rev);
+            revs.push(parent_rev.clone());
             q.push_back(parent_rev);
         }
     }
@@ -167,10 +167,7 @@ fn get_all_rev_ancestors(repo:Repo, rev:Rev) -> Result<Vec<Rev>, Errors> {
 }
 
 // count the number of indegrees of each revision
-fn count_indegrees(repo:Repo, rev:Rev, revs_anc:Vec<Rev>) -> Result<HashMap<String, i32>,Errors> {
-    let q = VecDeque::new();
-
-    q.push_back(rev);
+fn count_indegrees<'a>(repo: &'a Repo, rev: Rev, revs_anc:Vec<Rev>) -> Result<HashMap<String, i32>, Errors> {
 
     let mut indegrees:HashMap<String, i32> = HashMap::new();
     
@@ -191,17 +188,17 @@ fn count_indegrees(repo:Repo, rev:Rev, revs_anc:Vec<Rev>) -> Result<HashMap<Stri
 }
 
 // Topological sort of revisions
-fn get_rev_topo(repo:Repo, rev: Rev) -> Result<Vec<String>, Errors> {
+fn get_rev_topo(repo: &Repo, rev: Rev) -> Result<Vec<String>, Errors> {
     let mut ordering = Vec::new();
 
-    let mut revs_anc = get_all_rev_ancestors(repo, rev)?;
+    let revs_anc = get_all_rev_ancestors(repo, rev.clone())?;
 
     // indegrees
-    let mut indegrees = count_indegrees(repo, rev, revs_anc)?;
+    let mut indegrees = count_indegrees(repo, rev.clone(), revs_anc)?;
 
     // queue with 0 indegrees (no parents, so should be just the first rev)
     let mut queue = VecDeque::new();
-    for (rev_id, degree) in indegrees {
+    for (rev_id, degree) in indegrees.clone() {
         if degree == 0 {
             queue.push_back(rev_id);
         }
@@ -215,7 +212,7 @@ fn get_rev_topo(repo:Repo, rev: Rev) -> Result<Vec<String>, Errors> {
         for parent in parents {
             if parent.is_none() { continue; }
             let p = parent.unwrap().to_string();
-            indegrees.entry(p).and_modify(|e| *e -= 1);
+            indegrees.entry(p.clone()).and_modify(|e| *e -= 1);
 
             if indegrees.get(p.as_str()).unwrap() == &0 {
                 queue.push_back(p);
@@ -229,7 +226,7 @@ fn get_rev_topo(repo:Repo, rev: Rev) -> Result<Vec<String>, Errors> {
 
 // TODO: test
 // LCA of two nodes in a DAG
-pub fn find_rev_lca(repo:Repo, rev1: Rev, rev2: Rev) -> Result<Rev,Errors> {
+pub fn find_rev_lca<'a>(repo: &'a Repo, rev1: Rev, rev2: Rev) -> Result<Rev, Errors> {
     // Creates 2 topo sortings of the DAGs that are somewhat connected
     // Then, find the first common node in the 2 topo sortings
     // Ex:
@@ -359,5 +356,10 @@ mod tests {
         // ...
         //>>> their
         assert!(find_unmerged(conf).is_ok()); // has unmerged markers
+    }
+
+    #[test]
+    fn test_find_rev_lca() {
+        // TODO: test find_rev_lca
     }
 }

@@ -113,12 +113,12 @@ pub fn remove<'a>(wd: &'a str, path:&'a str) -> Result<String, Errors>{
 
 fn find_conflict_files(stage:&Stage) -> Option<Vec<(String, String)>> {
     // let mut conflict_files = Vec::new();
-    let mut conflict_files:Vec<(String, String)> = stage.get_add().iter()
-    .filter_map(|(&file, &info)| {
+    let conflict_files:Vec<(String, String)> = stage.get_add().iter()
+    .filter_map(|(file, info)| {
         let content = info.get_content().unwrap();
         let res_unmerged = find_unmerged(content);
         if res_unmerged.is_ok() {return None;}
-        Some((file, res_unmerged.unwrap_err()))
+        Some((file.to_owned(), res_unmerged.unwrap_err()))
     }).collect();
 
     if conflict_files.len() > 0 {
@@ -133,13 +133,23 @@ pub fn commit<'a>(wd: &'a str, message:&'a str) -> Result<RevDiff, Errors> {
     let mut repo = repository::load(wd)?;
     let head1 = repo.get_current_head()?;
     let rev_id1 = head1.get_id().unwrap();
-    // TODO: block if there is no change
-    let stage = repo.get_stage();
-    
-    // TODO: block if we find a conflict
-    find_conflict_files(&stage);
 
-    let commit_res = repo.commit()?;
+    // blocks if there are no changes
+    let stage = repo.get_stage();
+    if stage.is_empty() {
+        return Err(Errstatic("no change"));
+    }
+    
+    // block if we find a conflict
+    let conflicted_files = find_conflict_files(stage);
+    if conflicted_files.is_some() {
+        conflicted_files.unwrap().iter().fold("".to_string(), |acc, (file, content)| {
+            acc + &format!("conflict in file {}\n{}\n", file, content)
+        });
+        return Err(Errstatic("conflict found"));
+    }
+
+    repo.commit(message)?;
     let head2 = repo.get_current_head()?;
     let rev_id2 = head2.get_id().unwrap();
 
@@ -180,7 +190,7 @@ pub fn merge<'a>(wd: &'a str, rev_id_src:String,
     let rev1 = rev_dst.clone(); // Will only create conflict files if dst is the current head, otherwise will simply just return the errors
     let rev2 = repo.get_rev(&rev_id_src)?;
 
-    let rev_origin = find_rev_lca(repo, rev1.clone(), rev2.clone())?;
+    let rev_origin = find_rev_lca(&repo, rev1.clone(), rev2.clone())?;
     let rev_diff1_files = diff(wd, rev_origin.get_id().unwrap(), rev1.clone().get_id().unwrap())?.files;
     let rev_diff2_files = diff(wd, rev_origin.get_id().unwrap(), rev2.clone().get_id().unwrap())?.files;
 
@@ -193,14 +203,12 @@ pub fn merge<'a>(wd: &'a str, rev_id_src:String,
         let diff2 = diff2.unwrap();
         let conflict = conflict_find(diff1, diff2.clone())?;
 
-        merged_files.insert(file, conflict.get_content());
+        merged_files.insert(file.clone(), conflict.get_content());
 
         if conflict.is_conflict() {
             merge_conflicts.insert(file, conflict);
         }
     }
-
-    let cur_head_id = repo.get_current_head()?.get_id().unwrap();
 
     if merge_conflicts.len() > 0 {
         // write the conflict files to the repo
@@ -209,7 +217,7 @@ pub fn merge<'a>(wd: &'a str, rev_id_src:String,
         for (file, new_content) in merged_files {
             let abs_path = path_compose(wd, file.as_str());
             let _ = dsr::write_file(&abs_path, &new_content);
-            add(wd, &file);
+            add(wd, &file)?;
         }
         return Err(ErrStr("Conflicts found, please resolve the conflicts and try to commit again".to_string()));
         
@@ -219,7 +227,7 @@ pub fn merge<'a>(wd: &'a str, rev_id_src:String,
         for (file, content) in merged_files {
             let abs_path = path_compose(wd, file.as_str());
             let _ = dsr::write_file(&abs_path, &content);
-            add(wd, &file);
+            add(wd, &file)?;
         }
         // merge_commit(); // TODO repo.merge_commit()
 
@@ -295,7 +303,7 @@ mod tests {
         let _ = dsr::delete_dir(&path_compose(cwd, ".dvcs"));
         let _ = dsr::delete_file(&path_compose(cwd, "a.txt"));
 
-        init(Some(cwd));
+        let _ = init(Some(cwd));
 
         let _ = dsr::create_file(&path_compose(cwd, "a.txt"));
         let _ = dsr::write_file(&path_compose(cwd, "a.txt"), "hello world");
