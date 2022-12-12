@@ -22,6 +22,7 @@ $[executable_path] checkout SHA-MAIN b
     -> Ok("checkout successful: currently on `DETACHED-HEAD`")
 $[executable_path] merge SHA2
     -> Ok("52b321cb9cb7d3ae1d0d138b7ac1aae51e5d3e73ef0f8a4af2cb9b0e44c824f3")
+$ cd ..
 $ rm -r new_test
 
 TEST 5b:
@@ -60,3 +61,5 @@ $[executable_path] commit "make some super-stable changes to main"
     -> SHA3
 $[executable_path] merge SHA2
     -> Err(ErrStr("Conflicts found, please resolve the conflicts and try to commit again"))
+$ cd ..
+$ rm -r new_test

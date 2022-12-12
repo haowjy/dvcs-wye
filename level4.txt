@@ -27,6 +27,7 @@ $[executable_path] commit "bad feature, deleted"
 $[executable_path] diff SHA1 SHA3
     -> Ok(RevDiff { files: {"new_feature.rs": FileDiff { origin_content: "",
         mod_content: "", patch: "--- original\n+++ modified\n", diff_type: Added }} })
+$ cd ..
 $ rm -r new_test
 
 TEST 4b:
@@ -80,4 +81,5 @@ $[executable_path] remove new_feature.rs
     -> Ok("remove success")
 $[executable_path] commit "bad feature, deleted"
     -> SHA5
+$ cd ..
 $ rm -r new_test
