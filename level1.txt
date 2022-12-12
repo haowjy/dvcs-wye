@@ -1,24 +1,28 @@
+Acceptance Test
+Level 1: init
+
 Test 1.a
 
 $[executable_path] init
-{
+TEST_RESULT: {
     pass: print message indicating dvcs is successfully initialized, and/or can find newly created repository;
     fail: print message indicating initialization failed, and/or cannot locate repository (depending on behavior)
 }
 
 // optional/alternative if supporting init remote or require a path in init
 $[executable_path] init [path]
-{
+TEST_RESULT: {
     pass: print message indicating dvcs is successfully initialized，and/or can find newly created repository for [path];
     fail: print message indicating initialization failed, and/or cannot locate repository for [path];
 }
+
 
 
 Test 1.b
 // testing reinitializing the same repo
 
 $[executable_path] init 
-{
+TEST_RESULT: {
     pass: print message indicating dvcs repo already exists, and/or warn user of re-initializing existing repo;
     fail: same message as first init, or abort the process
 }

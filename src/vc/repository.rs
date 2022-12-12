@@ -185,7 +185,6 @@ impl Repo {
         self.save()
     }
 
-
     pub fn add_file(&mut self, abs_path: &str) -> Result<(), Errors> {
         let mut temp_rev = Rev::new();
         temp_rev.add_file(abs_path)?;
