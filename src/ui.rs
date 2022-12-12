@@ -275,7 +275,7 @@ impl Wye {
                 }
                 let mut res:Result<String,Errors>=Err(Errstatic("1"));
                 res=readwrite::cat(&wd_path,&rev_id,&path);
-                Self::input_handling(res);
+                Self::input_handling_cat(res);
             }
             Command::Status { mut wd_path } => {
                 if wd_path.eq("-d") || wd_path.eq("-")|| wd_path.eq("."){
@@ -421,6 +421,14 @@ impl Wye {
             println!("init successfully");
         }
 
+    }
+    fn input_handling_cat(return_result:Result<String,Errors>){
+        if return_result.is_err() {
+            parse_error(return_result.unwrap_err());
+        }
+        else {
+            println!("content: {}",return_result.unwrap());
+        }
     }
 
     fn input_handling(return_result:Result<String,Errors>){
