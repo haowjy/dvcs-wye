@@ -1,38 +1,44 @@
 # acceptance 1
 mkdir level6
 cd level6
-git init level6-remote
+dvcs-wye init level6-remote
 cd level6-remote
 echo "Hello World" > a.txt
-git add .
-git commit -m "hello world"
+dvcs-wye add .
+dvcs-wye commit "hello world"
 
 cd ..
 mkdir cwd
 cd cwd
-git clone ../level6-remote
+dvcs-wye clone ../level6-remote level6-remote
 cd level6-remote
+
+# PASS: the clone should have a have a hidden directory wtih files, and it works inside the clone
+dvcs-wye log
+dvcs-wye status
 
 # acceptance 2
 sudo rm -r level6
 mkdir level6
 cd level6
-git init level6-remote
+dvcs-wye init level6-remote
 cd level6-remote
 echo "Hello World" > a.txt
-git add .
-git commit -m "hello world"
+dvcs-wye add .
+dvcs-wye commit "hello world"
 echo "File B" > b.txt
-git add .
-git commit -m "b"
+dvcs-wye add .
+dvcs-wye commit -m "b"
 
-git log
+# PASS: the clone should have a have a hidden directory wtih files, and it works inside the clone
+dvcs-wye log
+dvcs-wye status
 
-git checkout -b firstcommit 2b2462f991a072a2d9565f7d64de42a3ee5ea214
+dvcs-wye checkout new branch SHA
 
 cd ..
 mkdir cwd
 cd cwd
-git clone ../level6-remote
+dvcs-wye clone ../level6-remote level6-remote
 cd level6-remote
-git branch
+dvcs-wye branch

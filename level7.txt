@@ -1,53 +1,61 @@
+level7
+    level7-remote
+    cwd
+        level7-remote
+
 # acceptance 1
 mkdir level7
 cd level7
-git init level7-remote
+dvcs-wye init level7-remote
 cd level7-remote
 echo "Hello World" > a.txt
-git add .
-git commit -m "hello world"
+dvcs-wye add .
+dvcs-wye commit "hello world"
 
 cd ..
 mkdir cwd
 cd cwd
-git clone ../level7-remote
+dvcs-wye clone ../level7-remote level7-remote
 cd level7-remote
 
-git checkout -b newbranch
+dvcs-wye checkout new branch normal SHA .
 
 echo "B File" > b.txt
-git add .
-git commit -m "B"
-git push ../../level7-remote
+dvcs-wye add .
+dvcs-wye commit "B"
+dvcs-wye push ../../level7-remote
 
 echo "C File" > c.txt
-git add .
-git commit -m "C"
+dvcs-wye add .
+dvcs-wye commit -m "C"
 
 cd ../../level7-remote
-git pull ../cwd/level7-remote
+dvcs-wye pull ../cwd/level7-remote
+
+
+
 
 # acceptance 2
 sudo rm -r level7
 mkdir level7
 cd level7
-git init level7-remote
+dvcs-wye init level7-remote
 cd level7-remote
 echo "Hello World" > a.txt
-git add .
-git commit -m "hello world"
+dvcs-wye add .
+dvcs-wye commit "hello world"
 
 cd ..
 mkdir cwd
 cd cwd
-git clone ../level7-remote
+dvcs-wye clone ../level7-remote
 cd level7-remote
 
-git checkout -b newbranch
+dvcs-wye checkout new branch normal SHA .
 
 echo "B File" > b.txt
-git push ../../level7-remote
+dvcs-wye push ../../level7-remote
 
 # shouldn't have B because its not commited
 cd ../../level7-remote
-git pull ../cwd/level7-remote
+dvcs-wye pull ../cwd/level7-remote

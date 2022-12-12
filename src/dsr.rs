@@ -289,7 +289,7 @@ pub fn is_path_valid(path: &str) -> bool {
 // 14. Takes in Revision struct (vc/revision.rs/Rev), copy
 //      its contents to the current working directory
 pub fn make_wd(rev: &Rev, wd_path: &str) -> Result<(), Errors> {
-    clear_dir(&wd_path, vec![".dvcs"])?;
+    clear_dir_adv(&wd_path, vec![".dvcs"])?;
     let repo = repository::load(wd_path)?;
     let repo_wd = repository::check_wd(wd_path).unwrap();
     for (filepath, item) in rev.get_manifest() {
