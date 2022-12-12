@@ -186,8 +186,19 @@ impl Wye {
                     path_spoilt.iter().fold(0, |acc, &x| {
                         if Self::check_file_path_valid(Some(x))
                         {
-                            res=readwrite::add(&wd_path,x);
+                            if Self::check_file_file_or_path(Some(x)) {res=readwrite::add(&wd_path,x); }
+                            else {
+                                let mut list_files:Vec<String> = vec![];
+                                let mut ignore:Vec<&str> = vec![];
+                                dsr::get_files(x,ignore,&mut list_files);//file from fd
+                                list_files.iter().fold(0,|acc,x1| {
+                                    res=readwrite::add(&wd_path,x1);
+                                    0});
+
+                            }
+
                         }
+
                         else {
                             res=Err(Errstatic("error file path or unreadable file path"));
                         }
@@ -214,7 +225,17 @@ impl Wye {
                     path_spoilt.iter().fold(0, |acc, &x| {
                         if Self::check_file_path_valid(Some(x))
                         {
-                            res=readwrite::remove(&wd_path,x);
+                            if Self::check_file_file_or_path(Some(x)) {res=readwrite::remove(&wd_path,x); }
+                            else {
+                                let mut list_files:Vec<String> = vec![];
+                                let mut ignore:Vec<&str> = vec![];
+                               dsr::get_files(x,ignore,&mut list_files);//file from fd
+                                list_files.iter().fold(0,|acc,x1| {
+                                    res=readwrite::remove(&wd_path,x1);
+                                    0});
+
+                            }
+
                         }
                         else {
                             res=Err(Errstatic("error file path or unreadable file path"));
@@ -379,6 +400,14 @@ impl Wye {
             println!("{}",return_result.unwrap());
         }
     }
+    fn input_handling_new_commit(return_result:Result<String,Errors>){
+        if return_result.is_err() {
+            parse_error(return_result.unwrap_err());
+        }
+        else {
+            println!("Revision ID: {}",return_result.unwrap());
+        }
+    }
     fn input_handling_status(return_result:Result<&str,Errors>){
         if return_result.is_err() {
             parse_error(return_result.unwrap_err());
@@ -415,6 +444,10 @@ impl Wye {
     }*/
     fn check_file_path_valid(input_2:Option<&str>) ->bool{
         dsr::is_path_valid(input_2.unwrap_or("1"))//add D://ur//test.txt
+    }
+    fn check_file_file_or_path(input_2:Option<&str>) ->bool{
+        let a=dsr::read_file_as_string(input_2.unwrap_or("1"));
+        if a.is_ok(){return true} else { return false }
     }
     fn input_handling_log(return_result:Result<Option<Vec<String>>,Errors>){
         if return_result.is_err() {
