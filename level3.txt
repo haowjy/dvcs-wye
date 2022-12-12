@@ -1,25 +1,95 @@
 Test1
 Init - add a.txt - commit - heads - cat a.txt-status- log
-Success - success - success - “abc” -“inside”- ahead of update- commit abc user
+Success - success - success - “abc” -“inside”- nothing to change- commit abc user
 
-git init
-git add a.txt
-git commit "111"
-git heads
+$[executable] init
+TEST_RESULT: {
+    pass: print message shows process completed successfully;
+    fail: print message shows process not completed successfully;
+}
+$[executable] add a.txt
+TEST_RESULT: {
+    pass: print message shows file was added successfully;
+    fail: print message shows file was not added successfully;
+}
+$[executable] commit "111"
+TEST_RESULT: {
+    pass: print the revision id;
+    fail: print message shows commit fail;
+}
+$[executable] heads
+TEST_RESULT: {
+    pass: print the current head;
+    fail: print message shows error, any kind of error;
+}
 cat a.txt
-git status
-git log
+TEST_RESULT: {
+    pass: print content inside cat;
+    fail: print message shows error, any kind of error;
+}
+$[executable] status
+TEST_RESULT: {
+    pass: print status of untrack, unstage and need commit;
+    fail: print message shows error, any kind of error;
+}
+$[executable] log
+TEST_RESULT: {
+    pass: print log successfully;
+    fail: print message shows error, any kind of error;
+}
 
 
 Test2
 Init - cat a.txt-status-log-heads-add a.txt-cat a.txt -status - log-heads
 Success - wrong path -nothing change-nothing-no heads-not sure- a.txt need commit first- nothing-nothing
 
-git init
+$[executable] init
+TEST_RESULT: {
+    pass: print message shows process completed successfully;
+    fail: print message shows process not completed successfully;
+}
 cat a.txt
-git status
-git log
-git heads
-git add a.txt
-git log
-git heads
+TEST_RESULT: {
+    pass: file not found;
+    fail: print message shows error, any kind of error,except file not found;
+}
+$[executable] status
+TEST_RESULT: {
+    pass: nothing need to change;
+    fail: print message shows error, any kind of error;
+}
+$[executable] log
+TEST_RESULT: {
+    pass: nothing/no logs/no heads;
+    fail: print message shows error, any kind of error;
+}
+$[executable] heads
+TEST_RESULT: {
+    pass: no heads;
+    fail: print message shows error, any kind of error;
+}
+$[executable] add a.txt
+TEST_RESULT: {
+    pass: print message shows file was added successfully;
+    fail: print message shows file was not added successfully;
+}
+cat a.txt
+TEST_RESULT: {
+    pass: display content inside;
+    fail: print message shows error, any kind of error;
+}
+$[executable] status
+TEST_RESULT: {
+    pass: need to commit/a.txt need commit first;
+    fail: print message shows error, any kind of error, or show wrong status;
+}
+$[executable] log
+TEST_RESULT: {
+    pass: nothing/no logs/no heads;
+    fail: print message shows error, any kind of error;
+}
+$[executable] heads
+TEST_RESULT: {
+    pass: no heads;
+    fail: print message shows error, any kind of error;
+}
