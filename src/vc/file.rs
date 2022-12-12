@@ -28,16 +28,6 @@ use EntryType::{File, Dir, Other};
 
 
 impl ItemInfo {
-    // pub fn get_content(&self) -> Result<String, Errors> { // get cached content
-        
-    //     match &self.entry {
-    //         File(id) => {
-    //             let repo_storage_dir = get_repo_storage_dir().ok_or(Errors::ErrUnknown)?;
-    //             read_file_as_string(&path_compose(&repo_storage_dir, &id))
-    //         },
-    //         _ => Err(Errors::ErrStr(format!("{}Not a File", self.name)))
-    //     }
-    // }
 
     pub fn get_file_name(&self) -> &str {
         &self.name
@@ -128,18 +118,98 @@ fn get_id(file_path: &str) -> Result<String, Errors> {
 
 #[cfg(test)]
 mod tests {
-    // use super::*;
+    use super::*;
 
-    // #[test]
-    // fn serialization() {
-    //     let info = retrieve_info("/Users/yiyangw/Documents/dvcs_test/folder2"); // external file, only works on dev local machine 
-    //     let json_str = serde_json::to_string(&info).unwrap();
-    //     println!("{}", json_str)
-    // }
+    fn make_test_dir_file() {
+        let new_dir = "vc_test/file_test_dir";
+        if !is_path_valid(new_dir) {
+            create_dir(new_dir);
+        };
+        let new_file = path_compose(new_dir, "file_test.txt");
+        write_file(&new_file, "file tests");
+    }
 
-    // #[test]
-    // fn relative_path_info_retrieval() {
-    //     let info = retrieve_info("./src/vc/file.rs").unwrap();
-    //     assert_eq!(&info.name.unwrap(), "file.rs");
-    // }
+    // 1.
+    #[test]
+    fn test_serialize_deserialize() -> Result<(), Errors>{
+        make_test_dir_file();
+        let tracked_file_path = "./vc_test/file_test_dir/file_test.txt"; 
+
+        let info = retrieve_info(tracked_file_path)?; // relative path is fine
+        let json_str = serialize(&info).unwrap();
+        assert!(json_str.contains("name"));
+        let re_info:ItemInfo = serde_json::from_str(&json_str).unwrap();
+
+        assert_eq!(re_info.get_file_id(), info.get_file_id());
+        Ok(())
+    }
+
+
+    // 2.
+    #[test]
+    fn test_abs_rel_path_info_retrieval() -> Result<(), Errors> {
+        make_test_dir_file();
+        let rel_path = "./vc_test/file_test_dir/file_test.txt";
+        let abs_path = path_compose(&get_wd_path(), "vc_test/file_test_dir/file_test.txt");
+        let rel_info = retrieve_info(rel_path)?;
+        let abs_info = retrieve_info(&abs_path)?;
+    
+        assert_eq!(&rel_info.name, "file_test.txt");
+        assert_eq!(&abs_info.name, "file_test.txt");
+        Ok(())
+    }
+
+
+    // 3.
+    #[test]
+    fn test_dir() -> Result<(), Errors> {
+        let new_dir = "vc_test/file_test_dir";
+        if !is_path_valid(new_dir) {
+            create_dir(new_dir)?;
+        };
+        let info = retrieve_info(new_dir)?;
+        assert_eq!(&info.name, "file_test_dir");
+        assert_eq!(&info.entry, &EntryType::Dir);
+        assert!(!info.is_file());
+        assert!(info.get_file_id().is_none());
+        Ok(())
+    }
+
+    // 4.
+    #[test]
+    fn test_get() -> Result<(), Errors> {
+        make_test_dir_file();
+        let tracked_file_path = "./vc_test/file_test_dir/file_test.txt"; 
+        let info = retrieve_info(tracked_file_path)?;
+
+        assert!(info.get_file_id().is_some());
+        assert_eq!(info.get_file_name(), &info.name);
+        assert_eq!(info.get_file_wd_path(), "file_test_dir/file_test.txt");
+        Ok(())
+    }
+
+
+    // 5.
+    #[test]
+    fn test_make_file_dir() -> Result<(), Errors> { // bypassing make_file for File(String) type since it requires a source in repo (cannot formulate without calling repo)
+        make_test_dir_file();
+        let tracked_dir = "./vc_test/file_test_dir"; 
+        let mut info = retrieve_info(&tracked_dir)?;
+        info.loc_in_wd.push_str("/make_new");
+        let wd = "./vc_test";
+        info.make_file(&wd)
+    }
+
+
+    // 6.
+    #[test]
+    #[should_panic]
+    fn test_make_file() {
+        make_test_dir_file();
+        let tracked_file_path = "./vc_test/file_test_dir/file_test.txt"; 
+        let info = retrieve_info(tracked_file_path).unwrap();
+        let wd = "./vc_test";
+        info.make_file(wd).unwrap() // should panic bc file_test is not in .dvcs/files
+    }
+
 }
