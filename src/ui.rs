@@ -166,8 +166,8 @@ enum SubCommand {
     },
     /// no default
     Normal {
-        wd_path: String,
         revision: String,
+        wd_path: String,
     }
 
 }
