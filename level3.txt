@@ -50,7 +50,7 @@ TEST_RESULT: {
 }
 $[executable] cat [rev_id] a.txt
 TEST_RESULT: {
-    pass: file not found;
+    pass: revision not found; file not found;
     fail: print message shows error, any kind of error,except file not found;
 }
 $[executable] status
