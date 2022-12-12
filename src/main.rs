@@ -1,6 +1,7 @@
 mod ui;
 
 mod dsr;
+mod test_help;
 
 mod cmd_function;
 
