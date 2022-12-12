@@ -31,9 +31,13 @@ pub fn log(wd: &str) -> Result<Option<Vec<String>>, Errors> {//alias,rev_id: &st
     let mut new_rev;
         let current_head = load.get_current_head()?;//
         hashmap=current_head.get_log();//here get hashmap, this is log need print, maybe put into Vec<String>
-        for(key,value) in hashmap{
+    string.push("user: ".to_owned()+hashmap.get("user").unwrap());
+    string.push("id: ".to_owned()+hashmap.get("id").unwrap());
+    string.push("message: ".to_owned()+hashmap.get("message").unwrap());
+    string.push("time: ".to_owned()+hashmap.get("time").unwrap());
+        /*for(key,value) in hashmap{
             string.push(key.to_owned()+ ":"+ &value);
-        }
+        }*/
     string.push("".parse().unwrap());
         let mut parent_head = "";
         let parent_head_pre = current_head.get_parent_id();
@@ -42,15 +46,22 @@ pub fn log(wd: &str) -> Result<Option<Vec<String>>, Errors> {//alias,rev_id: &st
 
         new_rev = load.get_rev(parent_head).unwrap();
     hashmap=new_rev.get_log();//here get hashmap, this is log need print, maybe put into Vec<String>
-    for(key,value) in hashmap{
-        string.push(key.to_owned()+":"+&value);
-    }
+    string.push("user: ".to_owned()+hashmap.get("user").unwrap());
+    string.push("id: ".to_owned()+hashmap.get("id").unwrap());
+    string.push("message: ".to_owned()+hashmap.get("message").unwrap());
+    string.push("time: ".to_owned()+hashmap.get("time").unwrap());
+    /*for(key,value) in hashmap{
+        string.push(key.to_owned()+ ":"+ &value);
+    }*/
+    string.push("".parse().unwrap());
     while !new_rev.get_parent_id().is_none() {
         new_rev = load.get_rev(new_rev.get_parent_id().unwrap()).unwrap();
         hashmap=new_rev.get_log();//here get hashmap, this is log need print, maybe put into Vec<String>
-        for(key,value) in hashmap{
-            string.push(key.to_owned()+":"+&value);
-        }
+        string.push("user: ".to_owned()+hashmap.get("user").unwrap());
+        string.push("id: ".to_owned()+hashmap.get("id").unwrap());
+        string.push("message: ".to_owned()+hashmap.get("message").unwrap());
+        string.push("time: ".to_owned()+hashmap.get("time").unwrap());
+        string.push("".parse().unwrap());
     }
     Ok(Some(string))
     //first current head->know parent head-> get_rev(return Revision碰到revision就读Parent id->until None
