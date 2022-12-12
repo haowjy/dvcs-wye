@@ -282,7 +282,7 @@ impl Wye {
                     wd_path=default_wd_path;
                 }
                 let res_file_diff=readonly::status(&wd_path);
-                //TODO:Self::input_handling_status(res_file_diff);
+                //Self::input_handling_status(res_file_diff);
             }
             Command::Log { mut wd_path } => {
                 if wd_path.eq("-d") || wd_path.eq("-")|| wd_path.eq("."){
@@ -432,7 +432,12 @@ impl Wye {
     }
 
     fn input_handling(return_result:Result<String,Errors>){
-        println!("{:?}",return_result);
+        if return_result.is_err() {
+            parse_error(return_result.unwrap_err());
+        }
+        else {
+            println!("{}",return_result.unwrap());
+        }
     }
 
     fn input_handling_special(return_result:Result<RevDiff,Errors>){
@@ -475,8 +480,11 @@ impl Wye {
             parse_error(return_result.unwrap_err());
         }
         else {
+            println!("heads:");
             let vec = return_result.unwrap();
-            println!("{:?}", vec);
+            vec.iter().fold(0,|acc,x|{
+                println!("{}",x);
+                0});
         }
     }
     /*fn input_handling_backup<E: std::fmt::Debug>(return_result:Result<(), E>){

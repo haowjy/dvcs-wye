@@ -128,7 +128,8 @@ pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Error
                 //compare stage and last commit, if same->no change
                 //if not same->modified
                 if contain_add==true && contain_last_commit==true&&stage_status==false {
-                    println!("Modified file{}",name);
+                    println!("Modified file: {}",name);
+                    //Changes_not_staged_for_commit.push("Modified file: ".to_owned()+&name);
                     //compare inside content see modify
                     let it1= last_commit_hashmap.get(&name).unwrap();
                     let it2= stage_inside_add.get(&name).unwrap();
@@ -146,6 +147,14 @@ pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Error
                             }
                             else { println!("No difference, same"); }
                         }
+                }
+                if  contain_add==false && contain_last_commit==true&&stage_status==false{
+                    let it1= last_commit_hashmap.get(&name).unwrap();
+                    let a=load.get_file_content(it1).unwrap();
+                    if wd_item!=a{
+                        Changes_not_staged_for_commit.push("Modified file: ".to_owned()+&name);
+                    }
+
                 }
             }//contain_last_commit true
             else { //println!("wd has, last commit has not->maybe untrack file{}",x1);
