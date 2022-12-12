@@ -1,16 +1,12 @@
 use std::io;
-//use std::path::Path;
 use clap::{Parser, Subcommand, FromArgMatches, ArgMatches};
 use clap::error::{Error,ErrorKind};
-//use crate::cmd_function;
 use crate::dsr;
 use crate::cmd_interface::{createonly, readwrite, readonly};
 use crate::cmd_interface::readwrite::RevDiff;
 use crate::cmd_function::FileDiff;
 use crate::vc::repository::{load, Repo};
 use std::io::{stdout, Write};
-/*use log::{info, warn};
-use log4rs;*/
 use crate::vc::revision::Rev;
 #[derive(Debug)]
 pub enum Errors {
@@ -34,15 +30,6 @@ fn parse_error(res: Errors) -> String {
         ErrUnknown => {println!("ErrUnknown");"ErrUnknown".to_string()},
     }
 }
-/*fn match_Errors(error: Errors) -> String {
-    match error {
-        Errors::Error => "error inside".to_string(),
-        Errors::Error_betweenbalabalabala => "Error_betweenbalabalabala".to_string(),
-        Errors::String_content => "more than string".to_string(),
-        Errors::None =>"None".to_string(),
-    }
-}*/
-//type input=fn()->String;
 #[derive(Parser,Debug)]
 #[command(author, version, about, long_about = None)]
 pub struct Wye {
@@ -134,12 +121,6 @@ enum Command {
         #[arg(default_value_t)]
         wd_path: String,
     },
-    /*/// create an empty repository
-    Test {
-        /// Name of the package to search
-        #[command(subcommand)]
-        wd_path: SubCommand,
-    },*/
 }
 #[derive(Parser,Debug)]
 enum SubCommand {
@@ -162,9 +143,7 @@ enum SubCommand {
 }
 impl Wye {
     pub fn input_command() ->io::Result<()>{//start here temporary
-        //cli start here
         let args = Wye::parse();
-        //println!("args {:?}!", args);
         let default_wd_path=dsr::get_wd_path();
         match args.command {
             Command::Add { mut wd_path,mut path } => {
@@ -248,9 +227,8 @@ impl Wye {
                 if wd_path.eq("-d") || wd_path.eq("-")|| wd_path.eq("."){
                     wd_path=default_wd_path;
                 }
-                //let mut res:Result<RevDiff,Errors>=Err(Errstatic("1"));
                 let res=readwrite::commit(&wd_path,&message);
-                Self::input_handling_new_String(res);
+                Self::input_handling_new_string(res);
             }
             Command::Merge { mut wd_path,rev_id } => {
                 if wd_path.eq("-d") || wd_path.eq("-")|| wd_path.eq("."){
@@ -353,32 +331,15 @@ impl Wye {
                 }
                 else { opt_path=Some(&wd_path)}
                 let mut res:Result<String,Errors>=Err(Errstatic("1"));
-                let init=crate::vc::repository::init(opt_path);
+                let init=repository::init(opt_path);
                 match init { Ok(string)=>{res=Ok(string);}
                     Err(String)=>{res=Err(String)} }
-                Self::input_handling_new_String(res);
+                Self::input_handling_new_string(res);
             }
-            /*Command::Test { wd_path } => {
-                match wd_path{
-                    SubCommand::O { ref wd_path} => {
-                        println!("path is: {:?}", wd_path)
-                    }
-                    /*SubCommand::DefalutRev { ref , .. } => {
-                        println!("path is: {:?}", wd_path)
-                    }*/
-                    _ => {}
-                }
-
-                println!("path is: {:?}", wd_path)
-            }*/
             _ => {
                 println!("Sorry! Wrong input! Command not found");
             }
         }
-
-        //cli close here
-
-        //log4rs::init_file("src/log4rs.yml", Default::default()).unwrap();
         Ok(())
     }
 
@@ -390,7 +351,7 @@ impl Wye {
             println!("{}",return_result.unwrap());
         }
     }
-    fn input_handling_new_String(return_result:Result<String,Errors>){
+    fn input_handling_new_string(return_result:Result<String,Errors>){
         if return_result.is_err() {
             parse_error(return_result.unwrap_err());
         }
@@ -411,7 +372,7 @@ impl Wye {
             parse_error(return_result.unwrap_err());
         }
         else {
-            let (changes_to_be_committed,Changes_not_staged_for_commit,untrack) = return_result.unwrap();
+            let (changes_to_be_committed,changes_not_staged_for_commit,untrack) = return_result.unwrap();
                 println!("Changes to be committed:");
                 if  changes_to_be_committed.capacity()==0{ println!("nothing to change");}
                 else{
@@ -419,26 +380,19 @@ impl Wye {
                         println!("{:?}",x);
                         0});
                 }
-                //already add file but modified, so just need commit
-                //commit delete stage, last commit
                 println!("Changes not staged for commit:");
-                if  Changes_not_staged_for_commit.capacity()==0{ println!("nothing to change");}
+                if  changes_not_staged_for_commit.capacity()==0{ println!("nothing to change");}
                 else{
-                    Changes_not_staged_for_commit.iter().fold(0,|acc,x|{
+                    changes_not_staged_for_commit.iter().fold(0,|acc,x|{
                         println!("{:?}",x);
                         0});
-                    //println!("{:?}",Changes_not_staged_for_commit);
                 }
-                //need add first, then commit
-                //
-                //last commit has, stage has in add, but not commit yet, so not in wd
                 println!("Untracked files:");
                 if  untrack.capacity()==0{ println!("nothing to change");}
                 else{
                     untrack.iter().fold(0,|acc,x|{
                         println!("{:?}",x);
                         0});
-                    //println!("{:?}",untrack);
                 }
 
         }
@@ -472,7 +426,6 @@ impl Wye {
     }
 
     fn input_handling_special(return_result:Result<RevDiff,Errors>){
-        //waiting structure inside RevDiff, similar with FileDiff
         if return_result.is_err() {
             parse_error(return_result.unwrap_err());
         }
@@ -481,16 +434,6 @@ impl Wye {
             println!("{:}",rev_diff);
         }
     }
-    /*fn input_handling_special_file(return_result:Result<FileDiff,&str>){
-        let fd = return_result.unwrap();
-        let flag= fd.is_diff();
-        if flag==true {
-            let d= fd.get_patch();
-            println!("{}",d);
-        }
-        else { println!("No difference, same");}
-        info!(target: "a","{} update {}", "command line","b");
-    }*/
     fn check_file_path_valid(input_2:Option<&str>) ->bool{
         dsr::is_path_valid(input_2.unwrap_or("1"))//add D://ur//test.txt
     }
@@ -504,10 +447,9 @@ impl Wye {
         }
         else { let vec = return_result.unwrap();
             if vec.is_none() {println!("{:?}", vec); }
-            else { //println!("{:?}", vec.clone().unwrap());
+            else {
                 vec.unwrap().iter().fold(0,|acc,x|{
                     println!("{}",x);
-                    //println!();
                     0});
             } }
     }
@@ -524,8 +466,5 @@ impl Wye {
                 0});
         }
     }
-    /*fn input_handling_backup<E: std::fmt::Debug>(return_result:Result<(), E>){
-        println!("{:?}",return_result)
-    }*/
 }
 
