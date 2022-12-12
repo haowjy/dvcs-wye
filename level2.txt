@@ -1,53 +1,54 @@
 Acceptance Test
 Level 2: add, commit, checkout
 
-Test 2.a
+Test 2a
 
-$touch new_file.txt
+$touch new_file1.txt
 $touch new_file2.txt
 
-$[executable_path] add new_file.txt
-$[executable_path] commit first
-$[executable_path] commit another
-    -> checkpoint: questionable behavior if this commit is successful
+$[executable_path] add new_file1.txt
+$[executable_path] commit "first commit"
+    -> checkpoint: receive id [first_commit_id] of this commit
+$[executable_path] commit "another commit"
+    -> checkpoint: expected to fail and return no change
 $[executable_path] add new_file2.txt
-$[executable_path] commit second
-$[executable_path] log
-    -> get [prev_commit_id] for commit w/ msg "first" 
-$[executable_path] checkout [prev_commit_id] new_branch
+$[executable_path] commit "second commit"
+$[executable_path] checkout [first_commit_id] -b new_branch
+    -> TEST_RESULT: {
+        pass: WD only has new_file.txt and doesn't have new_file2.txt;
 
-TEST_RESULT: {
-    pass: WD only has new_file.txt and doesn't have new_file2.txt;
-    fail: any failed checkpoints, new_file2.txt still exists, any other added or missing files from wd
-}
+        fail: any failed checkpoints, new_file2.txt still exists, any other added or missing files from wd
+    }
 
+----------------
 
-Test 2.b
-(this test is to follow 2.a and assumes the same WD and REPO condition after passing 2.a)
+Test 2b
+
+(this test is to immediately follow 2a and assumes the same WD and REPO condition after passing 2a)
+
 $[executable_path] checkout main
-    -> checkpoint: fail new_file2.txt is not back in WD
+    -> checkpoint: fail if new_file2.txt is not back in WD
 $mkdir new_dir 
 $cd new_dir
-$touch new_file.txt
+$touch new_file1.txt
 $touch new_file2.txt
 
 $[executable_path] add new_file.txt
-    -> checkpoint: could fail since repo is in parent dir
+    -> checkpoint: should add file despite repo in parent dir
 $cd ..
 $[executable_path] add new_dir/new_file2.txt
 $[executable_path] commit 2b
 
-
-TEST_RESULT: {
-    pass: all commands successful, wd has {
-        new_file.txt, 
-        new_fil2.txt, 
-        new_dir {
+    -> TEST_RESULT: {
+        pass: all commands successful, wd has {
             new_file1.txt, 
-            new_file2.txt
-            }
-        }; 
-    fail: any failed commands, any missing files in WD 
-}
+            new_file2.txt, 
+            new_dir {
+                new_file1.txt, 
+                new_file2.txt
+                }
+            }; (note: these empty files are considered identical in content and resulting in only one entry in the repo's file storage.)
+        fail: any failed commands, any missing files in WD 
+    }
 
 
