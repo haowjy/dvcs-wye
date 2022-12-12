@@ -13,7 +13,7 @@ $[executable_path] commit "another commit"
     -> checkpoint: expected to fail and return no change
 $[executable_path] add new_file2.txt
 $[executable_path] commit "second commit"
-$[executable_path] checkout [first_commit_id] -b new_branch
+$[executable_path] checkout [first_commit_id] p new_branch
     -> TEST_RESULT: {
         pass: WD only has new_file.txt and doesn't have new_file2.txt;
 
@@ -26,29 +26,37 @@ Test 2b
 
 (this test is to immediately follow 2a and assumes the same WD and REPO condition after passing 2a)
 
-$[executable_path] checkout main
+$[executable_path] checkout main b
     -> checkpoint: fail if new_file2.txt is not back in WD
 $mkdir new_dir 
 $cd new_dir
 $touch new_file1.txt
 $touch new_file2.txt
 
-$[executable_path] add new_file.txt
-    -> checkpoint: should add file despite repo in parent dir
+$[executable_path] add .
+    -> checkpoint: should add files despite repo in parent dir
 $cd ..
-$[executable_path] add new_dir/new_file2.txt
+$mkdir new_dir2
+$touch new_file3.txt
+$[executable_path] add .
 $[executable_path] commit 2b
 
+
+
+$[executable_path] checkout new_branch b
+    -> checkpoint: only new_file1.txt in wd
+$[executable_path] checkout main b
     -> TEST_RESULT: {
         pass: all commands successful, wd has {
             new_file1.txt, 
             new_file2.txt, 
             new_dir {
                 new_file1.txt, 
-                new_file2.txt
-                }
+                new_file2.txt,
+                },
+            new_dir2,
+            new_file3.txt,
             }; (note: these empty files are considered identical in content and resulting in only one entry in the repo's file storage.)
         fail: any failed commands, any missing files in WD 
     }
-
 
