@@ -7,19 +7,20 @@ $mkdir new_test
 $cd new_test
 $[executable_path] init
     TEST_RESULT: {
-        pass: print message indicating dvcs is successfully initialized, and/or can find newly created repository;
+        pass: print message indicating dvcs is successfully initialized;
 
-        fail: print message indicating initialization failed, and/or cannot locate repository (depending on behavior)
+        fail: print message indicating initialization failed;
     }
 
-!!optional/alternative 
+
+--- optional/alternative: 1a ---
 
 $[executable_path] init [alt_path/new_path]
 
 TEST_RESULT: {
     pass: print message indicating dvcs is successfully initialized，and/or can find newly created repository for [path];
 
-    fail: print message indicating initialization failed, and/or cannot locate repository for [path];
+    fail: print message indicating initialization failed, and/or cannot locate repository for [alt_path/new_path];
 }
 
 ----------------
