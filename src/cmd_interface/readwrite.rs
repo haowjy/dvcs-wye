@@ -7,7 +7,6 @@ use std::collections::{HashMap,};
 use std::fmt;
 
 use crate::cmd_function::{*};
-use crate::cmd_function::FileDiffType::{*};
 
 // ---------- PRIVATE ----------
 fn find_conflict_files(repo: &Repo, stage:&Stage) -> Result<Option<Vec<(String, String)>>, Errors> {
@@ -171,8 +170,7 @@ pub fn merge<'a>(wd: &'a str, rev_id_src:String,
     let rev_dst = repo.get_current_head()?; // is current head
 
     // Check if there are uncommitted changes (checks only stage instead)
-    // if !repo.get_stage().is_empty(){ return Err(Errstatic("pull failed: uncommitted changes in working directory, commit changes first"));}
-    // TODO: status doesn't work???
+    
     let (staged, unstaged, untracked) = status(wd)?; // print status
     if !(staged.is_empty() && unstaged.is_empty() && untracked.is_empty()){ // not empty
         return Err(Errstatic("merge failed: uncommitted changes"));
@@ -250,8 +248,9 @@ mod tests {
 
     use crate::createonly::checkout;
     use crate::dsr;
-    use crate::vc::repository::{self, init};
+    use crate::vc::repository::{self};
     use crate::test_help::{*};
+    use crate::cmd_function::FileDiffType::{*};
     
 
     #[test]

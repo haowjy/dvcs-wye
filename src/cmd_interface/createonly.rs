@@ -101,8 +101,6 @@ pub fn pull<'a>(wd:&'a str, remote:&'a str) -> Result<String, Errors> {
     if cur_head_alias.is_none() {return Err(Errstatic("pull failed: no head found"));}
     let cur_head_alias = cur_head_alias.unwrap();
 
-    // if !cur_repo.get_stage().is_empty(){ return Err(Errstatic("pull failed: uncommitted changes in working directory, commit changes first"));}
-    // TODO: status doesn't work???
     let (staged, unstaged, untracked) = status(wd)?; // print status
     if !(staged.is_empty() && unstaged.is_empty() && untracked.is_empty()){ // not empty
         return Err(Errstatic("pull failed: uncommitted changes in working directory, commit changes first"));
@@ -136,8 +134,7 @@ pub fn push<'a>(wd:&'a str, remote:&'a str) -> Result<String, Errors> {
 
     let mut cur_repo_mut = repository::load(wd)?;
     let cur_repo = repository::load(wd)?;
-    // if !cur_repo.get_stage().is_empty(){ return Err(Errstatic("push failed: uncommitted changes in working directory, commit changes first"));}
-    // TODO: status doesn't work???
+    
     let (staged, unstaged, untracked) = status(wd)?; // print status
     if !(staged.is_empty() && unstaged.is_empty() && untracked.is_empty()){ // not empty
         return Err(Errstatic("pull failed: uncommitted changes in working directory, commit changes first"));
