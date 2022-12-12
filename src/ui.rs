@@ -1,12 +1,9 @@
 use std::io;
-use clap::{Parser, Subcommand, FromArgMatches, ArgMatches};
+use clap::{Parser, FromArgMatches};
 use clap::error::{Error,ErrorKind};
 use crate::dsr;
 use crate::cmd_interface::{createonly, readwrite, readonly};
 use crate::cmd_interface::readwrite::RevDiff;
-use crate::cmd_function::FileDiff;
-use crate::vc::repository::{load, Repo};
-use std::io::{stdout, Write};
 use crate::vc::revision::Rev;
 #[derive(Debug)]
 pub enum Errors {
@@ -160,15 +157,15 @@ impl Wye {
                 }
                 else {
                     let path_spoilt:Vec<&str>=path.split(',').collect();
-                    path_spoilt.iter().fold(0, |acc, &x| {
+                    path_spoilt.iter().fold(0, |_acc, &x| {
                         if Self::check_file_path_valid(Some(x))
                         {
                             if Self::check_file_file_or_path(Some(x)) {res=readwrite::add(&wd_path,x); }
                             else {
                                 let mut list_files:Vec<String> = vec![];
-                                let mut ignore:Vec<&str> = vec![".dvcs"];
+                                let ignore:Vec<&str> = vec![".dvcs"];
                                 dsr::get_files(x,ignore,&mut list_files);//file from fd
-                                list_files.iter().fold(0,|acc,x1| {
+                                list_files.iter().fold(0,|_acc,x1| {
                                     res=readwrite::add(&wd_path,x1);
                                     0});
 
@@ -199,7 +196,7 @@ impl Wye {
                 }
                 else {
                     let path_spoilt:Vec<&str>=path.split(',').collect();
-                    path_spoilt.iter().fold(0, |acc, &x| {
+                    path_spoilt.iter().fold(0, |_acc, &x| {
                         if Self::check_file_path_valid(Some(x))
                         {
                             if Self::check_file_file_or_path(Some(x)) {res=readwrite::remove(&wd_path,x); }
@@ -207,7 +204,7 @@ impl Wye {
                                 let mut list_files:Vec<String> = vec![];
                                 let mut ignore:Vec<&str> = vec![".dvcs"];
                                dsr::get_files(x,ignore,&mut list_files);//file from fd
-                                list_files.iter().fold(0,|acc,x1| {
+                                list_files.iter().fold(0,|_acc,x1| {
                                     res=readwrite::remove(&wd_path,x1);
                                     0});
 
@@ -228,14 +225,13 @@ impl Wye {
                     wd_path=default_wd_path;
                 }
                 let res=readwrite::commit(&wd_path,&message);
-                Self::input_handling_new_string(res);
+                Self::input_handling_new_commit(res);
             }
             Command::Merge { mut wd_path,rev_id } => {
                 if wd_path.eq("-d") || wd_path.eq("-")|| wd_path.eq("."){
                     wd_path=default_wd_path;
                 }
-                let mut res:Result<String,Errors>=Err(Errstatic("1"));
-                res=readwrite::merge(&wd_path, rev_id.clone());
+                let  res=readwrite::merge(&wd_path, rev_id.clone());
                 Self::input_handling(res);
             }
             Command::Diff { mut wd_path,rev_id_1,rev_id_2 } => {
@@ -250,8 +246,7 @@ impl Wye {
                 if wd_path.eq("-d") || wd_path.eq("-")|| wd_path.eq("."){
                     wd_path=default_wd_path;
                 }
-                let mut res:Result<String,Errors>=Err(Errstatic("1"));
-                res=readwrite::cat(&wd_path,&rev_id,&path);
+                let res=readwrite::cat(&wd_path,&rev_id,&path);
                 Self::input_handling_cat(res);
             }
             Command::Status { mut wd_path } => {
@@ -333,7 +328,7 @@ impl Wye {
                 let mut res:Result<String,Errors>=Err(Errstatic("1"));
                 let init=repository::init(opt_path);
                 match init { Ok(string)=>{res=Ok(string);}
-                    Err(String)=>{res=Err(String)} }
+                    Err(string)=>{res=Err(string)} }
                 Self::input_handling_new_string(res);
             }
             _ => {
@@ -376,21 +371,21 @@ impl Wye {
                 println!("Changes to be committed:");
                 if  changes_to_be_committed.capacity()==0{ println!("nothing to change");}
                 else{
-                    changes_to_be_committed.iter().fold(0, |acc, x|{
+                    changes_to_be_committed.iter().fold(0, |_acc, x|{
                         println!("{:?}",x);
                         0});
                 }
                 println!("Changes not staged for commit:");
                 if  changes_not_staged_for_commit.capacity()==0{ println!("nothing to change");}
                 else{
-                    changes_not_staged_for_commit.iter().fold(0,|acc,x|{
+                    changes_not_staged_for_commit.iter().fold(0,|_acc,x|{
                         println!("{:?}",x);
                         0});
                 }
                 println!("Untracked files:");
                 if  untrack.capacity()==0{ println!("nothing to change");}
                 else{
-                    untrack.iter().fold(0,|acc,x|{
+                    untrack.iter().fold(0,|_acc,x|{
                         println!("{:?}",x);
                         0});
                 }
@@ -448,7 +443,7 @@ impl Wye {
         else { let vec = return_result.unwrap();
             if vec.is_none() {println!("{:?}", vec); }
             else {
-                vec.unwrap().iter().fold(0,|acc,x|{
+                vec.unwrap().iter().fold(0,|_acc,x|{
                     println!("{}",x);
                     0});
             } }
@@ -461,7 +456,7 @@ impl Wye {
         else {
             println!("heads:");
             let vec = return_result.unwrap();
-            vec.iter().fold(0,|acc,x|{
+            vec.iter().fold(0,|_acc,x|{
                 println!("{}",x);
                 0});
         }
