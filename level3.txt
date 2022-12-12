@@ -1,4 +1,4 @@
-Test1
+Test3a
 Init - add a.txt - commit - heads - cat a.txt-status- log
 Success - success - success - “abc” -“inside”- nothing to change- commit abc user
 
@@ -39,7 +39,7 @@ TEST_RESULT: {
 }
 
 
-Test2
+Test3b
 Init - cat a.txt-status-log-heads-add a.txt-cat a.txt -status - log-heads
 Success - wrong path -nothing change-nothing-no heads-not sure- a.txt need commit first- nothing-nothing
 

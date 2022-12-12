@@ -19,9 +19,9 @@ use crate::vc::repository;
 
 fn parse_error(res: Errors) -> String {
     match res {
-        ErrSerde(Error) => {println!("{}", Error);Error.to_string()},
-        ErrIo(Error) => {println!("{}", Error);Error.to_string()},
-        ErrSys(Error) => {println!("{}", Error);Error.to_string()},
+        ErrSerde(e) => {println!("{}", e);e.to_string()},
+        ErrIo(e) => {println!("{}", e);e.to_string()},
+        ErrSys(e) => {println!("{}", e);e.to_string()},
         ErrStr(String) => {println!("{}", String);String},
         Errstatic(Str) => {println!("{}", Str);Str.to_string()},
         ErrUnknown => {println!("ErrUnknown");"ErrUnknown".to_string()},
@@ -202,7 +202,7 @@ impl Wye {
                             if Self::check_file_file_or_path(Some(x)) {res=readwrite::remove(&wd_path,x); }
                             else {
                                 let mut list_files:Vec<String> = vec![];
-                                let mut ignore:Vec<&str> = vec![".dvcs"];
+                                let ignore:Vec<&str> = vec![".dvcs"];
                                dsr::get_files(x,ignore,&mut list_files);//file from fd
                                 list_files.iter().fold(0,|_acc,x1| {
                                     res=readwrite::remove(&wd_path,x1);
@@ -238,8 +238,7 @@ impl Wye {
                 if wd_path.eq("-d") || wd_path.eq("-")|| wd_path.eq("."){
                     wd_path=default_wd_path;
                 }
-                let mut res_diff:Result<RevDiff,Errors>=Err(Errstatic("2"));
-                res_diff=readwrite::diff(&wd_path,&rev_id_1, &rev_id_2);
+                let res_diff=readwrite::diff(&wd_path,&rev_id_1, &rev_id_2);
                 Self::input_handling_special(res_diff);
             }
             Command::Cat { mut wd_path,rev_id,path } => {
@@ -260,8 +259,7 @@ impl Wye {
                 if wd_path.eq("-d") || wd_path.eq("-")|| wd_path.eq("."){
                     wd_path=default_wd_path;
                 }
-                let mut res_log:Result<Option<Vec<String>>,Errors>;
-                res_log=readonly::log(&wd_path);
+                let res_log=readonly::log(&wd_path);
                 //parse_error(readonly::log(&path).unwrap_err());
                 Self::input_handling_log(res_log);
             }
