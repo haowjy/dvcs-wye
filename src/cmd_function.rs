@@ -276,7 +276,7 @@ mod tests {
     use crate::{test_help::*, vc::repository};
     
     #[test]
-    fn test_file_diff() {
+    fn test_file_diff_1() {
         let diff1 = file_diff("Some line of text\nSecond line".to_string(), "Some line of text\nSecond line\nin a file".to_string());
         assert_eq!(diff1.get_diff_type(), &FileDiffType::Modified); // modified
         let diff2 = file_diff("Some line of text\nSecond line".to_string(), "Some line of text\nSecond line".to_string());
@@ -298,7 +298,7 @@ mod tests {
     }
 
     #[test]
-    fn test_conflict_find() {
+    fn test_conflict_find_2() {
         let content0 = "Some line of text\nSecondLine\n".to_string();
         let content1 = "Some line of text\nInsert\nSecondLine\n".to_string();
         let content2 = "Some line of text\nSecondLine\nInsertLast".to_string();
@@ -330,7 +330,7 @@ mod tests {
     }
 
     #[test]
-    fn test_find_unmerged() {
+    fn test_find_unmerged_3() {
         let content0 = "Some line of text\nSecondLine\n".to_string();
         let content1 = "Some line of text\nInsert\nSecondLine\n".to_string();
         let content2 = "Some line of text\nSecondLine\nInsertLast".to_string();
@@ -376,7 +376,7 @@ mod tests {
     }
 
     #[test]
-    fn test_find_rev_lca() {
+    fn test_find_rev_lca_4() {
         let cwd = "./a_test_repo/";
 
         remove_git_and_init(cwd);

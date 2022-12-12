@@ -187,7 +187,7 @@ mod tests {
 
     // 1. clone
     #[test]
-    fn test_clone() {
+    fn test_clone_1() {
         let remote_wd = "./a_remote/a_test_repo";
         remove_git_and_init(remote_wd);
         create_files_and_commit_ab1(remote_wd);
@@ -204,7 +204,7 @@ mod tests {
 
     // 2. clone no change
     #[test]
-    fn test_clone_remote_no_change() {
+    fn test_clone_remote_no_change_2() {
         let remote_wd = "./a_remote/a_test_repo";
         remove_git_and_init(remote_wd);
         let rev1 = create_files_and_commit_ab1(remote_wd);
@@ -224,7 +224,7 @@ mod tests {
     }
 
     #[test]
-    fn test_checkout() {
+    fn test_checkout_3() {
         let cwd = "./a_test_repo";
         remove_git_and_init(cwd);
         let rev1 = create_files_and_commit_ab1(cwd);
@@ -247,7 +247,7 @@ mod tests {
     }
 
     #[test]
-    fn test_checkout_new_branch() {
+    fn test_checkout_new_branch_4() {
         let cwd = "./a_test_repo";
         remove_git_and_init(cwd);
         let rev1 = create_files_and_commit_ab1(cwd);
@@ -269,25 +269,24 @@ mod tests {
     }
 
     #[test]
-    fn test_checkout_new_branch_fail() {
+    fn test_checkout_new_branch_fail_5() {
         let cwd = "./a_test_repo";
         remove_git_and_init(cwd);
         let rev1 = create_files_and_commit_ab1(cwd);
         let _ = write_create_files_and_commit_abc2(cwd);
 
         let res = checkout(cwd, rev1.as_str(), Some("main".to_string()));
-        assert_eq!(res.is_err(), true);
+        assert_eq!(res.is_err(), true); // checkout should fail because new branch already exists
 
         let res = checkout(cwd, "wrong", None);
-        // println!("{:?}", res);
-        assert_eq!(res.is_err(), true);
+        assert_eq!(res.is_err(), true); // checkout should fail because doesn't exist
 
         let repo = repository::load(cwd).unwrap();
         assert_eq!(repo.get_current_head_alias().unwrap(), "main"); // did not change
     }
 
     #[test]
-    fn test_pull() {
+    fn test_pull_6() {
         let remote_wd = "./a_remote/a_test_repo";
         remove_git_and_init(remote_wd);
         let rev1 = create_files_and_commit_ab1(remote_wd);
@@ -315,7 +314,7 @@ mod tests {
     }
 
     #[test]
-    fn test_push() {
+    fn test_push_7() {
         let remote_wd = "./a_remote/a_test_repo";
         remove_git_and_init(remote_wd);
         let _ = create_files_and_commit_ab1(remote_wd);

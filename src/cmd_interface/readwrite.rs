@@ -244,7 +244,7 @@ mod tests {
     
 
     #[test]
-    fn test_diff() {
+    fn test_diff_1() {
         let cwd = "./a_test_repo/";
 
         remove_git_and_init(cwd);
@@ -260,7 +260,7 @@ mod tests {
     }
 
     #[test]
-    fn test_cat() {
+    fn test_cat_2() {
         let cwd = "./a_test_repo/";
 
         remove_git_and_init(cwd);
@@ -280,7 +280,7 @@ mod tests {
     }
 
     #[test]
-    fn test_add() {
+    fn test_add_3() {
         let cwd = "./a_test_repo/";
         
         remove_git_and_init(cwd);
@@ -296,7 +296,7 @@ mod tests {
     }
 
     #[test]
-    fn test_remove() {
+    fn test_remove_4() {
         let cwd = "./a_test_repo/";
 
         remove_git_and_init(cwd);
@@ -316,7 +316,7 @@ mod tests {
     }
 
     #[test]
-    fn test_commit() {
+    fn test_commit_5() {
         let cwd = "./a_test_repo";
         
         remove_git_and_init(cwd);
@@ -340,7 +340,7 @@ mod tests {
     }
 
     #[test]
-    fn test_merge() {
+    fn test_merge_6() {
         let cwd = "./a_test_repo";
         remove_git_and_init(cwd);
 
@@ -360,7 +360,7 @@ mod tests {
     }
 
     #[test]
-    fn test_merge_conflict() {
+    fn test_merge_conflict_7() {
         let cwd = "./a_test_repo";
         remove_git_and_init(cwd);
 
