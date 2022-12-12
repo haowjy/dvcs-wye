@@ -145,22 +145,31 @@ enum Command {
 }
 #[derive(Parser,Debug)]
 enum SubCommand {
+    /// has default revision id and wd_path
     Default {
         #[arg(default_value_t)]
         revision: String,
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
     },
+    /// has default wd_path
     DefaultPath {
         revision: String,
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
     },
+    /// has default revision id
     DefaultRev {
         wd_path: String,
         #[arg(default_value_t)]
         revision: String,
+    },
+    /// no default
+    Normal {
+        revision: String,
+        wd_path: String,
     }
+
 }
 impl Wye {
     pub fn input_command() ->io::Result<()>{//start here temporary
@@ -324,6 +333,10 @@ impl Wye {
                         path= wd_path.clone();
                         rev=revision.clone();
                     }
+                    SubCommand::Normal { ref wd_path,ref revision} => {
+                        path= wd_path.clone();
+                        rev=revision.clone();
+                    }
                     _ => {}
                 }
                 if rev.eq(""){
@@ -455,10 +468,11 @@ impl Wye {
         }
         else { let vec = return_result.unwrap();
             if vec.is_none() {println!("{:?}", vec); }
-            else { println!("{:?}", vec.clone().unwrap());
-                /*vec.unwrap().iter().fold(0,|acc,x|{
-                    println!("{:?}",x);
-                    0});*/
+            else { //println!("{:?}", vec.clone().unwrap());
+                vec.unwrap().iter().fold(0,|acc,x|{
+                    println!("{}",x);
+                    //println!();
+                    0});
             } }
     }
 

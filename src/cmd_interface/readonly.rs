@@ -28,12 +28,17 @@ pub fn log(wd: &str) -> Result<Option<Vec<String>>, Errors> {//alias,rev_id: &st
         for(key,value) in hashmap{
             string.push(key.to_owned()+ ":"+ &value);
         }
+    string.push("".parse().unwrap());
         let mut parent_head = "";
         let parent_head_pre = current_head.get_parent_id();
         if  parent_head_pre.is_none(){ return Ok(Some(string));}
         else {parent_head=parent_head_pre.unwrap(); }
 
         new_rev = load.get_rev(parent_head).unwrap();
+    hashmap=new_rev.get_log();//here get hashmap, this is log need print, maybe put into Vec<String>
+    for(key,value) in hashmap{
+        string.push(key.to_owned()+":"+&value);
+    }
     while !new_rev.get_parent_id().is_none() {
         new_rev = load.get_rev(new_rev.get_parent_id().unwrap()).unwrap();
         hashmap=new_rev.get_log();//here get hashmap, this is log need print, maybe put into Vec<String>
