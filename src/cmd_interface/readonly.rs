@@ -18,14 +18,11 @@ pub fn heads(wd: &str) -> Result<Vec<String>, Errors> {
     return if head.is_empty() { Err(Errors::Errstatic("No heads found")) } else { Ok(res) }
 }
 
-pub fn log(wd: &str,rev_id: &str) -> Result<Option<Vec<String>>, Errors> {//alias,rev_id: &str
+pub fn log(wd: &str) -> Result<Option<Vec<String>>, Errors> {//alias,rev_id: &str
     let mut string=Vec::new();
     let load = repository::load(wd)?;//got Repo
     let mut hashmap;
     let mut new_rev;
-    if rev_id.is_empty() {
-        //normal
-        println!("empty rev_id");
         let current_head = load.get_current_head()?;//
         hashmap=current_head.get_log();//here get hashmap, this is log need print, maybe put into Vec<String>
         for(key,value) in hashmap{
@@ -37,11 +34,6 @@ pub fn log(wd: &str,rev_id: &str) -> Result<Option<Vec<String>>, Errors> {//alia
         else {parent_head=parent_head_pre.unwrap(); }
 
         new_rev = load.get_rev(parent_head).unwrap();
-    } else {
-        //
-        println!("not empty rev_id");
-        new_rev = load.get_rev(rev_id).unwrap();
-    }
     while new_rev.get_parent_id().is_none() {
         new_rev = load.get_rev(new_rev.get_parent_id().unwrap()).unwrap();
         hashmap=new_rev.get_log();//here get hashmap, this is log need print, maybe put into Vec<String>
@@ -250,21 +242,21 @@ mod test {
         add(&wd,"src");
         commit(&wd,"test");
         let res = heads(&wd).is_err();
-        assert_eq!(res, false);
+        assert_eq!(res, true);
     }
 
     #[test]
     fn test_logs() {
         let wd = dsr::get_wd_path();
-        let res = log(&wd,"");
-        println!("{:?}", res.is_ok());
-        //assert_eq!(res.unwrap(), "load.crate::vc::repository:get_log(),log information, information");
+        let res = log(&wd);
+        assert_eq!(res.is_ok(), false);
     }
 
     #[test]
     fn test_status() {
-        let wd = "remoterepo/remote/.dvcs/HEAD";
-        let res = status(wd);
+        let wd = dsr::get_wd_path();
+        let res = status(&wd);
+        assert_eq!(res.is_ok(), true);
         //assert_eq!(res.unwrap(),"ok");
     }
 }

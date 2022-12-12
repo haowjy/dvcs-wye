@@ -97,8 +97,6 @@ enum Command {
     },
     /// view the change log
     Log {
-        #[arg(default_value_t)]
-        rev_id: String,
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
     },
@@ -266,12 +264,12 @@ impl Wye {
                 let res_file_diff=readonly::status(&wd_path);
                 //TODO:Self::input_handling_status(res_file_diff);
             }
-            Command::Log { mut wd_path,rev_id } => {
+            Command::Log { mut wd_path } => {
                 if wd_path.eq("-d") || wd_path.eq("-")|| wd_path.eq("."){
                     wd_path=default_wd_path;
                 }
                 let mut res_log:Result<Option<Vec<String>>,Errors>;
-                res_log=readonly::log(&wd_path,&rev_id);
+                res_log=readonly::log(&wd_path);
                 //parse_error(readonly::log(&path).unwrap_err());
                 Self::input_handling_log(res_log);
             }
