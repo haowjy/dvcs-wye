@@ -53,36 +53,31 @@ pub struct Wye {
 enum Command {
     /// add specific files(multi files use "," to spilt) that you want to track
     Add {
-        /// Name of the package to search
         path: String,
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
     },
     /// remove specific files from tracking list
     Remove {
-        /// Name of the package to search
         path: String,
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
     },
     /// commit changes and create a new revision
     Commit {
-        /// Name of the package to search
+        /// Message need to be single word
         message: String,
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
     },
     /// merge two revisions
     Merge {
-        /// Name of the package to search
         rev_id: String,
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
     },
     /// check the changes between revisions
     Diff {
-        //#[arg(short, long, default_value_t = dsr::get_wd_path())]
-        /// Name of the package to search
         rev_id_1: String,
         rev_id_2: String,
         #[arg(default_value_t = dsr::get_wd_path())]
@@ -90,7 +85,6 @@ enum Command {
     },
     /// inspect a file of a given revision
     Cat {
-        /// Name of the package to search
         rev_id: String,
         path: String,
         #[arg(default_value_t = dsr::get_wd_path())]
@@ -98,7 +92,6 @@ enum Command {
     },
     ///  check the current status of current repository
     Status {
-        /// Name of the package to search
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
     },
@@ -142,31 +135,30 @@ enum Command {
     },
     /// create an empty repository
     Init {
-        /// Name of the package to search
         #[arg(default_value_t)]
         wd_path: String,
     },
-    /// create an empty repository
+    /*/// create an empty repository
     Test {
         /// Name of the package to search
         #[command(subcommand)]
         wd_path: SubCommand,
-    },
+    },*/
 }
 #[derive(Parser,Debug)]
 enum SubCommand {
-    Defalut {
+    Default {
         #[arg(default_value_t)]
         revision: String,
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
     },
-    DefalutPath {
+    DefaultPath {
         revision: String,
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
     },
-    DefalutRev {
+    DefaultRev {
         wd_path: String,
         #[arg(default_value_t)]
         revision: String,
@@ -180,8 +172,11 @@ impl Wye {
         let default_wd_path=dsr::get_wd_path();
         match args.command {
             Command::Add { mut wd_path,mut path } => {
-                if wd_path.eq("-d") || wd_path.eq("-"){
-                    wd_path=default_wd_path;
+                if wd_path.eq("-d") || wd_path.eq("-")||wd_path.eq("."){
+                    wd_path=default_wd_path.clone();
+                }
+                if path.eq("-d") || path.eq("-")||path.eq("."){
+                    path=default_wd_path;
                 }
                 println!("wd_path is: {:?}", wd_path);
                 let mut res:Result<String,Errors>=Err(Errstatic("1"));
@@ -206,9 +201,12 @@ impl Wye {
                 }
                 Self::input_handling(res);
             }
-            Command::Remove { mut wd_path,path } => {
-                if wd_path.eq("-d") || wd_path.eq("-"){
-                    wd_path=default_wd_path;
+            Command::Remove { mut wd_path,mut path } => {
+                if wd_path.eq("-d") || wd_path.eq("-")||path.eq("."){
+                    wd_path=default_wd_path.clone();
+                }
+                if path.eq("-d") || path.eq("-")||path.eq("."){
+                    path=default_wd_path;
                 }
                 println!("wd_path is: {:?}", wd_path);
                 let mut res:Result<String,Errors>=Err(Errstatic("1"));
@@ -234,7 +232,7 @@ impl Wye {
                 Self::input_handling(res);
             }
             Command::Commit {mut wd_path, message } => {
-                if wd_path.eq("-d") || wd_path.eq("-"){
+                if wd_path.eq("-d") || wd_path.eq("-")|| wd_path.eq("."){
                     wd_path=default_wd_path;
                 }
                 //let mut res:Result<RevDiff,Errors>=Err(Errstatic("1"));
@@ -243,7 +241,7 @@ impl Wye {
                 println!("message is: {:?}", message)
             }
             Command::Merge { mut wd_path,rev_id } => {
-                if wd_path.eq("-d") || wd_path.eq("-"){
+                if wd_path.eq("-d") || wd_path.eq("-")|| wd_path.eq("."){
                     wd_path=default_wd_path;
                 }
                 println!("wd_path is: {:?}", wd_path);
@@ -253,7 +251,7 @@ impl Wye {
                 println!("path1 is: {:?}", rev_id);
             }
             Command::Diff { mut wd_path,rev_id_1,rev_id_2 } => {
-                if wd_path.eq("-d") || wd_path.eq("-"){
+                if wd_path.eq("-d") || wd_path.eq("-")|| wd_path.eq("."){
                     wd_path=default_wd_path;
                 }
                 let mut res_diff:Result<RevDiff,Errors>=Err(Errstatic("2"));
@@ -262,7 +260,7 @@ impl Wye {
                 println!("rev_id_1 is: {:?} rev_id_2 is: {:?}", rev_id_1,rev_id_2)
             }
             Command::Cat { mut wd_path,rev_id,path } => {
-                if wd_path.eq("-d") || wd_path.eq("-"){
+                if wd_path.eq("-d") || wd_path.eq("-")|| wd_path.eq("."){
                     wd_path=default_wd_path;
                 }
                 let mut res:Result<String,Errors>=Err(Errstatic("1"));
@@ -272,7 +270,7 @@ impl Wye {
                 println!("path is: {:?}", path)
             }
             Command::Status { mut wd_path } => {
-                if wd_path.eq("-d") || wd_path.eq("-"){
+                if wd_path.eq("-d") || wd_path.eq("-")|| wd_path.eq("."){
                     wd_path=default_wd_path;
                 }
                 let res_file_diff=readonly::status(&wd_path);
@@ -280,7 +278,7 @@ impl Wye {
                 println!("wd_path is: {:?}", wd_path)
             }
             Command::Log { mut wd_path,rev_id } => {
-                if wd_path.eq("-d") || wd_path.eq("-"){
+                if wd_path.eq("-d") || wd_path.eq("-")|| wd_path.eq("."){
                     wd_path=default_wd_path;
                 }
                 let mut res_log:Result<Option<Vec<String>>,Errors>;
@@ -290,7 +288,7 @@ impl Wye {
                 println!("wd_path is: {:?}", wd_path)
             }
             Command::Heads { mut wd_path } => {
-                if wd_path.eq("-d") || wd_path.eq("-"){
+                if wd_path.eq("-d") || wd_path.eq("-")|| wd_path.eq("."){
                     wd_path=default_wd_path;
                 }
                 let res_head=readonly::heads(&wd_path);
@@ -299,7 +297,7 @@ impl Wye {
                 println!("path is: {:?}", wd_path)
             }
             Command::Clone { remote,mut wd_path } => {
-                if wd_path.eq("-d") || wd_path.eq("-"){
+                if wd_path.eq("-d") || wd_path.eq("-")|| wd_path.eq("."){
                     wd_path=default_wd_path;
                 }
                 let res=createonly::clone(&wd_path, &remote);
@@ -309,15 +307,15 @@ impl Wye {
             Command::Checkout { option,new_branch_alias } => {
                 let mut rev =String::new(); let mut path =String::new();
                 match option{
-                    SubCommand::Defalut { ref wd_path,ref revision} => {
+                    SubCommand::Default { ref wd_path,ref revision} => {
                         path= wd_path.clone();
                         rev=revision.clone();
                     }
-                    SubCommand::DefalutPath { ref wd_path,ref revision} => {
+                    SubCommand::DefaultPath { ref wd_path,ref revision} => {
                         path= wd_path.clone();
                         rev=revision.clone();
                     }
-                    SubCommand::DefalutRev { ref wd_path,ref revision} => {
+                    SubCommand::DefaultRev { ref wd_path,ref revision} => {
                         path= wd_path.clone();
                         rev=revision.clone();
                     }
@@ -333,7 +331,7 @@ impl Wye {
                 println!("path is: {:?}", path)
             }
             Command::Pull { mut path,remote,head } => {
-                if path.eq("-d") || path.eq("-"){
+                if path.eq("-d") || path.eq("-")|| path.eq("."){
                     path=default_wd_path;
                 }
                 let res=createonly::pull(&path, &remote);
@@ -341,7 +339,7 @@ impl Wye {
                 println!("path is: {:?}", path)
             }
             Command::Push { mut path,remote,head } => {
-                if path.eq("-d") || path.eq("-"){
+                if path.eq("-d") || path.eq("-")|| path.eq("."){
                     path=default_wd_path;
                 }
                 let res=createonly::push(&path, &remote);
@@ -350,7 +348,7 @@ impl Wye {
             }
             Command::Init { mut wd_path } => {
                 let mut opt_path:Option<&str>=None;
-                if wd_path.eq("-d") || wd_path.eq("-") || wd_path.is_empty(){
+                if wd_path.eq("-d") || wd_path.eq("-") || wd_path.is_empty()|| wd_path.eq("."){
                     opt_path=None;
                 }
                 else { opt_path=Some(&wd_path)}

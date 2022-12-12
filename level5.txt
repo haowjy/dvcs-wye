@@ -1,0 +1,28 @@
+5a
+// Start a new branch
+checkout -b new_feature -> "checkout success"
+// Edit some files
+add file1.rs -> "add success"
+commit -m "Start a feature" -> "1 file changed, 1 insertion(+)"
+// Edit some files
+add file2.rs -> "add success"
+commit -m "Finish a feature" -> "1 file changed, 1 insertion(+)"
+// Merge in the new_feature branch
+checkout master -> "checkout success"
+merge new_feature -> "merge success"
+
+5b
+checkout -b new_feature -> "checkout success"
+// Edit some files
+add file1.py -> "add success"
+commit -m -> "Start a feature"
+// Edit some files
+add file2.py -> "add success"
+commit -m -> "Finish a feature"
+// Develop the main branch
+checkout master -> "checkout success"
+// Edit some files
+add file2.py -> "add success"
+commit -m -> "Make some super-stable changes to main"
+// Merge in the new_feature branch
+merge new_feature -> "Conflicts found, please resolve the conflicts and try to commit again"

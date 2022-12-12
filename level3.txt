@@ -4,7 +4,7 @@ Success - success - success - “abc” -“inside”- ahead of update- commit a
 
 git init
 git add a.txt
-git commit
+git commit "111"
 git heads
 cat a.txt
 git status
