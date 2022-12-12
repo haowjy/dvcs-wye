@@ -127,7 +127,6 @@ enum Command {
     /// push changes into another repository
     Push {
         remote: String,
-        head: String,
         #[arg(default_value_t = dsr::get_wd_path())]
         path: String,
     },
@@ -354,7 +353,7 @@ impl Wye {
                 let res=createonly::pull(&path, &remote);
                 Self::input_handling(res);
             }
-            Command::Push { mut path,remote,head } => {
+            Command::Push { mut path,remote } => {
                 if path.eq("-d") || path.eq("-")|| path.eq("."){
                     path=default_wd_path;
                 }
