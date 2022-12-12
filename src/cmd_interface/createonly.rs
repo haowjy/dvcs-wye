@@ -1,3 +1,4 @@
+use crate::readonly::status;
 use crate::ui::{Errors, Errors::*};
 use crate::vc::repository::{Repo};
 use crate::vc::{repository};
@@ -100,9 +101,12 @@ pub fn pull<'a>(wd:&'a str, remote:&'a str) -> Result<String, Errors> {
     if cur_head_alias.is_none() {return Err(Errstatic("pull failed: no head found"));}
     let cur_head_alias = cur_head_alias.unwrap();
 
-    if !cur_repo.get_stage().is_empty(){ // not empty
-        return Err(Errstatic("pull failed: uncommitted changes in working directory, commit changes first"));
-    }
+    if !cur_repo.get_stage().is_empty(){ return Err(Errstatic("pull failed: uncommitted changes in working directory, commit changes first"));}
+    // TODO: status doesn't work???
+    // let (staged, unstaged, untracked) = status(wd)?; // print status
+    // if !(staged.is_empty() && unstaged.is_empty() && untracked.is_empty()){ // not empty
+    //     return Err(Errstatic("pull failed: uncommitted changes in working directory, commit changes first"));
+    // }
 
     let remote_repo = repository::load(remote)?;
     let remote_heads = remote_repo.get_heads();
@@ -127,35 +131,45 @@ pub fn push<'a>(wd:&'a str, remote:&'a str) -> Result<String, Errors> {
     if wd == remote {
         return Err(Errstatic("pull failed: working and remote are the same directory"));
     }
-    
 
     let cur_repo = repository::load(wd)?;
     if !cur_repo.get_stage().is_empty(){ return Err(Errstatic("pull failed: uncommitted changes in working directory, commit changes first"));}
+    // TODO: status doesn't work???
+    // let (staged, unstaged, untracked) = status(wd)?; // print status
+    // if !(staged.is_empty() && unstaged.is_empty() && untracked.is_empty()){ // not empty
+    //     return Err(Errstatic("pull failed: uncommitted changes in working directory, commit changes first"));
+    // }
 
     let cur_head_alias = cur_repo.get_current_head_alias();
     if cur_head_alias.is_none() {return Err(Errstatic("pull failed: no head found"));}
     let cur_head_alias = cur_head_alias.unwrap();
+    let remote_tracking_branch = format!("remote/{}", cur_head_alias);
 
-    let remote_repo = repository::load(remote)?;
+    let mut remote_repo = repository::load(remote)?;
     let remote_heads = remote_repo.get_heads();
     let head = remote_heads.get(cur_head_alias);
-    if head.is_some() { // remote has the same branch, check if up to date
+    if head.is_some() { // remote has the same branch, check if up to date with remote tracking
         let head = head.unwrap();
-        let cur_rev = cur_repo.get_rev(cur_head_alias)?;
+        let remote_tracking_rev = cur_repo.get_rev(&remote_tracking_branch)?;
         let remote_rev = remote_repo.get_rev(head)?;
-        if cur_rev.get_id() != remote_rev.get_id() {
+        if remote_tracking_rev.get_id() != remote_rev.get_id() {
             return Err(Errstatic("push failed: remote branch is not up to date. Please pull first"));
         }
     }
 
-    checkout(wd, format!("remote/{}",cur_head_alias).as_str(), None)?;
+    checkout(wd, &remote_tracking_branch, None)?; // on remote tracking branch
     let m = merge(wd, cur_head_alias.to_string()); // NOTE: there shouldn't be any conflicts unless the user tries to checkout a remote tracking branch. 
     checkout(wd, cur_head_alias, None)?; // back to original branch
+
+    let cur_repo = repository::load(wd)?; // reload repo
     if m.is_err() {
         return Err(Errstatic("push failed: merge failed. Something unexpected went wrong."));
     }
-
+    
     remote_repo.fetch(wd)?; // copies files from wd to remote, then they can pull
+    // Create a new remote tracking branch in remote repo for them
+    let cur_rev = cur_repo.get_rev(cur_head_alias)?;
+    remote_repo.new_head(&format!("remote/{}", cur_head_alias), cur_rev.get_id().unwrap())?;
 
     Ok("push success".to_string())
 }
@@ -263,7 +277,7 @@ mod tests {
         assert_eq!(res.is_err(), true);
 
         let res = checkout(cwd, "wrong", None);
-        println!("{:?}", res);
+        // println!("{:?}", res);
         assert_eq!(res.is_err(), true);
 
         let repo = repository::load(cwd).unwrap();
@@ -281,15 +295,51 @@ mod tests {
 
         let _ = clone(cwd, remote_wd);
 
-        write_create_files_and_commit_abc2(remote_wd);
+        write_create_files_and_commit_abc2(remote_wd); // changes on remote
+
+        let repo = repository::load(cwd).unwrap();
+        assert_eq!(repo.get_current_head().unwrap().get_id().unwrap(), rev1); // on local, its still rev1
 
         let res = pull(cwd, remote_wd);
-        print!("{:?}", res);
-        // TODO
+        assert!(res.is_ok());
+        let repo = repository::load(cwd).unwrap();
+        assert_ne!(rev1, repo.get_current_head().unwrap().get_id().unwrap()); // after pulling, its now not the same rev as before (its a merge commit)
+        
+        let _ = dsr::write_file(&path_compose(cwd, "a.txt"), "random");
+
+        let _ = add(cwd, "a.txt").unwrap();
+        let res = pull(cwd, remote_wd); // changes on remote
+        assert!(res.is_err());
     }
 
     #[test]
     fn test_push() {
-        // TODO
+        let remote_wd = "./a_remote/a_test_repo";
+        remove_git_and_init(remote_wd);
+        let _ = create_files_and_commit_ab1(remote_wd);
+
+        let cwd = "./a_test_repo";
+        let _ = dsr::clear_dir(cwd, vec![]);
+
+        let _ = clone(cwd, remote_wd);
+
+        // CHANGE LOCAL
+        write_create_files_and_commit_abc2(cwd); // changes on local
+        let p_res = push(cwd, remote_wd);
+        assert!(p_res.is_err()); // push fails because you must always pull first
+        
+        // THE FILE SHARDS DO NOT EXSIT ON REMOTE
+        let is_valid = dsr::is_path_valid(&format!("{}/.dvcs/files/8c4441129d6dff4be269e18e0137f428d753b7d9c2909b596dab16d81340b122", remote_wd)); // file DNE on remote yet
+        assert_eq!(is_valid, false);
+
+        // PUSH TO REMOTE
+        let _ = pull(cwd, remote_wd); // pull changes from remote
+        let p_res = push(cwd, remote_wd);
+        assert!(p_res.is_ok()); // push succeeds because you pulled first
+
+        // THE FILE SHARDS NOW EXSIT ON REMOTE
+        let is_valid = dsr::is_path_valid(&format!("{}/.dvcs/files/8c4441129d6dff4be269e18e0137f428d753b7d9c2909b596dab16d81340b122", remote_wd)); // file DNE on remote yet
+        assert_eq!(is_valid, true);
+
     }
 }
