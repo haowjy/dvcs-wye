@@ -11,8 +11,14 @@ pub fn heads(wd: &str) -> Result<Vec<String>, Errors> {
     let head = load.get_heads();//&Hashmap//waiting
     let mut res=Vec::new();
     let mut string=String::new();
+    let cur_head = load.get_current_head_alias().unwrap();
     for(key,value) in head{
-        string=key.to_owned()+":"+value;
+        string = if key == cur_head {
+            "*".to_owned() + &key.to_owned()+":"+value
+        } else {
+            key.to_owned()+":"+value
+        };
+
         res.push(string);
     }
     return if head.is_empty() { Err(Errors::Errstatic("No heads found")) } else { Ok(res) }
