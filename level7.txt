@@ -37,6 +37,7 @@ $[executable] checkout remote/newbranch a newbranch .
 $[executable] checkout remote/newbranch a newbranch .
 $[executable] pull ../cwd/level7a-remote
 
+# NOTE: Ours is kind of convoluted since you can only pull from the current head of a branch and there needs to be a branch, but it works if you checkout a new branch
 # PASS: everything works as expected, B is in both remote and cwd repos, C is both as well because it has been pulled
 
 
