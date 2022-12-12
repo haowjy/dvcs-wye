@@ -1,28 +1,65 @@
-5a
-// Start a new branch
-checkout -b new_feature -> "checkout success"
-// Edit some files
-add file1.rs -> "add success"
-commit -m "Start a feature" -> "1 file changed, 1 insertion(+)"
-// Edit some files
-add file2.rs -> "add success"
-commit -m "Finish a feature" -> "1 file changed, 1 insertion(+)"
-// Merge in the new_feature branch
-checkout master -> "checkout success"
-merge new_feature -> "merge success"
+TEST 5a:
+$mkdir new_test
+$cd new_test
+$[executable_path] init
+    -> init success
+$touch new_feature.rs
+$[executable_path] add new_feature.rs
+    -> "add success"
+$[executable_path] commit "start new feature"
+    -> SHA1
 
-5b
-checkout -b new_feature -> "checkout success"
-// Edit some files
-add file1.py -> "add success"
-commit -m -> "Start a feature"
-// Edit some files
-add file2.py -> "add success"
-commit -m -> "Finish a feature"
-// Develop the main branch
-checkout master -> "checkout success"
-// Edit some files
-add file2.py -> "add success"
-commit -m -> "Make some super-stable changes to main"
-// Merge in the new_feature branch
-merge new_feature -> "Conflicts found, please resolve the conflicts and try to commit again"
+$[executable_path] checkout SHA1 b
+    -> Ok("checkout successful: currently on `DETACHED-HEAD`")
+$touch unstable_feature.rs
+$[executable_path] add unstable_feature.rs
+    -> "add success"
+$[executable_path] commit "added unstable feature"
+    -> SHA2
+$[executable_path] heads
+    -> ["DETACHED-HEAD:SHA2", "main:SHA-MAIN"]
+$[executable_path] checkout SHA-MAIN b
+    -> Ok("checkout successful: currently on `DETACHED-HEAD`")
+$[executable_path] merge SHA2
+    -> Ok("52b321cb9cb7d3ae1d0d138b7ac1aae51e5d3e73ef0f8a4af2cb9b0e44c824f3")
+$ cd ..
+$ rm -r new_test
+
+TEST 5b:
+$mkdir new_test
+$cd new_test
+$[executable_path] init
+    -> init success
+$touch new_feature.rs
+$touch new_feature2.rs
+$touch new_feature3.rs
+$[executable_path] add new_feature.rs
+$[executable_path] add new_feature2.rs
+$[executable_path] add new_feature3.rs
+    -> "add success"
+$[executable_path] commit "added some features"
+    -> SHA1
+$[executable_path] checkout SHA1 b
+    -> Ok("checkout successful: currently on `DETACHED-HEAD`")
+$echo "blahhhh" > new_feature.rs
+$echo "something..." > new_feature2.rs
+$echo "okay" > new_feature3.rs
+$[executable_path] add new_feature.rs
+$[executable_path] add new_feature2.rs
+$[executable_path] add new_feature3.rs
+    -> "add success"
+$[executable_path] commit "added testing features"
+    -> SHA2
+$[executable_path] checkout SHA1 b
+    -> Ok("checkout successful: currently on `DETACHED-HEAD`")
+$echo "changes" > new_feature2.rs
+$echo "also changes" > new_feature3.rs
+$[executable_path] add new_feature2.rs
+$[executable_path] add new_feature3.rs
+    -> "add success"
+$[executable_path] commit "make some super-stable changes to main"
+    -> SHA3
+$[executable_path] merge SHA2
+    -> Err(ErrStr("Conflicts found, please resolve the conflicts and try to commit again"))
+$ cd ..
+$ rm -r new_test
