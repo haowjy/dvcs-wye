@@ -1,10 +1,5 @@
-#[allow(dead_code)]
-#[allow(unused_imports)]
 use std::collections::HashMap;
-use chrono::format::Item;
-// use std::time::SystemTime;
 // external crates:
-// use petgraph::graphmap::DiGraphMap;
 use sha2::{Sha256, Digest};
 use serde::{Serialize, Deserialize};
 
@@ -13,15 +8,13 @@ use crate::vc::file::*;
 use crate::vc::revision::*;
 use crate::ui::Errors;
 
-
+// ------ pub repository structs ------
 #[derive(Debug, Serialize, Deserialize)] 
 pub struct Repo {
     current_head: Option<String>, // alias 
     branch_heads: HashMap<String,String>, // <K=alias, V=sha_rev_id>
     paths: RepoPaths,
     stage: Stage,
-    // revs: DiGraphMap<String, RevInfo>, // will change to wrapper struct
-    // remote_head: Option<String>
 }
 
 #[derive(Debug, Serialize, Deserialize)] 
@@ -30,34 +23,8 @@ pub struct Stage {
     to_remove: HashMap<String, ItemInfo>,
 }
 
-impl Stage {
-    pub fn get_add(&self) -> &HashMap<String, ItemInfo> {
-        &self.to_add
-    }
 
-    pub fn get_remove(&self) -> &HashMap<String, ItemInfo> {
-        &self.to_remove
-    }
-    
-    pub fn is_empty(&self) -> bool {
-        self.to_add.is_empty() && self.to_remove.is_empty()
-    }
-
-    fn clear(&mut self) -> &Self {
-        self.to_add.clear();
-        self.to_remove.clear();
-        self
-    }
-
-    fn new() -> Self {
-        Stage {
-            to_add: HashMap::new(),
-            to_remove: HashMap::new()
-        }
-    }
-}
-
-// ------ pub Repo fns ------
+// ------ pub Repo methods ------
 
 impl Repo {
     pub fn get_current_head(&self) -> Result<Rev, Errors> {
@@ -229,7 +196,6 @@ impl Repo {
         abs_paths.iter().try_for_each(|path| self.remove_file_from_stage(path))
     }
 
-
     pub fn set_current_head(&mut self, set_head_to: &str) -> Result<(),Errors> {
         if !self.branch_heads.contains_key(set_head_to) {
             return Err(Errors::ErrStr(format!("Repository doesn't have the branch {}.", set_head_to)))
@@ -243,6 +209,34 @@ impl Repo {
     }
 }
 
+// ------ Stage methods ------
+
+impl Stage {
+    pub fn get_add(&self) -> &HashMap<String, ItemInfo> {
+        &self.to_add
+    }
+
+    pub fn get_remove(&self) -> &HashMap<String, ItemInfo> {
+        &self.to_remove
+    }
+    
+    pub fn is_empty(&self) -> bool {
+        self.to_add.is_empty() && self.to_remove.is_empty()
+    }
+
+    fn clear(&mut self) -> &Self {
+        self.to_add.clear();
+        self.to_remove.clear();
+        self
+    }
+
+    fn new() -> Self {
+        Stage {
+            to_add: HashMap::new(),
+            to_remove: HashMap::new()
+        }
+    }
+}
 
 // ------ pub mod fns ------
 pub fn init(opt_path: Option<&str>) -> Result<String, Errors> {
@@ -285,14 +279,6 @@ pub fn load(wd:&str) -> Result<Repo, Errors> { // Result<Repo, ()>
     load_repo.paths = paths;
     Ok(load_repo)
 }
-//buggy fn, commented out
-// pub fn get_wd_root() -> Result<String, Errors> { 
-//     let wd = get_wd_path();
-//     match check_wd(&wd) {
-//         Some(path) => Ok(path),
-//         None => Err(Errors::Errstatic("Directory untracked, fail to locate repository"))
-//     }
-// }
 
 pub fn check_wd(wd_path: &str) -> Option<String> {
     if is_path_valid(&path_compose(wd_path, ".dvcs")) {
@@ -305,7 +291,7 @@ pub fn check_wd(wd_path: &str) -> Option<String> {
     }
 }
 
-// ------ private Repo fns ------
+// ------ private Repo mtds ------
 impl Repo {
     fn save(&self) -> Result<(), Errors> {
         let content = serialize(self)?;
@@ -352,19 +338,6 @@ pub (super) fn sha<T: AsRef<[u8]> + ?Sized> (data: &T) -> String {
     format!("{:x}", Sha256::digest(data))
 }
 
-
-// // preliminary fn might change later or make a trait
-// pub (super) fn sha_match<'a, T: Clone + Iterator + Iterator<Item=&'a str>> (sha: &'a str, pool: T) -> Vec<&'a str> {
-//     let sha_len = sha.len();
-//     pool.filter(|v| {
-//         if v.len() < sha_len {
-//             false
-//         } else {
-//             v[0..sha_len] == *sha
-//         }
-//     }).clone().collect::<Vec<_>>()
-// }
-// resolving sha conflict
 pub (crate) fn checked_sha(data: &str, matching_pool_path: &str) -> String {
     let mut sha_id = format!("{:x}", Sha256::digest(data));
 
@@ -382,15 +355,12 @@ pub (crate) fn checked_sha(data: &str, matching_pool_path: &str) -> String {
 
 #[derive(Debug, Serialize, Deserialize)] 
 pub (super) struct RepoPaths { 
-    // wd: &str,// inconsistent types for paths, might need better type representation
     wd: String,
     root: String,
     pub files: String,
     pub revs: String,
     repos: String,
-    // head: String, // THE current head
-    // branch_heads: String,
-    // stage: String,
+
 }
 
 impl RepoPaths {
@@ -408,20 +378,6 @@ impl RepoPaths {
         }
     }
 
-    // pub (super) fn default() -> RepoPaths { // relative path config
-    //         let wd = ".";
-    //         let root = path_compose(wd, ".dvcs");
-    //     RepoPaths {
-    //         wd: wd.to_string(),
-    //         root: root.clone(),
-    //         files: path_compose(&root, "files"),
-    //         revs: path_compose(&root, "revs"),
-    //         repos: path_compose(&root, "repos")
-    //         // head: path_compose(&root, "head"),
-    //         // branch_heads: path_compose(&root, "branches"),
-    //         // stage: path_compose(&root, "stage"),
-    //     }
-    // }
 }
 
 pub(super) fn serialize<T: Serialize> (data_struct: &T) -> Result<String, Errors> {
@@ -431,205 +387,181 @@ pub(super) fn serialize<T: Serialize> (data_struct: &T) -> Result<String, Errors
     }
 }
 
-// in-process attempt to generalize deserialize with trait / trait obj
 
-// pub trait SerDe {
-//     type Item;
-
-//     fn deserialize(str_in: &str) -> Result<Self::Item, Errors> {
-//         match serde_json::from_str(str_in) {
-//             Ok(x) => Ok(x),
-//             Err(_) =>  Err(Errors::ErrStr("Deserialization failed!".to_string()))
-//         } 
-
-//     }
-
-// }
-
-// pub(super) fn deserialize(str_in: &str) -> Result<Box<dyn Deserialize>, Errors> {
-//     serde_json::from_str(str_in) match {
-//         Ok(val) => Ok(val),
-//         Err(e) => Err(Errors::ErrStr(e.to_string()))
-//     }
-
-// }
-
+// ------ tests ------
 #[cfg(test)]
 mod tests {
-        use super::*;
-        use std::{fs, time::SystemTime};
-        // might have cuncurrency issues when running tests in batch or use cargo test. Test one by one in order should work.
-        // running individual tests multiple times could also fail because of certain duplication prevention
+    use super::*;
+    use std::{fs, time::SystemTime};
+    // might have cuncurrency issues when running tests in batch or use cargo test. Test one by one in order should work.
+    // running individual tests multiple times could also fail because of certain duplication prevention
 
-        static TEST_PATH: &str = "vc_test";
+    static TEST_PATH: &str = "vc_test";
 
-
-        fn get_test_paths()-> RepoPaths {
-            let wd = get_wd_path();
-            let paths = RepoPaths::new(&path_compose(&wd, TEST_PATH));
-            if !is_path_valid(&paths.wd) {
-                clear_dir(&paths.wd, Vec::new()).unwrap();
-            }
-            paths
-
+    fn get_test_paths()-> RepoPaths {
+        let wd = get_wd_path();
+        let paths = RepoPaths::new(&path_compose(&wd, TEST_PATH));
+        if !is_path_valid(&paths.wd) {
+            clear_dir(&paths.wd, Vec::new()).unwrap();
         }
+        paths
 
-
-        // 1.
-        #[test]
-        fn test_init_load() {
-            let paths = get_test_paths();
-            // delete_dir(&paths.root);
-
-            print!("{}", &paths.revs);
-            assert!(init(Some(&paths.wd)).is_ok());
-            assert!(fs::read_dir(paths.revs).is_ok());
-
-            assert!(load(&paths.wd).is_ok());
-            // create_dir(&path_compose(&paths.wd, "test_dir"));
-
-            assert!(load(&path_compose(&paths.wd, "test_dir")).is_ok());
-
-        }
-
-        // 2.
-        #[test]
-        fn test_add_stage_commit() -> Result<(), Errors> {
-            let paths = get_test_paths();
-            let mut repo = load(&paths.wd)?;
-            repo.clear_stage()?;
-
-            let sub_dir = path_compose(&paths.wd, "nested");
-            if !is_path_valid(&sub_dir) {
-                create_dir(&sub_dir)?;
-            }
-
-            // writing files
-            let file_path_1 = path_compose(&paths.wd, "test_file1.txt");
-            let file_path_nested = path_compose(&sub_dir, "test_file_nested.txt");
-            // println!("debug print\nfile_path_1: {}",file_path_1);
-            write_file(&file_path_1, &format!("test file root\n{:?}", SystemTime::now()))?;
-            write_file(&file_path_nested, &format!("test file nested\n{:?}", SystemTime::now()))?;
-
-            repo.add_file(&file_path_1)?;
-            assert_eq!(repo.stage.get_add().len(), 1);
-            repo.commit("test add commit")?;
-            assert!(repo.stage.is_empty());
-
-            repo.add_file(&file_path_nested)?;
-            repo.add_files(&vec![file_path_1, file_path_nested])?;
-            assert_eq!(repo.stage.get_add().len(), 2);
-            repo.commit("test add commit 2")
-        }
-
-        // 3.
-        #[test]
-        fn test_branching() -> Result<(), Errors> {
-            let paths = get_test_paths();
-            let mut repo = load(&paths.wd)?;
-            let file_path_1 = path_compose(&paths.wd, "branching_test.txt");
-            write_file(&file_path_1, &format!("branching test\n{:?}", SystemTime::now()))?;
-            match &repo.current_head {
-                Some(alias) => {
-                    if alias != "main" {
-                        repo.set_current_head("main")?
-                    }
-                },
-                None => ()
-            };
-            repo.add_file(&file_path_1)?;
-            repo.commit("test branching")?;
-            let head = repo.get_current_head()?;
-
-            let new_head_alias = "branching-test";
-            repo.new_head(new_head_alias,head.get_id().unwrap())?;
-            assert_eq!(repo.branch_heads.len(), 2);
-            repo.set_current_head(new_head_alias)?;
-            assert_eq!(&repo.current_head, &Some(new_head_alias.to_string()));
-            assert_eq!(&repo.branch_heads.get(new_head_alias), &repo.branch_heads.get("main"));
-
-            write_file(&file_path_1, &format!("branching test\n{:?}", SystemTime::now()))?;
-            repo.add_file(&file_path_1)?;
-            repo.commit("committed on test branch")?;
-            assert!(&repo.branch_heads.get(new_head_alias) != &repo.branch_heads.get("main"));
-            repo.set_current_head("main")?;
-            Ok(())
-        }
-
-        
-        // 4.
-        #[test]
-        fn test_get_file_content()-> Result<(), Errors> {
-            let paths = get_test_paths();
-            let mut repo = load(&paths.wd)?;
-            let head = repo.get_current_head()?;
-            let manifest = head.get_manifest();
-            manifest.iter().try_for_each(|(_k, v)| {
-                if v.is_file() {
-                    repo.get_file_content(v)?;
-                };
-                Ok(())
-            })?;
-            let new_file = path_compose(&paths.wd, "get_file_content_test.txt");
-            write_file(&new_file, "get file content after add")?;
-
-            repo.add_file(&new_file)?;
-            repo.stage.to_add.iter().try_for_each(|(_k,v)| {
-                if v.is_file() {
-                    repo.get_file_content(v)?;
-                };
-                Ok(())
-            })?;
-            repo.clear_stage()?;
-            Ok(())
-        }
-
-        // 5.
-        #[test]
-        fn test_remove() -> Result<(), Errors> {
-            let paths = get_test_paths();
-            let mut repo = load(&paths.wd)?;
-            let remove_file = path_compose(&paths.wd, "remove_test.txt");
-            write_file(&remove_file, &format!("test remove\n{:?}", SystemTime::now()))?;
-            repo.add_file(&remove_file)?;
-            repo.commit("commit file to be removed later")?;
-
-            write_file(&remove_file, &format!("test remove\n{:?}", SystemTime::now()))?;
-            repo.add_file(&remove_file)?;
-            repo.remove_file(&remove_file)?;
-            assert_eq!(repo.stage.to_add.len(), 0);
-            assert_eq!(repo.stage.to_remove.len(), 1);
-            Ok(())
-
-        }
-
-        // 6
-        #[test]
-        fn test_fetch() -> Result<(), Errors> {
-
-            let remote_paths = make_rwd()?;
-            let mut remote_repo = load(&remote_paths.wd)?;
-            let remote_wd_f_path = path_compose(&remote_paths.wd, "remote_file.txt");
-            remote_repo.add_file(&remote_wd_f_path)?;
-
-            let paths = get_test_paths();
-            let mut repo = load(&paths.wd)?;
-            repo.fetch(&remote_paths.wd)?;
-            Ok(())
-            // let new_file = path_compose(&paths.wd, "cwd file.txt");
-            // write_file(&new_file, &format!("cwd file content\n{:?}", SystemTime::now()))?;
-        }
-
-        fn make_rwd() -> Result<RepoPaths, Errors> {
-            let remote_dir = path_compose(&get_wd_path(), "vc_test_remote");
-            if !is_path_valid(&remote_dir) {
-                create_dir(&remote_dir)?;
-            }
-            let remote_paths = RepoPaths::new(&remote_dir);
-            init(Some(&remote_paths.wd))?;
-
-            let remote_wd_f_path = path_compose(&remote_paths.wd, "remote_file.txt");
-            write_file(&remote_wd_f_path, &format!("remote content\n{:?}", SystemTime::now()))?;
-            Ok(remote_paths)
-        }
     }
+
+    // 1.
+    #[test]
+    fn test_init_load() {
+        let paths = get_test_paths();
+        // delete_dir(&paths.root);
+
+        print!("{}", &paths.revs);
+        assert!(init(Some(&paths.wd)).is_ok());
+        assert!(fs::read_dir(paths.revs).is_ok());
+
+        assert!(load(&paths.wd).is_ok());
+        // create_dir(&path_compose(&paths.wd, "test_dir"));
+
+        assert!(load(&path_compose(&paths.wd, "test_dir")).is_ok());
+
+    }
+
+    // 2.
+    #[test]
+    fn test_add_stage_commit() -> Result<(), Errors> {
+        let paths = get_test_paths();
+        let mut repo = load(&paths.wd)?;
+        repo.clear_stage()?;
+
+        let sub_dir = path_compose(&paths.wd, "nested");
+        if !is_path_valid(&sub_dir) {
+            create_dir(&sub_dir)?;
+        }
+
+        // writing files
+        let file_path_1 = path_compose(&paths.wd, "test_file1.txt");
+        let file_path_nested = path_compose(&sub_dir, "test_file_nested.txt");
+        // println!("debug print\nfile_path_1: {}",file_path_1);
+        write_file(&file_path_1, &format!("test file root\n{:?}", SystemTime::now()))?;
+        write_file(&file_path_nested, &format!("test file nested\n{:?}", SystemTime::now()))?;
+
+        repo.add_file(&file_path_1)?;
+        assert_eq!(repo.stage.get_add().len(), 1);
+        repo.commit("test add commit")?;
+        assert!(repo.stage.is_empty());
+
+        repo.add_file(&file_path_nested)?;
+        repo.add_files(&vec![file_path_1, file_path_nested])?;
+        assert_eq!(repo.stage.get_add().len(), 2);
+        repo.commit("test add commit 2")
+    }
+
+    // 3.
+    #[test]
+    fn test_branching() -> Result<(), Errors> {
+        let paths = get_test_paths();
+        let mut repo = load(&paths.wd)?;
+        let file_path_1 = path_compose(&paths.wd, "branching_test.txt");
+        write_file(&file_path_1, &format!("branching test\n{:?}", SystemTime::now()))?;
+        match &repo.current_head {
+            Some(alias) => {
+                if alias != "main" {
+                    repo.set_current_head("main")?
+                }
+            },
+            None => ()
+        };
+        repo.add_file(&file_path_1)?;
+        repo.commit("test branching")?;
+        let head = repo.get_current_head()?;
+
+        let new_head_alias = "branching-test";
+        repo.new_head(new_head_alias,head.get_id().unwrap())?;
+        assert_eq!(repo.branch_heads.len(), 2);
+        repo.set_current_head(new_head_alias)?;
+        assert_eq!(&repo.current_head, &Some(new_head_alias.to_string()));
+        assert_eq!(&repo.branch_heads.get(new_head_alias), &repo.branch_heads.get("main"));
+
+        write_file(&file_path_1, &format!("branching test\n{:?}", SystemTime::now()))?;
+        repo.add_file(&file_path_1)?;
+        repo.commit("committed on test branch")?;
+        assert!(&repo.branch_heads.get(new_head_alias) != &repo.branch_heads.get("main"));
+        repo.set_current_head("main")?;
+        Ok(())
+    }
+
+    
+    // 4.
+    #[test]
+    fn test_get_file_content()-> Result<(), Errors> {
+        let paths = get_test_paths();
+        let mut repo = load(&paths.wd)?;
+        let head = repo.get_current_head()?;
+        let manifest = head.get_manifest();
+        manifest.iter().try_for_each(|(_k, v)| {
+            if v.is_file() {
+                repo.get_file_content(v)?;
+            };
+            Ok(())
+        })?;
+        let new_file = path_compose(&paths.wd, "get_file_content_test.txt");
+        write_file(&new_file, "get file content after add")?;
+
+        repo.add_file(&new_file)?;
+        repo.stage.to_add.iter().try_for_each(|(_k,v)| {
+            if v.is_file() {
+                repo.get_file_content(v)?;
+            };
+            Ok(())
+        })?;
+        repo.clear_stage()?;
+        Ok(())
+    }
+
+    // 5.
+    #[test]
+    fn test_remove() -> Result<(), Errors> {
+        let paths = get_test_paths();
+        let mut repo = load(&paths.wd)?;
+        let remove_file = path_compose(&paths.wd, "remove_test.txt");
+        write_file(&remove_file, &format!("test remove\n{:?}", SystemTime::now()))?;
+        repo.add_file(&remove_file)?;
+        repo.commit("commit file to be removed later")?;
+
+        write_file(&remove_file, &format!("test remove\n{:?}", SystemTime::now()))?;
+        repo.add_file(&remove_file)?;
+        repo.remove_file(&remove_file)?;
+        assert_eq!(repo.stage.to_add.len(), 0);
+        assert_eq!(repo.stage.to_remove.len(), 1);
+        Ok(())
+    }
+
+    // 6
+    #[test]
+    fn test_fetch() -> Result<(), Errors> {
+
+        let remote_paths = make_rwd()?;
+        let mut remote_repo = load(&remote_paths.wd)?;
+        let remote_wd_f_path = path_compose(&remote_paths.wd, "remote_file.txt");
+        remote_repo.add_file(&remote_wd_f_path)?;
+
+        let paths = get_test_paths();
+        let mut repo = load(&paths.wd)?;
+        repo.fetch(&remote_paths.wd)?;
+        Ok(())
+        // let new_file = path_compose(&paths.wd, "cwd file.txt");
+        // write_file(&new_file, &format!("cwd file content\n{:?}", SystemTime::now()))?;
+    }
+
+    fn make_rwd() -> Result<RepoPaths, Errors> {
+        let remote_dir = path_compose(&get_wd_path(), "vc_test_remote");
+        if !is_path_valid(&remote_dir) {
+            create_dir(&remote_dir)?;
+        }
+        let remote_paths = RepoPaths::new(&remote_dir);
+        init(Some(&remote_paths.wd))?;
+
+        let remote_wd_f_path = path_compose(&remote_paths.wd, "remote_file.txt");
+        write_file(&remote_wd_f_path, &format!("remote content\n{:?}", SystemTime::now()))?;
+        Ok(remote_paths)
+    }
+}

@@ -5,7 +5,7 @@ use crate::vc::{repository};
 use crate::dsr::*;
 use crate::readwrite::*;
 
-
+// 4. clone
 pub fn clone<'a>(wd: &'a str, remote:&'a str) -> Result<String, Errors> {
     let dvcs_cwd = path_compose(wd, ".dvcs");
     let dvcs_remote = path_compose(remote, ".dvcs");
@@ -30,6 +30,7 @@ pub fn clone<'a>(wd: &'a str, remote:&'a str) -> Result<String, Errors> {
     checkout(wd, head_alias.unwrap(), None)
 }
 
+// 5. checkout
 pub fn checkout<'a>(wd:&'a str, rev:&'a str, new_branch_alias: Option<String>) -> Result<String, Errors> {
     // NEW BRANCH DETATCH-HEAD, rev
     // set current head to DETATCH-HEAD
@@ -83,6 +84,7 @@ pub fn checkout<'a>(wd:&'a str, rev:&'a str, new_branch_alias: Option<String>) -
     }
 }
 
+// 6. pull
 pub fn pull<'a>(wd:&'a str, remote:&'a str) -> Result<String, Errors> {
     // check if wd and remote are directories and have same name
     if get_name(wd) != get_name(remote){
@@ -120,6 +122,7 @@ pub fn pull<'a>(wd:&'a str, remote:&'a str) -> Result<String, Errors> {
     merge(wd, format!("remote/{}",cur_head_alias))
 }
 
+// 7. push
 pub fn push<'a>(wd:&'a str, remote:&'a str) -> Result<String, Errors> {
     // check if wd and remote are directories and have same name
     if get_name(wd) != get_name(remote){
@@ -182,8 +185,9 @@ mod tests {
 
     use crate::test_help::{*};
 
+    // 1. clone
     #[test]
-    fn test_clone() {
+    fn test_clone_1() {
         let remote_wd = "./a_remote/a_test_repo";
         remove_git_and_init(remote_wd);
         create_files_and_commit_ab1(remote_wd);
@@ -198,8 +202,9 @@ mod tests {
         assert_eq!(res2.is_err(), true);
     }
 
+    // 2. clone no change
     #[test]
-    fn test_clone_remote_no_change() {
+    fn test_clone_remote_no_change_2() {
         let remote_wd = "./a_remote/a_test_repo";
         remove_git_and_init(remote_wd);
         let rev1 = create_files_and_commit_ab1(remote_wd);
@@ -219,7 +224,7 @@ mod tests {
     }
 
     #[test]
-    fn test_checkout() {
+    fn test_checkout_3() {
         let cwd = "./a_test_repo";
         remove_git_and_init(cwd);
         let rev1 = create_files_and_commit_ab1(cwd);
@@ -242,7 +247,7 @@ mod tests {
     }
 
     #[test]
-    fn test_checkout_new_branch() {
+    fn test_checkout_new_branch_4() {
         let cwd = "./a_test_repo";
         remove_git_and_init(cwd);
         let rev1 = create_files_and_commit_ab1(cwd);
@@ -264,25 +269,24 @@ mod tests {
     }
 
     #[test]
-    fn test_checkout_new_branch_fail() {
+    fn test_checkout_new_branch_fail_5() {
         let cwd = "./a_test_repo";
         remove_git_and_init(cwd);
         let rev1 = create_files_and_commit_ab1(cwd);
         let _ = write_create_files_and_commit_abc2(cwd);
 
         let res = checkout(cwd, rev1.as_str(), Some("main".to_string()));
-        assert_eq!(res.is_err(), true);
+        assert_eq!(res.is_err(), true); // checkout should fail because new branch already exists
 
         let res = checkout(cwd, "wrong", None);
-        // println!("{:?}", res);
-        assert_eq!(res.is_err(), true);
+        assert_eq!(res.is_err(), true); // checkout should fail because doesn't exist
 
         let repo = repository::load(cwd).unwrap();
         assert_eq!(repo.get_current_head_alias().unwrap(), "main"); // did not change
     }
 
     #[test]
-    fn test_pull() {
+    fn test_pull_6() {
         let remote_wd = "./a_remote/a_test_repo";
         remove_git_and_init(remote_wd);
         let rev1 = create_files_and_commit_ab1(remote_wd);
@@ -310,7 +314,7 @@ mod tests {
     }
 
     #[test]
-    fn test_push() {
+    fn test_push_7() {
         let remote_wd = "./a_remote/a_test_repo";
         remove_git_and_init(remote_wd);
         let _ = create_files_and_commit_ab1(remote_wd);
@@ -337,6 +341,6 @@ mod tests {
         // THE FILE SHARDS NOW EXSIT ON REMOTE
         let is_valid = dsr::is_path_valid(&format!("{}/.dvcs/files/8c4441129d6dff4be269e18e0137f428d753b7d9c2909b596dab16d81340b122", remote_wd)); // file DNE on remote yet
         assert_eq!(is_valid, true);
-
     }
+
 }

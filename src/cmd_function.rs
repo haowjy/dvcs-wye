@@ -68,7 +68,7 @@ impl FileDiff {
     }
 }
 
-// result: ok -> no diff, err -> diff
+// 1. file_diff
 pub fn file_diff(origin_content: String, mod_content: String) -> FileDiff {
     FileDiff::new(origin_content, mod_content)
 }
@@ -82,19 +82,19 @@ pub struct FileConflict {
     pub is_conflict: bool,
 }
 
-fn force_end_with_newline(content: String) -> String {
-    if content.ends_with("\n"){
-        content
-    } else {
-        content + "\n"
-    }
-}
 impl FileConflict {
+    fn force_end_with_newline(content: String) -> String {
+        if content.ends_with("\n"){
+            content
+        } else {
+            content + "\n"
+        }
+    }
     pub fn new(diff1: FileDiff, diff2: FileDiff) -> Self {
         
-        let origin = force_end_with_newline(diff1.clone().origin_content);
-        let mod1 = force_end_with_newline(diff1.clone().mod_content);
-        let mod2 = force_end_with_newline(diff2.clone().mod_content);
+        let origin = Self::force_end_with_newline(diff1.clone().origin_content);
+        let mod1 = Self::force_end_with_newline(diff1.clone().mod_content);
+        let mod2 = Self::force_end_with_newline(diff2.clone().mod_content);
 
         let merge_res = merge(&origin,&mod1,&mod2);
         let is_conflict = merge_res.is_err();
@@ -123,8 +123,7 @@ impl FileConflict {
 
 }
 
-// results: Ok is running fine -> error -> conflict, ok -> no conflict
-// first error is failed to run conflict_find 
+// 2. conflict_find
 pub fn conflict_find(diff1: FileDiff, diff2: FileDiff) -> Result<FileConflict, Errors> {
     if diff1.origin_content != diff2.origin_content { // not same origin
         return Err(Errstatic("conflict_find: diff1 and diff2 have different original files"));
@@ -132,6 +131,7 @@ pub fn conflict_find(diff1: FileDiff, diff2: FileDiff) -> Result<FileConflict, E
     Ok(FileConflict::new(diff1, diff2))
 }
 
+// 3. find_unmerged
 // Uses diffy crate to find if there is a conflict in the file
 pub fn find_unmerged<'a>(content: String) -> Result<(), String> {
     let mut unmerged_markers = vec!["<<<<<<< ours", "||||||| original", "=======", ">>>>>>> theirs"].into_iter();
@@ -153,6 +153,7 @@ pub fn find_unmerged<'a>(content: String) -> Result<(), String> {
     Ok(())
 }
 
+// ---------- PRIVATE FOR LCA ----------
 fn get_all_rev_ancestors<'a>(repo: &'a Repo, rev: Rev) -> Result<Vec<Rev>, Errors> {
     let mut revs:Vec<Rev> = Vec::new();
 
@@ -176,7 +177,7 @@ fn get_all_rev_ancestors<'a>(repo: &'a Repo, rev: Rev) -> Result<Vec<Rev>, Error
 }
 
 // count the number of indegrees of each revision
-fn count_indegrees<'a>(repo: &'a Repo, rev: Rev, revs_anc:Vec<Rev>) -> Result<HashMap<String, i32>, Errors> {
+fn count_indegrees<'a>(revs_anc:Vec<Rev>) -> Result<HashMap<String, i32>, Errors> {
 
     let mut indegrees:HashMap<String, i32> = HashMap::new();
 
@@ -207,7 +208,7 @@ fn get_rev_topo(repo: &Repo, rev: Rev) -> Result<Vec<String>, Errors> {
     let revs_anc = get_all_rev_ancestors(repo, rev.clone())?;
 
     // indegrees
-    let mut indegrees = count_indegrees(repo, rev.clone(), revs_anc)?;
+    let mut indegrees = count_indegrees( revs_anc)?;
 
     // queue with 0 indegrees (no parents, so should be just the first rev)
     let mut queue = VecDeque::new();
@@ -237,6 +238,9 @@ fn get_rev_topo(repo: &Repo, rev: Rev) -> Result<Vec<String>, Errors> {
     
 }
 
+// ---------- END PRIVATE FOR LCA ----------
+
+// 4. find_rev_lca
 // LCA of two nodes in a DAG
 pub fn find_rev_lca<'a>(repo: &'a Repo, rev1: Rev, rev2: Rev) -> Result<Rev, Errors> {
     // Creates 2 topo sortings of the DAGs that are somewhat connected
@@ -272,7 +276,7 @@ mod tests {
     use crate::{test_help::*, vc::repository};
     
     #[test]
-    fn test_file_diff() {
+    fn test_file_diff_1() {
         let diff1 = file_diff("Some line of text\nSecond line".to_string(), "Some line of text\nSecond line\nin a file".to_string());
         assert_eq!(diff1.get_diff_type(), &FileDiffType::Modified); // modified
         let diff2 = file_diff("Some line of text\nSecond line".to_string(), "Some line of text\nSecond line".to_string());
@@ -294,7 +298,7 @@ mod tests {
     }
 
     #[test]
-    fn test_conflict_find() {
+    fn test_conflict_find_2() {
         let content0 = "Some line of text\nSecondLine\n".to_string();
         let content1 = "Some line of text\nInsert\nSecondLine\n".to_string();
         let content2 = "Some line of text\nSecondLine\nInsertLast".to_string();
@@ -326,7 +330,7 @@ mod tests {
     }
 
     #[test]
-    fn test_find_unmerged() {
+    fn test_find_unmerged_3() {
         let content0 = "Some line of text\nSecondLine\n".to_string();
         let content1 = "Some line of text\nInsert\nSecondLine\n".to_string();
         let content2 = "Some line of text\nSecondLine\nInsertLast".to_string();
@@ -372,7 +376,7 @@ mod tests {
     }
 
     #[test]
-    fn test_find_rev_lca() {
+    fn test_find_rev_lca_4() {
         let cwd = "./a_test_repo/";
 
         remove_git_and_init(cwd);

@@ -8,6 +8,26 @@ use std::collections::{HashMap,};
 use crate::cmd_function::{*};
 use crate::cmd_function::FileDiffType::{*};
 
+// ---------- PRIVATE ----------
+fn find_conflict_files(repo: &Repo, stage:&Stage) -> Result<Option<Vec<(String, String)>>, Errors> {
+
+    let mut conflict_files = Vec::new();
+
+    for (file, info) in stage.get_add() {
+        let content = repo.get_file_content(info)?;
+        let res_unmerged = find_unmerged(content.clone());
+        if res_unmerged.is_ok() {continue;}
+        conflict_files.push((file.to_owned(), res_unmerged.unwrap_err()));
+    }
+
+    if conflict_files.len() > 0 {
+        return Ok(Some(conflict_files));
+    } else {
+        return Ok(None);
+    }
+}
+// ---------- END PRIVATE ----------
+
 #[derive(Debug)]
 pub struct RevDiff {
     files: HashMap<String, FileDiff>,
@@ -31,12 +51,8 @@ impl RevDiff {
     }
 }
 
+// 8. diff
 pub fn diff<'a>(wd: &'a str, rev1_id:&'a str, rev2_id:&'a str) -> Result<RevDiff, Errors>{
-    // go through all files in rev1 and rev2
-    // if file in rev1 but not in rev2 -> file deleted
-    // if file in rev2 but not in rev1 -> file added
-    // if file in rev1 and rev2, but there is a diff -> file modified
-    // if file in rev1 and rev2, and there is no diff -> file unchanged
     let mut rev_diff = RevDiff::new();
 
     let repo = repository::load(wd)?;
@@ -73,6 +89,7 @@ pub fn diff<'a>(wd: &'a str, rev1_id:&'a str, rev2_id:&'a str) -> Result<RevDiff
         
 }
 
+// 9. cat
 pub fn cat<'a>(wd: &'a str, rev_id:&'a str, path:&'a str) -> Result<String, Errors>{
     // find path in rev
     // return file content or error
@@ -90,6 +107,7 @@ pub fn cat<'a>(wd: &'a str, rev_id:&'a str, path:&'a str) -> Result<String, Erro
     }
 }
 
+// 10. add
 pub fn add<'a>(wd: &'a str, path:&'a str) -> Result<String, Errors>{
     let mut repo = repository::load(wd)?;
     
@@ -98,6 +116,7 @@ pub fn add<'a>(wd: &'a str, path:&'a str) -> Result<String, Errors>{
     Ok("add success".to_string())
 }
 
+// 11. remove
 pub fn remove<'a>(wd: &'a str, path:&'a str) -> Result<String, Errors>{
     // remove the file temporarily to the index branch by acting as if we have deleted the file (not committed yet)
     // just call repo.remove by obtaining absolute path
@@ -108,24 +127,7 @@ pub fn remove<'a>(wd: &'a str, path:&'a str) -> Result<String, Errors>{
     Ok("remove success".to_string())
 }
 
-fn find_conflict_files(repo: &Repo, stage:&Stage) -> Result<Option<Vec<(String, String)>>, Errors> {
-
-    let mut conflict_files = Vec::new();
-
-    for (file, info) in stage.get_add() {
-        let content = repo.get_file_content(info)?;
-        let res_unmerged = find_unmerged(content.clone());
-        if res_unmerged.is_ok() {continue;}
-        conflict_files.push((file.to_owned(), res_unmerged.unwrap_err()));
-    }
-
-    if conflict_files.len() > 0 {
-        return Ok(Some(conflict_files));
-    } else {
-        return Ok(None);
-    }
-}
-
+// 12. commit
 pub fn commit<'a>(wd: &'a str, message:&'a str) -> Result<String, Errors> {
     let mut repo = repository::load(wd)?;
 
@@ -152,7 +154,7 @@ pub fn commit<'a>(wd: &'a str, message:&'a str) -> Result<String, Errors> {
     
 }
 
-// merge from src to dst, dst must be named revisions tracked by the repo so we can have something to update
+// 13. merge from src into the current head of wd
 pub fn merge<'a>(wd: &'a str, rev_id_src:String,
 //  rev_id_dst: String
 ) -> Result<String, Errors>{
@@ -242,7 +244,7 @@ mod tests {
     
 
     #[test]
-    fn test_diff() {
+    fn test_diff_1() {
         let cwd = "./a_test_repo/";
 
         remove_git_and_init(cwd);
@@ -258,7 +260,7 @@ mod tests {
     }
 
     #[test]
-    fn test_cat() {
+    fn test_cat_2() {
         let cwd = "./a_test_repo/";
 
         remove_git_and_init(cwd);
@@ -278,7 +280,7 @@ mod tests {
     }
 
     #[test]
-    fn test_add() {
+    fn test_add_3() {
         let cwd = "./a_test_repo/";
         
         remove_git_and_init(cwd);
@@ -294,7 +296,7 @@ mod tests {
     }
 
     #[test]
-    fn test_remove() {
+    fn test_remove_4() {
         let cwd = "./a_test_repo/";
 
         remove_git_and_init(cwd);
@@ -314,7 +316,7 @@ mod tests {
     }
 
     #[test]
-    fn test_commit() {
+    fn test_commit_5() {
         let cwd = "./a_test_repo";
         
         remove_git_and_init(cwd);
@@ -338,7 +340,7 @@ mod tests {
     }
 
     #[test]
-    fn test_merge() {
+    fn test_merge_6() {
         let cwd = "./a_test_repo";
         remove_git_and_init(cwd);
 
@@ -358,7 +360,7 @@ mod tests {
     }
 
     #[test]
-    fn test_merge_conflict() {
+    fn test_merge_conflict_7() {
         let cwd = "./a_test_repo";
         remove_git_and_init(cwd);
 
