@@ -197,6 +197,7 @@ pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Error
                 contain_last_commit_again= last_commit_hashmap.contains_key(key);
                 if contain_last_commit_again {//wd no, stage yes, last commit yes
                     Changes_not_staged_for_commit.push("Delete file: ".to_owned()+key);
+
                 }
                 else { //wd no,stage yes, last commit yes
                     Changes_to_be_committed.push("Delete file: ".to_owned()+key);
@@ -219,7 +220,7 @@ pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Error
         let last_commit_file_again=last_commit_again.unwrap();
         let last_commit_hashmap=last_commit_file_again.get_manifest();//iteminfo
         for(key,value)in last_commit_hashmap{
-            if !name_list.contains(key) {
+            if !name_list.contains(key) &&!stage_inside_remove.contains_key(key){
                 Changes_not_staged_for_commit.push("Delete file: ".to_owned()+key);
             }
         }
