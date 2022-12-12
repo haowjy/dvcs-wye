@@ -1,11 +1,6 @@
-
-#[allow(dead_code)]
-#[allow(unused_imports)]
 use std::collections::HashMap;
 use std::time::SystemTime;
 // external crates:
-// use petgraph::graphmap::DiGraphMap;
-// use sha2::{Sha256, Digest};
 use serde::{Serialize, Deserialize};
 use chrono::{DateTime, Local};
 
@@ -15,20 +10,20 @@ use crate::vc::repository::*;
 use crate::vc::file::*;
 
 
-#[derive(Debug, Clone, Serialize, Deserialize)] // might impl Drop trait for save safety
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Rev {
     rev_id: Option<String>,
     parent_id: Option<String>, 
     parent_id2: Option<String>,
     user_id: Option<String>,
     time_stamp: SystemTime,
-    message: Option<String>, // to be added
+    message: Option<String>,
     pub (super) manifest: HashMap<String, ItemInfo>,  // Hashmap<K: wd_relative_path, V: ItemInfo: file content id and metadata id
 }
 
 
-
 impl Rev {
+    // ------ pub Rev methods ------
     pub fn from(path: &str) -> Result<Rev, Errors> {
         match serde_json::from_str(&read_file_as_string(path)?){
             Ok(rev) => Ok(rev),
@@ -36,25 +31,6 @@ impl Rev {
         }
         // rev.path_self = path.to_string();
         // Some(rev)
-    }
-
-    pub (super) fn save(&self, rev_path: &str) -> Result<(), Errors> { //need to figure out destructor
-        match &self.rev_id {
-            Some(id) => write_file(&path_compose(rev_path, &id), &serialize(&self)?),
-            None => Err(Errors::ErrStr("Unable to save repo without id".to_string()))
-        }
-    }
-
-    pub (super) fn new() -> Rev {
-        Rev {
-            rev_id: None,
-            parent_id: None,
-            parent_id2:None,
-            user_id: None,
-            time_stamp: SystemTime::now(),
-            message: None,
-            manifest: HashMap::new(),
-        }
     }
 
     pub fn get_id(&self) -> Option<&str> {
@@ -82,6 +58,27 @@ impl Rev {
         log
     }
 
+    // ------ private Rev methods ------
+
+    pub (super) fn new() -> Rev {
+        Rev {
+            rev_id: None,
+            parent_id: None,
+            parent_id2:None,
+            user_id: None,
+            time_stamp: SystemTime::now(),
+            message: None,
+            manifest: HashMap::new(),
+        }
+    }
+
+    pub (super) fn save(&self, rev_path: &str) -> Result<(), Errors> {
+        match &self.rev_id {
+            Some(id) => write_file(&path_compose(rev_path, &id), &serialize(&self)?),
+            None => Err(Errors::ErrStr("Unable to save repo without id".to_string()))
+        }
+    }    
+    
     // NOTE: current vc doesn't track files moving from one subdirectory to another, 
     pub (super) fn add_file(&mut self, abs_path: &str) -> Result<(), Errors> {
         let new_entry = retrieve_info(abs_path)?;
@@ -131,19 +128,13 @@ impl Rev {
         self.parent_id2 = Some(parent_2.to_string());
         self
     }
+    
     fn get_date_time(&self) -> String{
         DateTime::<Local>::from(self.time_stamp).to_string()
     }
 
 }
 
-
-
-//     pub fn remove_file(&mut self, abs_path:&str) -> Self {
-        // self.manifest
-    // }
-//     }
-    
 
 #[cfg(test)]
 mod tests {
@@ -180,9 +171,12 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_time_update() {
+        // might fail if elapse between two System::now() is not captured, but the update works
         let mut rev = Rev::new();
+
         let time = rev.time_stamp.clone();
         assert_eq!(&time, &rev.time_stamp); // won't panic
+        
         rev.update_time();
         assert_eq!(time, rev.time_stamp); // panic
     }

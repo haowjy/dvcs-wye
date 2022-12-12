@@ -26,12 +26,12 @@ pub enum EntryType {
 
 use EntryType::{File, Dir, Other};
 
-
 impl ItemInfo {
-
+// ------ ItemInfo methods ------
     pub fn get_file_name(&self) -> &str {
         &self.name
     }
+
     pub fn get_file_wd_path(&self) -> &str {
         &self.loc_in_wd
     }
@@ -51,7 +51,6 @@ impl ItemInfo {
     }
 
     // new pub fn, assisting make_wd
-    // trial only, might move to repos
     pub fn make_file(&self, wd:&str) -> Result<(), Errors> {    
         let wd_file_path = path_compose(wd, &self.loc_in_wd);
         let repo_storage_dir = path_compose(wd, ".dvcs/files");
@@ -72,13 +71,9 @@ impl ItemInfo {
         }
     }
 
-
-    // // MOVING TO repository
-    // pub (super) fn save_to_repo(&mut self) -> Result<(), Errors>{ 
-    // }
-
 }
 
+// ------ mod functions ------
 pub fn retrieve_info(abs_path: &str) -> Result<ItemInfo, Errors> {
     let rel_path = get_rel_path(abs_path).ok_or(Errors::ErrStr(format!("Cannot find the proper working directory path for file {abs_path}")))?;
 
@@ -99,7 +94,6 @@ pub fn retrieve_info(abs_path: &str) -> Result<ItemInfo, Errors> {
     })
 }
 
-
 fn get_id(file_path: &str) -> Result<String, Errors> {
     let wd_root = check_wd(file_path).ok_or(Errors::ErrStr(format!("unable to locate a repository in {}", file_path)))?;
     let repo_storage_dir = path_compose(&wd_root, ".dvcs/files");
@@ -109,10 +103,6 @@ fn get_id(file_path: &str) -> Result<String, Errors> {
     Ok(checked_sha(&content, &repo_storage_dir))
 }
 
-// fn get_repo_storage_dir() -> Option<String> {
-//     let wd_root = get_wd_root().ok()?;
-//     Some(path_compose(&wd_root, ".dvcs/files"))
-// }
 
 
 
