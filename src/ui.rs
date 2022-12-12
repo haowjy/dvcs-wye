@@ -276,7 +276,7 @@ impl Wye {
                     wd_path=default_wd_path;
                 }
                 let res_file_diff=readonly::status(&wd_path);
-                Self::input_handling_status(res_file_diff);
+                //TODO:Self::input_handling_status(res_file_diff);
                 println!("wd_path is: {:?}", wd_path)
             }
             Command::Log { mut wd_path,rev_id } => {
