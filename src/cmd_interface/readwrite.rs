@@ -1,3 +1,4 @@
+use crate::readonly::status;
 use crate::ui::{Errors, Errors::*};
 use crate::vc::{repository::{Repo, Stage}, revision::{Rev}};
 use crate::vc::{repository};
@@ -157,14 +158,16 @@ pub fn merge<'a>(wd: &'a str, rev_id_src:String,
 ) -> Result<String, Errors>{
 
     let mut repo = repository::load(wd)?;
-    let stage = repo.get_stage();
 
     let rev_dst = repo.get_current_head()?; // is current head
 
-    // Check stage before merge into current HEAD
-    if !(stage.get_add().is_empty() && stage.get_remove().is_empty()) {
-        return Err(Errstatic("Stage must be empty before merge"));
-    }
+    // Check if there are uncommitted changes (checks only stage instead)
+    if !repo.get_stage().is_empty(){ return Err(Errstatic("pull failed: uncommitted changes in working directory, commit changes first"));}
+    // TODO: status doesn't work???
+    // let (staged, unstaged, untracked) = status(wd)?; // print status
+    // if !(staged.is_empty() && unstaged.is_empty() && untracked.is_empty()){ // not empty
+    //     return Err(Errstatic("merge failed: uncommitted changes"));
+    // }
 
     let cur_head_rev = rev_dst.clone(); // Will only create conflict files if dst is the current head, otherwise will simply just return the errors
     let rev2 = repo.get_rev(&rev_id_src)?;
@@ -223,7 +226,6 @@ pub fn merge<'a>(wd: &'a str, rev_id_src:String,
         let cur_head = repo.get_current_head()?;
         let cur_rev_id = cur_head.get_id().unwrap(); // new rev
         return Ok(cur_rev_id.to_string()); // The merge commit is the new head
-        
     }
 
     
