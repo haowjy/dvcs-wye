@@ -1,12 +1,13 @@
-use crate::readonly::status;
+// use crate::readonly::status;
 use crate::ui::{Errors, Errors::*};
-use crate::vc::{repository::{Repo, Stage}, revision::{Rev}};
+use crate::vc::{repository::{Repo, Stage}};
 use crate::vc::{repository};
 use crate::dsr::{*, self};
-use std::collections::{HashMap, VecDeque, HashSet};
+use std::collections::{HashMap,};
 
 use crate::cmd_function::{*};
 use crate::cmd_function::FileDiffType::{*};
+
 #[derive(Debug)]
 pub struct RevDiff {
     files: HashMap<String, FileDiff>,
@@ -151,7 +152,6 @@ pub fn commit<'a>(wd: &'a str, message:&'a str) -> Result<String, Errors> {
     
 }
 
-// TODO: test
 // merge from src to dst, dst must be named revisions tracked by the repo so we can have something to update
 pub fn merge<'a>(wd: &'a str, rev_id_src:String,
 //  rev_id_dst: String

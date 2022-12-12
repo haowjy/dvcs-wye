@@ -1,9 +1,6 @@
 use crate::readonly::status;
 use crate::ui::{Errors, Errors::*};
-use crate::vc::repository::{Repo};
 use crate::vc::{repository};
-use std::path::Path;
-use std::io::Error;
 
 use crate::dsr::*;
 use crate::readwrite::*;
@@ -181,13 +178,13 @@ mod tests {
     
     use crate::dsr;
 
-    use crate::vc::repository::{self, init};
+    use crate::vc::repository::{self};
 
     use crate::test_help::{*};
 
     #[test]
     fn test_clone() {
-        let remote_wd = "./a_test_remote";
+        let remote_wd = "./a_remote/a_test_repo";
         remove_git_and_init(remote_wd);
         create_files_and_commit_ab1(remote_wd);
 
@@ -203,7 +200,7 @@ mod tests {
 
     #[test]
     fn test_clone_remote_no_change() {
-        let remote_wd = "./a_test_remote";
+        let remote_wd = "./a_remote/a_test_repo";
         remove_git_and_init(remote_wd);
         let rev1 = create_files_and_commit_ab1(remote_wd);
 
