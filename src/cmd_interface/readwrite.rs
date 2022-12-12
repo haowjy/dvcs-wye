@@ -1,4 +1,4 @@
-// use crate::readonly::status;
+use crate::readonly::status;
 use crate::ui::{Errors, Errors::*};
 use crate::vc::{repository::{Repo, Stage}};
 use crate::vc::{repository};
@@ -173,6 +173,10 @@ pub fn merge<'a>(wd: &'a str, rev_id_src:String,
 
     let cur_head_rev = rev_dst.clone(); // Will only create conflict files if dst is the current head, otherwise will simply just return the errors
     let rev2 = repo.get_rev(&rev_id_src)?;
+
+    if cur_head_rev.get_id().unwrap() == rev2.get_id().unwrap() { 
+        return Ok("merge: already up to date".to_string());
+    }
 
     let rev_origin = find_rev_lca(&repo, cur_head_rev.clone(), rev2.clone())?;
     let rev_diff1_files = diff(wd, rev_origin.get_id().unwrap(), cur_head_rev.clone().get_id().unwrap())?.files;

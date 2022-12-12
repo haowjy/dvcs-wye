@@ -120,7 +120,6 @@ enum Command {
     /// pull the changes from another repository
     Pull {
         remote: String,
-        head: String,
         #[arg(default_value_t = dsr::get_wd_path())]
         path: String,
     },
@@ -275,14 +274,14 @@ impl Wye {
                 }
                 let mut res:Result<String,Errors>=Err(Errstatic("1"));
                 res=readwrite::cat(&wd_path,&rev_id,&path);
-                Self::input_handling(res);
+                Self::input_handling_cat(res);
             }
             Command::Status { mut wd_path } => {
                 if wd_path.eq("-d") || wd_path.eq("-")|| wd_path.eq("."){
                     wd_path=default_wd_path;
                 }
                 let res_file_diff=readonly::status(&wd_path);
-                //TODO:Self::input_handling_status(res_file_diff);
+                //Self::input_handling_status(res_file_diff);
             }
             Command::Log { mut wd_path } => {
                 if wd_path.eq("-d") || wd_path.eq("-")|| wd_path.eq("."){
@@ -333,7 +332,7 @@ impl Wye {
                 let res=createonly::checkout(&path, &rev_id,option_alias); // TODO:
                 Self::input_handling(res);
             }
-            Command::Pull { mut path,remote,head } => {
+            Command::Pull { mut path,remote } => {
                 if path.eq("-d") || path.eq("-")|| path.eq("."){
                     path=default_wd_path;
                 }
@@ -422,9 +421,22 @@ impl Wye {
         }
 
     }
+    fn input_handling_cat(return_result:Result<String,Errors>){
+        if return_result.is_err() {
+            parse_error(return_result.unwrap_err());
+        }
+        else {
+            println!("content: {}",return_result.unwrap());
+        }
+    }
 
     fn input_handling(return_result:Result<String,Errors>){
-        println!("{:?}",return_result);
+        if return_result.is_err() {
+            parse_error(return_result.unwrap_err());
+        }
+        else {
+            println!("{}",return_result.unwrap());
+        }
     }
 
     fn input_handling_special(return_result:Result<RevDiff,Errors>){
@@ -467,8 +479,11 @@ impl Wye {
             parse_error(return_result.unwrap_err());
         }
         else {
+            println!("heads:");
             let vec = return_result.unwrap();
-            println!("{:?}", vec);
+            vec.iter().fold(0,|acc,x|{
+                println!("{}",x);
+                0});
         }
     }
     /*fn input_handling_backup<E: std::fmt::Debug>(return_result:Result<(), E>){

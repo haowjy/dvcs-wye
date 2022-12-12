@@ -25,9 +25,10 @@ pub fn clone<'a>(wd: &'a str, remote:&'a str) -> Result<String, Errors> {
     copy_dir(&dvcs_remote, &dvcs_cwd)?;
 
     // create remote tracking branch
-    // checkout(wd, head_alias.unwrap(), Some("remote/".to_owned()+head_alias.unwrap()))?;
+    checkout(wd, head_alias.unwrap(), Some("remote/".to_owned()+head_alias.unwrap()))?;
     // checkout the on cwd 
-    checkout(wd, head_alias.unwrap(), None)
+    checkout(wd, head_alias.unwrap(), None)?;
+    Ok(format!("clone success: {} -> {} on branch {}", remote, wd, head_alias.unwrap()))
 }
 
 // 5. checkout
@@ -37,12 +38,12 @@ pub fn checkout<'a>(wd:&'a str, rev:&'a str, new_branch_alias: Option<String>) -
     let mut repo_mut = repository::load(wd)?;
     let repo = repository::load(wd)?;
     let branch_heads = repo.get_heads();
-    let new_head_id = branch_heads.get_key_value(rev);
+    let rev_head_id = branch_heads.get_key_value(rev);
 
     clear_dir_adv(wd, vec![".dvcs", "src"])?; // NOTE: this is potentially dangerous when using it in default directory
 
-    if new_head_id.is_some() {
-        let (rev_alias, rev_id) = new_head_id.unwrap();
+    if rev_head_id.is_some() {
+        let (rev_alias, rev_id) = rev_head_id.unwrap();
         if new_branch_alias.is_some() { // we will create a new branch
             let new_branch_alias = new_branch_alias.unwrap();
             if branch_heads.contains_key(&new_branch_alias) {
@@ -61,7 +62,7 @@ pub fn checkout<'a>(wd:&'a str, rev:&'a str, new_branch_alias: Option<String>) -
             repo_mut.set_current_head(&rev_alias)?; // is also saved
             Ok(format!("checkout successful: currently on `{}`", rev_alias))
         }
-    }else{
+    } else {
         if new_branch_alias.is_some() { // we will create a new branch with the rev as rev_id
             let new_branch_alias = new_branch_alias.unwrap();
             if branch_heads.contains_key(&new_branch_alias) {
@@ -119,21 +120,23 @@ pub fn pull<'a>(wd:&'a str, remote:&'a str) -> Result<String, Errors> {
     cur_repo_mut.new_head(format!("remote/{}",cur_head_alias).as_str(), remote_rev_id.unwrap())?;
 
     // merge cur_head_alias, remote/cur_head_alias
-    merge(wd, format!("remote/{}",cur_head_alias))
+    merge(wd, format!("remote/{}",cur_head_alias))?;
+    Ok(format!("pull successful: currently on `{}`", cur_head_alias))
 }
 
 // 7. push
 pub fn push<'a>(wd:&'a str, remote:&'a str) -> Result<String, Errors> {
     // check if wd and remote are directories and have same name
     if get_name(wd) != get_name(remote){
-        return Err(Errstatic("pull failed: wd and remote do not have the same working directory name, either rename working directory or use a different directory"));
+        return Err(Errstatic("push failed: wd and remote do not have the same working directory name, either rename working directory or use a different directory"));
     }
     if wd == remote {
-        return Err(Errstatic("pull failed: working and remote are the same directory"));
+        return Err(Errstatic("push failed: working and remote are the same directory"));
     }
 
+    let mut cur_repo_mut = repository::load(wd)?;
     let cur_repo = repository::load(wd)?;
-    if !cur_repo.get_stage().is_empty(){ return Err(Errstatic("pull failed: uncommitted changes in working directory, commit changes first"));}
+    if !cur_repo.get_stage().is_empty(){ return Err(Errstatic("push failed: uncommitted changes in working directory, commit changes first"));}
     // TODO: status doesn't work???
     // let (staged, unstaged, untracked) = status(wd)?; // print status
     // if !(staged.is_empty() && unstaged.is_empty() && untracked.is_empty()){ // not empty
@@ -141,7 +144,7 @@ pub fn push<'a>(wd:&'a str, remote:&'a str) -> Result<String, Errors> {
     // }
 
     let cur_head_alias = cur_repo.get_current_head_alias();
-    if cur_head_alias.is_none() {return Err(Errstatic("pull failed: no head found"));}
+    if cur_head_alias.is_none() {return Err(Errstatic("push failed: no head found"));}
     let cur_head_alias = cur_head_alias.unwrap();
     let remote_tracking_branch = format!("remote/{}", cur_head_alias);
 
@@ -155,15 +158,20 @@ pub fn push<'a>(wd:&'a str, remote:&'a str) -> Result<String, Errors> {
         if remote_tracking_rev.get_id() != remote_rev.get_id() {
             return Err(Errstatic("push failed: remote branch is not up to date. Please pull first"));
         }
+    } else { // remote doesn't have the new branch, create a temp remote tracking branch
+        let cur_rev = cur_repo.get_rev(cur_head_alias)?;
+        cur_repo_mut.new_head(&remote_tracking_branch, cur_rev.get_id().unwrap())?;
     }
 
     checkout(wd, &remote_tracking_branch, None)?; // on remote tracking branch
+    // ON REMOTE TRACKING BRANCH
     let m = merge(wd, cur_head_alias.to_string()); // NOTE: there shouldn't be any conflicts unless the user tries to checkout a remote tracking branch. 
-    checkout(wd, cur_head_alias, None)?; // back to original branch
+    checkout(wd, cur_head_alias, None)?;
+    // BACK TO ORIGINAL BRANCH
 
     let cur_repo = repository::load(wd)?; // reload repo
     if m.is_err() {
-        return Err(Errstatic("push failed: merge failed. Something unexpected went wrong."));
+        return Err(m.unwrap_err());
     }
     
     remote_repo.fetch(wd)?; // copies files from wd to remote, then they can pull

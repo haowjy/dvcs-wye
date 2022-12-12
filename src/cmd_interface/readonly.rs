@@ -11,8 +11,14 @@ pub fn heads(wd: &str) -> Result<Vec<String>, Errors> {
     let head = load.get_heads();//&Hashmap//waiting
     let mut res=Vec::new();
     let mut string=String::new();
+    let cur_head = load.get_current_head_alias().unwrap();
     for(key,value) in head{
-        string=key.to_owned()+":"+value;
+        string = if key == cur_head {
+            "*".to_owned() + &key.to_owned()+":"+value
+        } else {
+            key.to_owned()+":"+value
+        };
+
         res.push(string);
     }
     return if head.is_empty() { Err(Errors::Errstatic("No heads found")) } else { Ok(res) }
@@ -128,7 +134,8 @@ pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Error
                 //compare stage and last commit, if same->no change
                 //if not same->modified
                 if contain_add==true && contain_last_commit==true&&stage_status==false {
-                    println!("Modified file{}",name);
+                    //println!("Modified file: {}",name);
+                    //Changes_not_staged_for_commit.push("Modified file: ".to_owned()+&name);
                     //compare inside content see modify
                     let it1= last_commit_hashmap.get(&name).unwrap();
                     let it2= stage_inside_add.get(&name).unwrap();
@@ -146,6 +153,14 @@ pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Error
                             }
                             else { println!("No difference, same"); }
                         }
+                }
+                if  contain_add==false && contain_last_commit==true&&stage_status==false{
+                    let it1= last_commit_hashmap.get(&name).unwrap();
+                    let a=load.get_file_content(it1).unwrap();
+                    if wd_item!=a{
+                        Changes_not_staged_for_commit.push("Modified file: ".to_owned()+&name);
+                    }
+
                 }
             }//contain_last_commit true
             else { //println!("wd has, last commit has not->maybe untrack file{}",x1);
@@ -182,6 +197,7 @@ pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Error
                 contain_last_commit_again= last_commit_hashmap.contains_key(key);
                 if contain_last_commit_again {//wd no, stage yes, last commit yes
                     Changes_not_staged_for_commit.push("Delete file: ".to_owned()+key);
+
                 }
                 else { //wd no,stage yes, last commit yes
                     Changes_to_be_committed.push("Delete file: ".to_owned()+key);
@@ -192,6 +208,22 @@ pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Error
         }
 
 
+    }
+    let mut name_list:Vec<String>=vec![];
+    list_files.iter().fold(0,|a,x1|{ name_list.push(dsr::get_name(x1).unwrap());
+        0});
+    let last_commit_again= load.get_current_head();//Rev
+    if  last_commit_again.is_err(){ //println!("no head, means last commit is empty");
+    }
+    else
+    {
+        let last_commit_file_again=last_commit_again.unwrap();
+        let last_commit_hashmap=last_commit_file_again.get_manifest();//iteminfo
+        for(key,value)in last_commit_hashmap{
+            if !name_list.contains(key) &&!stage_inside_remove.contains_key(key){
+                Changes_not_staged_for_commit.push("Delete file: ".to_owned()+key);
+            }
+        }
     }
 
     println!("Changes to be committed:");

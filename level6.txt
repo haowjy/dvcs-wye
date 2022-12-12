@@ -1,8 +1,8 @@
-# acceptance 1
-mkdir level6
-cd level6
-$[executable] init level6-remote
-cd level6-remote
+# acceptance 6a
+mkdir level6a
+cd level6a
+$[executable] init level6a-remote
+cd level6a-remote
 echo "Hello World" > a.txt
 $[executable] add .
 $[executable] commit "hello world"
@@ -10,8 +10,8 @@ $[executable] commit "hello world"
 cd ..
 mkdir cwd
 cd cwd
-$[executable] clone ../level6-remote level6-remote
-cd level6-remote
+$[executable] clone ../level6a-remote level6a-remote
+cd level6a-remote
 
 # PASS: the clone should have a have a hidden directory wtih files, and it works inside the clone
 $[executable] log
@@ -20,12 +20,11 @@ $[executable] status
 
 
 
-# acceptance 2
-sudo rm -r level6
-mkdir level6
-cd level6
-$[executable] init level6-remote
-cd level6-remote
+# acceptance 6b
+mkdir level6b
+cd level6b
+$[executable] init level6b-remote
+cd level6b-remote
 echo "Hello World" > a.txt
 $[executable] add .
 $[executable] commit "hello world"
@@ -37,16 +36,16 @@ $[executable] commit "b"
 $[executable] log
 $[executable] status
 
-$[executable] checkout new branch SHA
+$[executable] checkout SHA a newbranch .
 
-# MAYBE: the clone copies the current head of the clone
 cd ..
 mkdir cwd
 cd cwd
-$[executable] clone ../level6-remote level6-remote
+$[executable] clone ../level6b-remote level6b-remote
 
 # PASS: the clone fails the second time
-$[executable] clone ../level6-remote level6-remote
+$[executable] clone ../level6b-remote level6b-remote
 
-cd level6-remote
+cd level6b-remote
 $[executable] heads
+# MAYBE: the clone copies the current head of the clone
