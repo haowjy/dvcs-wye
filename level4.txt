@@ -25,8 +25,10 @@ $[executable_path] remove new_feature.rs
 $[executable_path] commit "bad feature, deleted"
     -> SHA3
 $[executable_path] diff SHA1 SHA3
-    -> Ok(RevDiff { files: {"new_feature.rs": FileDiff { origin_content: "",
+    -> PASS: Ok(RevDiff { files: {"new_feature.rs": FileDiff { origin_content: "",
         mod_content: "", patch: "--- original\n+++ modified\n", diff_type: Added }} })
+
+    -> FAIL: Err(Errstatic("conflict_find: diff1 and diff2 have different original files"))
 $ cd ..
 $ rm -r new_test
 
@@ -80,6 +82,7 @@ $[executable_path] diff SHA3 SHA4
 $[executable_path] remove new_feature.rs
     -> Ok("remove success")
 $[executable_path] commit "bad feature, deleted"
-    -> SHA5
+    -> PASS: SHA5
+    -> FAIL: Err(Errstatic("conflict found"))
 $ cd ..
 $ rm -r new_test
