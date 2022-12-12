@@ -1,0 +1,26 @@
+4a
+// start a new branch
+checkout -b unstable -> "checkout success"
+// add new file
+add new_feature.rs -> "add success"
+commit -m "start new feature" -> "1 file changed, 1 insertion(+)"
+// check difference
+checkout master -> "checkout success"
+diff master unstable -> "diff:---file1.json +++file2.json"
+// remove the new file
+checkout unstable -> "checkout success"
+remove new_feature.rs -> "remove success"
+commit -> "1 file changed, 0 insertions(+), 0 deletions(-)"
+
+4b
+// start a new branch
+checkout -b unstable -> "checkout success"
+// add new file
+add new_feature.rs -> "add success"
+commit -m "start new feature" -> "1 file changed, 1 insertion(+)"
+// remove the new file
+remove new_feature.rs -> "remove success"
+commit -> "1 file changed, 0 insertions(+), 0 deletions(-)"
+// check difference
+checkout master -> "checkout success"
+diff master unstable -> None
