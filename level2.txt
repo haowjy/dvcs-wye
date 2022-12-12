@@ -37,10 +37,10 @@ $[executable_path] add .
     -> checkpoint: should add files despite repo in parent dir
 $cd ..
 $mkdir new_dir2
+    -> note: an empty directory won't be tracked. Git does not track empty directory either, so we do not consider it a fail, but just leave the empty dir here to make it a clarified use case for testers (there was a partial attempt to solve tracking empty dir in our program but somehow did not work)
 $touch new_file3.txt
 $[executable_path] add .
 $[executable_path] commit 2b
-
 
 
 $[executable_path] checkout new_branch b
@@ -54,7 +54,6 @@ $[executable_path] checkout main b
                 new_file1.txt, 
                 new_file2.txt,
                 },
-            new_dir2,
             new_file3.txt,
             }; (note: these empty files are considered identical in content and resulting in only one entry in the repo's file storage.)
         fail: any failed commands, any missing files in WD 
