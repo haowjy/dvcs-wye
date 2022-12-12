@@ -1,3 +1,4 @@
+$[executable] dvcs-wye
 level7
     level7-remote
     cwd
