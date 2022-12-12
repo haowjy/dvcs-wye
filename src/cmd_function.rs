@@ -86,10 +86,21 @@ pub struct FileConflict {
     pub is_conflict: bool,
 }
 
+fn force_end_with_newline(content: String) -> String {
+    if content.ends_with("\n"){
+        content
+    } else {
+        content + "\n"
+    }
+}
 impl FileConflict {
     pub fn new(diff1: FileDiff, diff2: FileDiff) -> Self {
+        
+        let origin = force_end_with_newline(diff1.clone().origin_content);
+        let mod1 = force_end_with_newline(diff1.clone().mod_content);
+        let mod2 = force_end_with_newline(diff2.clone().mod_content);
 
-        let merge_res = merge(&diff1.origin_content,& diff1.mod_content,& diff2.mod_content);
+        let merge_res = merge(&origin,&mod1,&mod2);
         let is_conflict = merge_res.is_err();
         
         let merged_content = match merge_res {

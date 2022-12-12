@@ -40,3 +40,11 @@ pub fn write_create_files_and_commit_abc2(cwd:&str) -> String {
     let _ = add(cwd, "c.txt");
     commit(cwd, "commit a and b and create c").unwrap()
 }
+
+pub fn write_files_edit_and_commit_ab3(cwd:&str) -> String{
+    let _ = dsr::write_file(&path_compose(cwd, "a.txt"), "InsertFirst\nA Change 2");
+    let _ = dsr::write_file(&path_compose(cwd, "b.txt"), "InsertFirst\nB Change 2");
+    let _ = add(cwd, "a.txt");
+    let _ = add(cwd, "b.txt");
+    commit(cwd, "commit a and b edit").unwrap()
+}

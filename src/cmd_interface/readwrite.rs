@@ -112,7 +112,7 @@ fn find_conflict_files(repo: &Repo, stage:&Stage) -> Result<Option<Vec<(String, 
 
     for (file, info) in stage.get_add() {
         let content = repo.get_file_content(info)?;
-        let res_unmerged = find_unmerged(content);
+        let res_unmerged = find_unmerged(content.clone());
         if res_unmerged.is_ok() {continue;}
         conflict_files.push((file.to_owned(), res_unmerged.unwrap_err()));
     }
@@ -155,12 +155,6 @@ pub fn commit<'a>(wd: &'a str, message:&'a str) -> Result<String, Errors> {
 pub fn merge<'a>(wd: &'a str, rev_id_src:String,
 //  rev_id_dst: String
 ) -> Result<String, Errors>{
-    // let r1 = VC::Revision::from(rev1)
-    // let r2 = VC::Revision::from(rev2)
-    // uses conflict_find(content1, content2) on on content of r1.files, f2.files
-    // DSR::write_file(wd+r1.files, r2.files, conflict_find results)
-    // add()
-    // merge_commit() [extended from commit] // blocks if there are conflicts
 
     let mut repo = repository::load(wd)?;
     let stage = repo.get_stage();
@@ -354,12 +348,33 @@ mod tests {
         checkout(cwd, "main", None).unwrap(); // back to main
 
         let rev3 = merge(cwd, rev2);
-        println!("rev3: {:?}", rev3);
         assert!(rev3.is_ok());
 
         let repo = repository::load(cwd).unwrap();
         let heads = repo.get_heads();
         assert_eq!(heads.get("main").unwrap(), &rev3.unwrap());
+    }
+
+    #[test]
+    fn test_merge_conflict() {
+        let cwd = "./a_test_repo";
+        remove_git_and_init(cwd);
+
+        let rev1 = create_files_and_commit_ab1(cwd);
+
+        let _ = write_create_files_and_commit_abc2(cwd); // make additional changes on main
+
+        checkout(cwd, &rev1, Some("otherbranch".to_string())).unwrap(); // make branch from rev1
+        let _ = write_files_edit_and_commit_ab3(cwd); // make some changes on main
+
+        let merg = merge(cwd, "main".to_string()); // merge main into otherbranch
+        assert!(merg.is_err());
+
+        let atxt = dsr::read_file_as_string(&path_compose(cwd, "a.txt")).unwrap();
+        assert_eq!(atxt.as_str(), "<<<<<<< ours\nInsertFirst\nA Change 2\n||||||| original\nhello world\n=======\nA Change\n>>>>>>> theirs\n"); // a.txt should have both changes
+
+        let c = commit(cwd, "merge"); // commit the merge will fail because it finds conflict pattern
+        assert_eq!(c.is_err(), true);
     }
 
 }
