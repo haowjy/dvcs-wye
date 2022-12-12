@@ -54,9 +54,7 @@ pub fn log(wd: &str,rev_id: &str) -> Result<Option<Vec<String>>, Errors> {//alia
 }
 
 pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Errors> {
-    //let res=(Vec<String>, Vec<String>, Vec<String>);
     let load=repository::load(wd)?;//got Repo
-    //let renew=load.get_current_head()?;//get Rev
     let stage=load.get_stage();// got stage
     let stage_inside_add=stage.get_add();
     let stage_inside_remove=stage.get_remove();
@@ -132,30 +130,26 @@ pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Error
                 //stage
                 //compare stage and last commit, if same->no change
                 //if not same->modified
-
                 if contain_add==true && contain_last_commit==true&&stage_status==false {
                     println!("Modified file{}",name);
                     //compare inside content see modify
-
-                        let it1= last_commit_hashmap.get(&name).unwrap();
+                    let it1= last_commit_hashmap.get(&name).unwrap();
                     let it2= stage_inside_add.get(&name).unwrap();
                         if it1.eq(it2) {
 //same
                         }
                         else {
+                            //diff
                             let a=load.get_file_content(it2);//stage
                             let b=load.get_file_content(it1);//last_commit
+                            let diff = file_diff(a.unwrap(), b.unwrap()).clone();
+                            let flag= diff.is_diff();
+                            if flag==true {
+                                Changes_to_be_committed.push("Modified file: ".to_owned()+&name);
+                            }
+                            else { println!("No difference, same"); }
                         }
-                        let diff = file_diff("wd_rev.unwrap().get_content().unwrap()".to_string(), "ItemInfo.get_content().unwrap()".to_string()).clone();
-                        let flag= diff.is_diff();
-                        if flag==true {
-                            /*let d= diff.get_patch();
-                            println!("add: {},{}",value.get_file_name(),d);*/
-                        }
-                        else { println!("No difference, same"); }
-                        //println!("delete: {}",value.get_file_name());
                 }
-
             }//contain_last_commit true
             else { println!("wd has, last commit has not->maybe untrack file{}",x1); }
         }
@@ -176,92 +170,21 @@ pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Error
         }
         0});
     //还差wd没有，stage和commit有没有？
+
     println!("Changes to be committed:");
     if  Changes_to_be_committed.capacity()==0{ println!("nothing to change");}
-    println!("{:?}",Changes_to_be_committed);
+    else{println!("{:?}",Changes_to_be_committed);}
     //already add file but modified, so just need commit
     //commit delete stage, last commit
     println!("Changes not staged for commit:");
     if  Changes_not_staged_for_commit.capacity()==0{ println!("nothing to change");}
-    println!("{:?}",Changes_not_staged_for_commit);
+    else{println!("{:?}",Changes_not_staged_for_commit);}
     //need add first, then commit
     //
     //last commit has, stage has in add, but not commit yet, so not in wd
     println!("Untracked files:");
     if  untrack.capacity()==0{ println!("nothing to change");}
-    println!("{:?}",untrack);
-    //readall
-    /*let res:&str;
-        let mut count_add =0;
-        let mut count_delete=0;
-        println!("Changes not staged for commit:");
-        for (path, ItemInfo) in stage_inside_add {//stage add
-            //println!("add: {}",ItemInfo.get_file_name());//compare modify or not?
-            let wd_rev=file::retrieve_info(path);
-            if  wd_rev.is_err(){//Cannot find the proper working directory path for file
-                println!("add: {}",ItemInfo.get_file_name());
-            }
-            else {
-                println!("modified: {}",ItemInfo.get_file_name());
-            }
-        }//stage add end
-
-        for (path, ItemInfo) in stage_inside_remove {//stage remove
-            let wd_rev=file::retrieve_info(path);
-            if  wd_rev.is_err(){//Cannot find the proper working directory path for file
-                println!("{} already be deleted",ItemInfo.get_file_name());
-            }
-            else {
-                let a=load.get_file_content(ItemInfo);
-                // TODO: use different get content method,use repo to get_content
-                let diff = file_diff("wd_rev.unwrap().get_content().unwrap()".to_string(), "ItemInfo.get_content().unwrap()".to_string()).clone();
-                let flag= diff.is_diff();
-                if flag==true {
-                    let d= diff.get_patch();
-                    println!("add: {},{}",ItemInfo.get_file_name(),d);
-                }
-                else { println!("No difference, same"); }
-                println!("delete: {}",ItemInfo.get_file_name());
-            }
-        }//stage remove end
-
-        //commit but not push
-        //let wd_rev=file::retrieve_info()?;//ItemInfo, read file path
-        if stage_inside_add.capacity()!=0 && stage_inside_remove.capacity()!=0 {
-            return Err(Errors::Errstatic("Please commit first!"))
-        }
-        else { //no stage, now compare last commit with wd//untrack, create a new file
-            let last_commit= load.get_current_head();//Rev//TODO???
-            if  last_commit.is_err(){ println!("no head, means last commit is empty");}
-            else
-            {
-                let last_commit_file=last_commit.unwrap();
-            let last_commit_hashmap=last_commit_file.get_manifest();//iteminfo
-            for (path, ItemInfo) in last_commit_hashmap {//read last commit
-                let wd_rev=file::retrieve_info(path);
-                if  wd_rev.as_ref().is_err(){//Cannot find the proper working directory path for file
-                    println!("{} is ahead of working directory",ItemInfo.get_file_name());
-                }
-                else {//compare diff
-                    if ItemInfo.clone()==wd_rev.as_ref().unwrap().clone(){
-                        return Err(Errors::Errstatic("No difference, same, means up to date"))
-                    }
-                    else {
-                        let diff = file_diff("ItemInfo.get_content().unwrap()".to_string(), "wd_rev.unwrap().get_content().unwrap()".to_string());
-                        let flag= diff.is_diff();
-                        if flag==true {
-                            println!("{}is ahead of working directory",ItemInfo.get_file_name());
-                            return Err(Errors::Errstatic("Please push first!"))
-                        }
-                        else {
-                            return Ok("No difference, same, means up to date")
-                        }
-                }
-            }
-        }
-            }
-
-    }//commit but not push end*/
+    else{println!("{:?}",untrack);}
     Ok((Changes_to_be_committed,Changes_not_staged_for_commit,untrack))
 }
 
