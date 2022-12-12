@@ -145,22 +145,31 @@ enum Command {
 }
 #[derive(Parser,Debug)]
 enum SubCommand {
+    /// has default revision id and wd_path
     Default {
         #[arg(default_value_t)]
         revision: String,
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
     },
+    /// has default wd_path
     DefaultPath {
         revision: String,
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
     },
+    /// has default revision id
     DefaultRev {
         wd_path: String,
         #[arg(default_value_t)]
         revision: String,
+    },
+    /// no default
+    Normal {
+        wd_path: String,
+        revision: String,
     }
+
 }
 impl Wye {
     pub fn input_command() ->io::Result<()>{//start here temporary
@@ -321,6 +330,10 @@ impl Wye {
                         rev=revision.clone();
                     }
                     SubCommand::DefaultRev { ref wd_path,ref revision} => {
+                        path= wd_path.clone();
+                        rev=revision.clone();
+                    }
+                    SubCommand::Normal { ref wd_path,ref revision} => {
                         path= wd_path.clone();
                         rev=revision.clone();
                     }
