@@ -169,7 +169,10 @@ pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Error
             //compare inside content see modify
         }
         0});
-    //还差wd没有，stage和commit有没有？
+    //还差wd没有，stage和commit有没有？//stage has, last  delete
+    for(key, value)in stage_inside_add{
+
+    }
 
     println!("Changes to be committed:");
     if  Changes_to_be_committed.capacity()==0{ println!("nothing to change");}

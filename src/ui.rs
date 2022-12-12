@@ -53,14 +53,12 @@ pub struct Wye {
 enum Command {
     /// add specific files(multi files use "," to spilt) that you want to track
     Add {
-        /// Name of the package to search
         path: String,
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
     },
     /// remove specific files from tracking list
     Remove {
-        /// Name of the package to search
         path: String,
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
@@ -74,15 +72,12 @@ enum Command {
     },
     /// merge two revisions
     Merge {
-        /// Name of the package to search
         rev_id: String,
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
     },
     /// check the changes between revisions
     Diff {
-        //#[arg(short, long, default_value_t = dsr::get_wd_path())]
-        /// Name of the package to search
         rev_id_1: String,
         rev_id_2: String,
         #[arg(default_value_t = dsr::get_wd_path())]
@@ -90,7 +85,6 @@ enum Command {
     },
     /// inspect a file of a given revision
     Cat {
-        /// Name of the package to search
         rev_id: String,
         path: String,
         #[arg(default_value_t = dsr::get_wd_path())]
@@ -98,7 +92,6 @@ enum Command {
     },
     ///  check the current status of current repository
     Status {
-        /// Name of the package to search
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
     },
@@ -142,31 +135,30 @@ enum Command {
     },
     /// create an empty repository
     Init {
-        /// Name of the package to search
         #[arg(default_value_t)]
         wd_path: String,
     },
-    /// create an empty repository
+    /*/// create an empty repository
     Test {
         /// Name of the package to search
         #[command(subcommand)]
         wd_path: SubCommand,
-    },
+    },*/
 }
 #[derive(Parser,Debug)]
 enum SubCommand {
-    Defalut {
+    Default {
         #[arg(default_value_t)]
         revision: String,
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
     },
-    DefalutPath {
+    DefaultPath {
         revision: String,
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
     },
-    DefalutRev {
+    DefaultRev {
         wd_path: String,
         #[arg(default_value_t)]
         revision: String,
@@ -315,15 +307,15 @@ impl Wye {
             Command::Checkout { option,new_branch_alias } => {
                 let mut rev =String::new(); let mut path =String::new();
                 match option{
-                    SubCommand::Defalut { ref wd_path,ref revision} => {
+                    SubCommand::Default { ref wd_path,ref revision} => {
                         path= wd_path.clone();
                         rev=revision.clone();
                     }
-                    SubCommand::DefalutPath { ref wd_path,ref revision} => {
+                    SubCommand::DefaultPath { ref wd_path,ref revision} => {
                         path= wd_path.clone();
                         rev=revision.clone();
                     }
-                    SubCommand::DefalutRev { ref wd_path,ref revision} => {
+                    SubCommand::DefaultRev { ref wd_path,ref revision} => {
                         path= wd_path.clone();
                         rev=revision.clone();
                     }
