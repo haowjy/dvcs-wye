@@ -87,7 +87,6 @@ pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Error
     let mut Changes_to_be_committed:Vec<String>=vec![];
     let mut Changes_not_staged_for_commit:Vec<String>=vec![];
     let a =list_files.iter().fold(0,|acc,x1| {
-        println!("{}",x1);
         let wd_item=dsr::read_file_as_string(x1).unwrap();
         let mut stage_status =false;
         let name=dsr::get_name(x1).unwrap();
@@ -125,7 +124,8 @@ pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Error
             let last_commit_file=last_commit.unwrap();
             let last_commit_hashmap=last_commit_file.get_manifest();//iteminfo
             contain_last_commit= last_commit_hashmap.contains_key(&name);
-            if contain_last_commit { println!("wd has, last commit has");
+            if contain_last_commit {
+                //println!("wd has, last commit has");
 //stage has, wd has, last commit has !!!!!! and stage_status=false
                 //stage
                 //compare stage and last commit, if same->no change
@@ -151,13 +151,14 @@ pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Error
                         }
                 }
             }//contain_last_commit true
-            else { println!("wd has, last commit has not->maybe untrack file{}",x1); }
+            else { //println!("wd has, last commit has not->maybe untrack file{}",x1);
+            }
         }
         //so
         if contain_add==false && contain_remove==false && contain_last_commit==false{
             untrack.push(name);
         } else if contain_add==true && contain_last_commit==false {
-            Changes_to_be_committed.push("Add new file: ".to_owned()+&name);
+            Changes_to_be_committed.push("Modified/Add new file: ".to_owned()+&name);
             //println!("Add new file{}",name);
             //Changes to be committed:
         }
@@ -165,29 +166,65 @@ pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Error
             Changes_to_be_committed.push("Remove file: ".to_owned()+&name);
             //Changes to be committed:
         }
-        else if contain_remove==true && contain_last_commit==true { println!("Modified file{}",name);
+        else if contain_remove==true && contain_last_commit==true { println!("Remove/Modified file{}",name);
             //compare inside content see modify
         }
         0});
-    //还差wd没有，stage和commit有没有？//stage has, last  delete
-    for(key, value)in stage_inside_add{
+    //wd has not，stage and commit？//stage has, last  delete
+    for(key, value)in stage_inside_remove{
+        let contain_delete=list_files.contains(key);
+        if  contain_delete==false{
+            let last_commit_again= load.get_current_head();//Rev
+            let mut contain_last_commit_again =false;
+            if  last_commit_again.is_err(){ //println!("no head, means last commit is empty");
+            }
+            else
+            {
+                let last_commit_file_again=last_commit_again.unwrap();
+                let last_commit_hashmap=last_commit_file_again.get_manifest();//iteminfo
+                contain_last_commit_again= last_commit_hashmap.contains_key(key);
+                if contain_last_commit_again {//wd no, stage yes, last commit yes
+                    Changes_not_staged_for_commit.push("Delete file: ".to_owned()+key);
+                }
+                else { //wd no,stage yes, last commit yes
+                    Changes_to_be_committed.push("Delete file: ".to_owned()+key);
+                     }
+            }
+
+
+        }
+
 
     }
 
     println!("Changes to be committed:");
     if  Changes_to_be_committed.capacity()==0{ println!("nothing to change");}
-    else{println!("{:?}",Changes_to_be_committed);}
+    else{
+        Changes_to_be_committed.iter().fold(0,|acc,x|{
+            println!("{:?}",x);
+        0});
+        }
     //already add file but modified, so just need commit
     //commit delete stage, last commit
     println!("Changes not staged for commit:");
     if  Changes_not_staged_for_commit.capacity()==0{ println!("nothing to change");}
-    else{println!("{:?}",Changes_not_staged_for_commit);}
+    else{
+        Changes_not_staged_for_commit.iter().fold(0,|acc,x|{
+            println!("{:?}",x);
+            0});
+        //println!("{:?}",Changes_not_staged_for_commit);
+    }
     //need add first, then commit
     //
     //last commit has, stage has in add, but not commit yet, so not in wd
     println!("Untracked files:");
     if  untrack.capacity()==0{ println!("nothing to change");}
-    else{println!("{:?}",untrack);}
+    else{
+        untrack.iter().fold(0,|acc,x|{
+            println!("{:?}",x);
+            0});
+        //println!("{:?}",untrack);
+    }
     Ok((Changes_to_be_committed,Changes_not_staged_for_commit,untrack))
 }
 

@@ -178,7 +178,7 @@ impl Wye {
                 if path.eq("-d") || path.eq("-")||path.eq("."){
                     path=default_wd_path;
                 }
-                println!("wd_path is: {:?}", wd_path);
+                //println!("wd_path is: {:?}", wd_path);
                 let mut res:Result<String,Errors>=Err(Errstatic("1"));
                 println!("path is: {:?}", path);
                 if path.is_empty() {
