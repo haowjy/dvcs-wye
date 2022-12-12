@@ -291,10 +291,11 @@ pub fn is_path_valid(path: &str) -> bool {
 pub fn make_wd(rev: &Rev, wd_path: &str) -> Result<(), Errors> {
     clear_dir(&wd_path, vec![".dvcs"])?;
     let repo = repository::load(wd_path)?;
-    for (path, item) in rev.get_manifest() {
-        create_file(path)?;
+    let repo_wd = repository::check_wd(wd_path).unwrap();
+    for (filepath, item) in rev.get_manifest() {
+        create_file(&path_compose(&repo_wd.clone(), filepath))?;
         let content = repo.get_file_content(item)?;
-        write_file(&path, &content)?;
+        write_file(&path_compose(&repo_wd.clone(), filepath), &content)?;
     }
     Ok(())
 }
