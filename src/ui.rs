@@ -113,7 +113,7 @@ enum Command {
     },
     /// check out a specific revision
     Checkout {
-        new_branch_alias: String,
+        rev_id: String,
         #[command(subcommand)]
         option: SubCommand,
     },
@@ -144,28 +144,19 @@ enum Command {
 }
 #[derive(Parser,Debug)]
 enum SubCommand {
-    /// has default revision id and wd_path
-    Default {
-        #[arg(default_value_t)]
-        revision: String,
+    /// default branch_alias
+    B {
         #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
     },
-    /// has default wd_path
-    DefaultPath {
-        revision: String,
-        #[arg(default_value_t = dsr::get_wd_path())]
-        wd_path: String,
-    },
-    /// has default revision id
-    DefaultRev {
-        wd_path: String,
+    /// default path
+    P {
         #[arg(default_value_t)]
-        revision: String,
+        new_branch_alias: String,
     },
-    /// no default
-    Normal {
-        revision: String,
+    /// need to input both new_branch_alias and wd_path
+    A {
+        new_branch_alias: String,
         wd_path: String,
     }
 
@@ -317,33 +308,29 @@ impl Wye {
                 let res=createonly::clone(&wd_path, &remote);
                 Self::input_handling(res);
             }
-            Command::Checkout { option,new_branch_alias } => {
-                let mut rev =String::new(); let mut path =String::new();
+            Command::Checkout { option,rev_id } => {
+                let mut alias =String::new(); let mut path =String::new();
                 match option{
-                    SubCommand::Default { ref wd_path,ref revision} => {
+                    SubCommand::B { ref wd_path} => {
                         path= wd_path.clone();
-                        rev=revision.clone();
+                        alias= "".parse().unwrap();
                     }
-                    SubCommand::DefaultPath { ref wd_path,ref revision} => {
-                        path= wd_path.clone();
-                        rev=revision.clone();
+                    SubCommand::P { ref new_branch_alias} => {
+                        path= default_wd_path;
+                        alias=new_branch_alias.clone();
                     }
-                    SubCommand::DefaultRev { ref wd_path,ref revision} => {
+                    SubCommand::A { ref wd_path,ref new_branch_alias} => {
                         path= wd_path.clone();
-                        rev=revision.clone();
-                    }
-                    SubCommand::Normal { ref wd_path,ref revision} => {
-                        path= wd_path.clone();
-                        rev=revision.clone();
+                        alias=new_branch_alias.clone();
                     }
                     _ => {}
                 }
-                if rev.eq(""){
-                    let a= repository::load(&path).unwrap().get_heads().get(&new_branch_alias).unwrap().clone();
-                    rev=a.clone();
-                    println!("{}",rev);
+                let mut option_alias =None;
+                if !alias.eq(""){
+                    option_alias=Some(alias);
                 }
-                let res=createonly::checkout(&path, &rev,Some(new_branch_alias)); // TODO:
+
+                let res=createonly::checkout(&path, &rev_id,option_alias); // TODO:
                 Self::input_handling(res);
             }
             Command::Pull { mut path,remote,head } => {
