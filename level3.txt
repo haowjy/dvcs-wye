@@ -22,7 +22,7 @@ TEST_RESULT: {
     pass: print the current head;
     fail: print message shows error, any kind of error;
 }
-cat a.txt
+$[executable] cat [rev_id] a.txt
 TEST_RESULT: {
     pass: print content inside cat;
     fail: print message shows error, any kind of error;
@@ -48,7 +48,7 @@ TEST_RESULT: {
     pass: print message shows process completed successfully;
     fail: print message shows process not completed successfully;
 }
-cat a.txt
+$[executable] cat [rev_id] a.txt
 TEST_RESULT: {
     pass: file not found;
     fail: print message shows error, any kind of error,except file not found;
