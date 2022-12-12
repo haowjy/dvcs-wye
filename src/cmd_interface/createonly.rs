@@ -120,7 +120,8 @@ pub fn pull<'a>(wd:&'a str, remote:&'a str) -> Result<String, Errors> {
     cur_repo_mut.new_head(format!("remote/{}",cur_head_alias).as_str(), remote_rev_id.unwrap())?;
 
     // merge cur_head_alias, remote/cur_head_alias
-    merge(wd, format!("remote/{}",cur_head_alias))
+    merge(wd, format!("remote/{}",cur_head_alias))?;
+    Ok(format!("pull successful: currently on `{}`", cur_head_alias))
 }
 
 // 7. push

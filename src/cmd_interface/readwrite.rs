@@ -1,4 +1,4 @@
-// use crate::readonly::status;
+use crate::readonly::status;
 use crate::ui::{Errors, Errors::*};
 use crate::vc::{repository::{Repo, Stage}};
 use crate::vc::{repository};
@@ -175,7 +175,7 @@ pub fn merge<'a>(wd: &'a str, rev_id_src:String,
     let rev2 = repo.get_rev(&rev_id_src)?;
 
     if cur_head_rev.get_id().unwrap() == rev2.get_id().unwrap() { 
-        return Ok("already up to date".to_string());
+        return Ok("merge: already up to date".to_string());
     }
 
     let rev_origin = find_rev_lca(&repo, cur_head_rev.clone(), rev2.clone())?;
