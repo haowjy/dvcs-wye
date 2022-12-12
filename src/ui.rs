@@ -7,7 +7,7 @@ use crate::dsr;
 use crate::cmd_interface::{createonly, readwrite, readonly};
 use crate::cmd_interface::readwrite::RevDiff;
 use crate::cmd_function::FileDiff;
-use crate::vc::repository::{Repo};
+use crate::vc::repository::{load, Repo};
 use std::io::{stdout, Write};
 /*use log::{info, warn};
 use log4rs;*/
@@ -22,6 +22,8 @@ pub enum Errors {
     ErrUnknown,
 }
 use Errors::{ErrSerde,ErrIo,ErrSys, ErrStr,Errstatic, ErrUnknown};
+use crate::vc::repository;
+
 fn parse_error(res: Errors) -> String {
     match res {
         ErrSerde(Error) => {println!("{}", Error);Error.to_string()},
@@ -48,7 +50,7 @@ pub struct Wye {
     command: Command,
 }
 #[derive(Parser,Debug)]
- enum Command {
+enum Command {
     /// add specific files(multi files use "," to spilt) that you want to track
     Add {
         /// Name of the package to search
@@ -120,10 +122,9 @@ pub struct Wye {
     },
     /// check out a specific revision
     Checkout {
-        rev: String,
         new_branch_alias: String,
-        #[arg(default_value_t = dsr::get_wd_path())]
-        path: String,
+        #[command(subcommand)]
+        option: SubCommand,
     },
     /// pull the changes from another repository
     Pull {
@@ -154,14 +155,21 @@ pub struct Wye {
 }
 #[derive(Parser,Debug)]
 enum SubCommand {
-    O {
-        /// Name of the package to search
+    Defalut {
         #[arg(default_value_t)]
+        revision: String,
+        #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
     },
-    RevId {
-        /// Name of the package to search
+    DefalutPath {
+        revision: String,
+        #[arg(default_value_t = dsr::get_wd_path())]
         wd_path: String,
+    },
+    DefalutRev {
+        wd_path: String,
+        #[arg(default_value_t)]
+        revision: String,
     }
 }
 impl Wye {
@@ -181,20 +189,20 @@ impl Wye {
                 if path.is_empty() {
                     res=Err(Errstatic("Wrong Empty Path"));
                     println!("path is empty");
-                    }
+                }
                 else {
                     let path_spoilt:Vec<&str>=path.split(',').collect();
                     path_spoilt.iter().fold(0, |acc, &x| {
-                    if Self::check_file_path_valid(Some(x))
-                    {
-                        res=readwrite::add(&wd_path,x);
+                        if Self::check_file_path_valid(Some(x))
+                        {
+                            res=readwrite::add(&wd_path,x);
+                        }
+                        else {
+                            res=Err(Errstatic("error file path or unreadable file path"));
+                        }
+                        0
                     }
-                    else {
-                        res=Err(Errstatic("error file path or unreadable file path"));
-                    }
-                    0
-                }
-                );
+                    );
                 }
                 Self::input_handling(res);
             }
@@ -298,9 +306,27 @@ impl Wye {
                 Self::input_handling(res);
                 println!("wd_path is: {:?}", wd_path)
             }
-            Command::Checkout { mut path,rev,new_branch_alias } => {
-                if path.eq("-d") || path.eq("-"){
-                    path=default_wd_path;
+            Command::Checkout { option,new_branch_alias } => {
+                let mut rev =String::new(); let mut path =String::new();
+                match option{
+                    SubCommand::Defalut { ref wd_path,ref revision} => {
+                        path= wd_path.clone();
+                        rev=revision.clone();
+                    }
+                    SubCommand::DefalutPath { ref wd_path,ref revision} => {
+                        path= wd_path.clone();
+                        rev=revision.clone();
+                    }
+                    SubCommand::DefalutRev { ref wd_path,ref revision} => {
+                        path= wd_path.clone();
+                        rev=revision.clone();
+                    }
+                    _ => {}
+                }
+                if rev.eq(""){
+                    let a= repository::load(&path).unwrap().get_heads().get(&new_branch_alias).unwrap().clone();
+                    rev=a.clone();
+                    println!("{}",rev);
                 }
                 let res=createonly::checkout(&path, &rev,Some(new_branch_alias)); // TODO:
                 Self::input_handling(res);
@@ -334,19 +360,19 @@ impl Wye {
                     Err(String)=>{res=Err(String)} }
                 Self::input_handling_new_String(res);
             }
-            Command::Test { wd_path } => {
+            /*Command::Test { wd_path } => {
                 match wd_path{
                     SubCommand::O { ref wd_path} => {
                         println!("path is: {:?}", wd_path)
                     }
-                    SubCommand::RevId { ref wd_path} => {
+                    /*SubCommand::DefalutRev { ref , .. } => {
                         println!("path is: {:?}", wd_path)
-                    }
+                    }*/
                     _ => {}
                 }
 
                 println!("path is: {:?}", wd_path)
-            }
+            }*/
             _ => {
                 println!("Sorry! Wrong input! Command not found");
             }
@@ -386,7 +412,7 @@ impl Wye {
         }
         else if return_result.unwrap()==() {
             println!("init successfully");
-            }
+        }
 
     }
 
