@@ -198,7 +198,7 @@ impl Wye {
                             if Self::check_file_file_or_path(Some(x)) {res=readwrite::add(&wd_path,x); }
                             else {
                                 let mut list_files:Vec<String> = vec![];
-                                let mut ignore:Vec<&str> = vec![];
+                                let mut ignore:Vec<&str> = vec![".dvcs"];
                                 dsr::get_files(x,ignore,&mut list_files);//file from fd
                                 list_files.iter().fold(0,|acc,x1| {
                                     res=readwrite::add(&wd_path,x1);
@@ -237,7 +237,7 @@ impl Wye {
                             if Self::check_file_file_or_path(Some(x)) {res=readwrite::remove(&wd_path,x); }
                             else {
                                 let mut list_files:Vec<String> = vec![];
-                                let mut ignore:Vec<&str> = vec![];
+                                let mut ignore:Vec<&str> = vec![".dvcs"];
                                dsr::get_files(x,ignore,&mut list_files);//file from fd
                                 list_files.iter().fold(0,|acc,x1| {
                                     res=readwrite::remove(&wd_path,x1);

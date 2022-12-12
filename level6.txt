@@ -1,44 +1,52 @@
 # acceptance 1
 mkdir level6
 cd level6
-dvcs-wye init level6-remote
+$[executable] init level6-remote
 cd level6-remote
 echo "Hello World" > a.txt
-dvcs-wye add .
-dvcs-wye commit "hello world"
+$[executable] add .
+$[executable] commit "hello world"
 
 cd ..
 mkdir cwd
 cd cwd
-dvcs-wye clone ../level6-remote level6-remote
+$[executable] clone ../level6-remote level6-remote
 cd level6-remote
 
 # PASS: the clone should have a have a hidden directory wtih files, and it works inside the clone
-dvcs-wye log
-dvcs-wye status
+$[executable] log
+$[executable] status
+
+
+
 
 # acceptance 2
 sudo rm -r level6
 mkdir level6
 cd level6
-dvcs-wye init level6-remote
+$[executable] init level6-remote
 cd level6-remote
 echo "Hello World" > a.txt
-dvcs-wye add .
-dvcs-wye commit "hello world"
+$[executable] add .
+$[executable] commit "hello world"
 echo "File B" > b.txt
-dvcs-wye add .
-dvcs-wye commit -m "b"
+$[executable] add .
+$[executable] commit "b"
 
-# PASS: the clone should have a have a hidden directory wtih files, and it works inside the clone
-dvcs-wye log
-dvcs-wye status
+# PASS: the clone should have a have a hidden directory with files, and it works inside the clone
+$[executable] log
+$[executable] status
 
-dvcs-wye checkout new branch SHA
+$[executable] checkout new branch SHA
 
+# MAYBE: the clone copies the current head of the clone
 cd ..
 mkdir cwd
 cd cwd
-dvcs-wye clone ../level6-remote level6-remote
+$[executable] clone ../level6-remote level6-remote
+
+# PASS: the clone fails the second time
+$[executable] clone ../level6-remote level6-remote
+
 cd level6-remote
-dvcs-wye branch
+$[executable] heads
