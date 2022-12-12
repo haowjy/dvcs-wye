@@ -120,7 +120,6 @@ enum Command {
     /// pull the changes from another repository
     Pull {
         remote: String,
-        head: String,
         #[arg(default_value_t = dsr::get_wd_path())]
         path: String,
     },
@@ -333,7 +332,7 @@ impl Wye {
                 let res=createonly::checkout(&path, &rev_id,option_alias); // TODO:
                 Self::input_handling(res);
             }
-            Command::Pull { mut path,remote,head } => {
+            Command::Pull { mut path,remote } => {
                 if path.eq("-d") || path.eq("-")|| path.eq("."){
                     path=default_wd_path;
                 }
