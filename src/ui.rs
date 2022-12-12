@@ -422,7 +422,11 @@ impl Wye {
         }
         else { let vec = return_result.unwrap();
             if vec.is_none() {println!("{:?}", vec); }
-            else { println!("{:?}", vec.unwrap()); } }
+            else { println!("{:?}", vec.clone().unwrap());
+                /*vec.unwrap().iter().fold(0,|acc,x|{
+                    println!("{:?}",x);
+                    0});*/
+            } }
     }
 
     fn input_handling_rev(return_result:Result<Vec<String>,Errors>){
