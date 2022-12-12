@@ -79,7 +79,9 @@ pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Error
     ignore.push(".dvcs");
     ignore.push("target");
     ignore.push("src");
-    ignore.push("src");
+    ignore.push(".idea");
+    ignore.push(".DS_Store");
+    ignore.push(".git");
     get_files(wd,ignore,&mut list_files);//file from fd
     //compare between wd and stage and last commit
     //println!("{:?}",list_files);
