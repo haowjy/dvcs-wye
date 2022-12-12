@@ -34,7 +34,7 @@ pub fn log(wd: &str) -> Result<Option<Vec<String>>, Errors> {//alias,rev_id: &st
         else {parent_head=parent_head_pre.unwrap(); }
 
         new_rev = load.get_rev(parent_head).unwrap();
-    while new_rev.get_parent_id().is_none() {
+    while !new_rev.get_parent_id().is_none() {
         new_rev = load.get_rev(new_rev.get_parent_id().unwrap()).unwrap();
         hashmap=new_rev.get_log();//here get hashmap, this is log need print, maybe put into Vec<String>
         for(key,value) in hashmap{
