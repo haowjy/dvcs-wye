@@ -411,7 +411,7 @@ impl Wye {
             parse_error(return_result.unwrap_err());
         }
         else {
-            let (changes_to_be_committed,Changes_not_staged_for_commit,untrack) = return_result.unwrap();
+            let (changes_to_be_committed,changes_not_staged_for_commit,untrack) = return_result.unwrap();
                 println!("Changes to be committed:");
                 if  changes_to_be_committed.capacity()==0{ println!("nothing to change");}
                 else{
@@ -422,9 +422,9 @@ impl Wye {
                 //already add file but modified, so just need commit
                 //commit delete stage, last commit
                 println!("Changes not staged for commit:");
-                if  Changes_not_staged_for_commit.capacity()==0{ println!("nothing to change");}
+                if  changes_not_staged_for_commit.capacity()==0{ println!("nothing to change");}
                 else{
-                    Changes_not_staged_for_commit.iter().fold(0,|acc,x|{
+                    changes_not_staged_for_commit.iter().fold(0,|acc,x|{
                         println!("{:?}",x);
                         0});
                     //println!("{:?}",Changes_not_staged_for_commit);
