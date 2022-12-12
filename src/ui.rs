@@ -281,7 +281,7 @@ impl Wye {
                     wd_path=default_wd_path;
                 }
                 let res_file_diff=readonly::status(&wd_path);
-                //Self::input_handling_status(res_file_diff);
+                Self::input_handling_status(res_file_diff);
             }
             Command::Log { mut wd_path } => {
                 if wd_path.eq("-d") || wd_path.eq("-")|| wd_path.eq("."){
@@ -406,9 +406,41 @@ impl Wye {
             println!("Revision ID: {}",return_result.unwrap());
         }
     }
-    fn input_handling_status(return_result:Result<&str,Errors>){
+    fn input_handling_status(return_result:Result<(Vec<String>, Vec<String>, Vec<String>), Errors>){
         if return_result.is_err() {
             parse_error(return_result.unwrap_err());
+        }
+        else {
+            let (changes_to_be_committed,Changes_not_staged_for_commit,untrack) = return_result.unwrap();
+                println!("Changes to be committed:");
+                if  changes_to_be_committed.capacity()==0{ println!("nothing to change");}
+                else{
+                    changes_to_be_committed.iter().fold(0, |acc, x|{
+                        println!("{:?}",x);
+                        0});
+                }
+                //already add file but modified, so just need commit
+                //commit delete stage, last commit
+                println!("Changes not staged for commit:");
+                if  Changes_not_staged_for_commit.capacity()==0{ println!("nothing to change");}
+                else{
+                    Changes_not_staged_for_commit.iter().fold(0,|acc,x|{
+                        println!("{:?}",x);
+                        0});
+                    //println!("{:?}",Changes_not_staged_for_commit);
+                }
+                //need add first, then commit
+                //
+                //last commit has, stage has in add, but not commit yet, so not in wd
+                println!("Untracked files:");
+                if  untrack.capacity()==0{ println!("nothing to change");}
+                else{
+                    untrack.iter().fold(0,|acc,x|{
+                        println!("{:?}",x);
+                        0});
+                    //println!("{:?}",untrack);
+                }
+
         }
     }
 
