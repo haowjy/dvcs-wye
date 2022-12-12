@@ -4,6 +4,7 @@ use crate::vc::{repository::{Repo, Stage}};
 use crate::vc::{repository};
 use crate::dsr::{*, self};
 use std::collections::{HashMap,};
+use std::fmt;
 
 use crate::cmd_function::{*};
 use crate::cmd_function::FileDiffType::{*};
@@ -48,6 +49,12 @@ impl RevDiff {
             res.push_str(&format!("{}\n{:?}\n{}\n", file, diff.get_diff_type(),diff.to_string()));
         }
         res
+    }
+}
+
+impl fmt::Display for RevDiff {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.to_string())
     }
 }
 
