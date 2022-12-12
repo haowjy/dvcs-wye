@@ -18,7 +18,8 @@ cd cwd
 $[executable] clone ../level7-remote level7-remote
 cd level7-remote
 
-$[executable] checkout new branch normal SHA .
+$[executable] log
+$[executable] checkout newbranch normal SHA .
 
 echo "B File" > b.txt
 $[executable] add .
