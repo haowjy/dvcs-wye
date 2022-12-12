@@ -1,26 +1,83 @@
-4a
-// start a new branch
-checkout -b unstable -> "checkout success"
-// add new file
-add new_feature.rs -> "add success"
-commit -m "start new feature" -> "1 file changed, 1 insertion(+)"
-// check difference
-checkout master -> "checkout success"
-diff master unstable -> "diff:---file1.json +++file2.json"
-// remove the new file
-checkout unstable -> "checkout success"
-remove new_feature.rs -> "remove success"
-commit -> "1 file changed, 0 insertions(+), 0 deletions(-)"
+TEST 4a:
+$mkdir new_test
+$cd new_test
+$[executable_path] init
+    -> init success
+$touch new_feature.rs
+$[executable_path] add new_feature.rs
+    -> "add success"
+$[executable_path] commit "start new feature"
+    -> SHA1
 
-4b
-// start a new branch
-checkout -b unstable -> "checkout success"
-// add new file
-add new_feature.rs -> "add success"
-commit -m "start new feature" -> "1 file changed, 1 insertion(+)"
-// remove the new file
-remove new_feature.rs -> "remove success"
-commit -> "1 file changed, 0 insertions(+), 0 deletions(-)"
-// check difference
-checkout master -> "checkout success"
-diff master unstable -> None
+$echo "blahhhh" > new_feature.rs
+$[executable_path] add new_feature.rs
+    -> "add success"
+$[executable_path] commit "add new feature"
+    -> SHA2
+$[executable_path] diff SHA1 SHA2 
+    -> Ok(RevDiff { files: {"new_feature.rs": FileDiff { origin_content: "",
+        mod_content: "blahhhh", patch: "--- original\n+++ modified\n@@ -0,0 +1 @@\n+blahhhh\n\\ No newline at end of file\n", diff_type: Added }} })
+
+$[executable_path] checkout SHA2 b
+    -> Ok("checkout successful: currently on `DETACHED-HEAD`")
+$[executable_path] remove new_feature.rs
+    -> Ok("remove success")
+$[executable_path] commit "bad feature, deleted"
+    -> SHA3
+$[executable_path] diff SHA1 SHA3
+    -> Ok(RevDiff { files: {"new_feature.rs": FileDiff { origin_content: "",
+        mod_content: "", patch: "--- original\n+++ modified\n", diff_type: Added }} })
+$ rm -r new_test
+
+TEST 4b:
+$mkdir new_test
+$cd new_test
+$[executable_path] init
+    -> init success
+$touch new_feature.rs
+$[executable_path] add new_feature.rs
+    -> "add success"
+$[executable_path] commit "start new feature"
+    -> SHA1
+
+$echo "println(\"awesome new feature here\");" > new_feature.rs
+$[executable_path] add new_feature.rs
+    -> "add success"
+$[executable_path] commit "new feature added"
+    -> SHA2
+
+$[executable_path] checkout SHA2 b
+    -> Ok("checkout successful: currently on `DETACHED-HEAD`")
+$echo "let new_feature = None;" > new_feature.rs
+$[executable_path] add new_feature.rs
+    -> "add success"
+$[executable_path] commit "new feature changed"
+    -> SHA3
+
+$[executable_path] checkout SHA3 b
+    -> Ok("checkout successful: currently on `DETACHED-HEAD`")
+$echo "fn feature() {}" > new_feature.rs
+$[executable_path] add new_feature.rs
+    -> "add success"
+$[executable_path] commit "another version"
+    -> SHA4
+
+$[executable_path] diff SHA2 SHA4
+    -> Ok(RevDiff { files: {"new_feature.rs": FileDiff {
+        origin_content: "println(\"awesome new feature here\")\n",
+        mod_content: "fn feature() {}\n", patch: "--- original\n+++ modified\n@@ -1 +1 @@\n-println(\"awesome new feature here\")\n+fn feature() {}\n", diff_type: Modified }} })
+$[executable_path] diff SHA3 SHA2
+    -> Ok(RevDiff { files: {"new_feature.rs": FileDiff {
+        origin_content: "let new_feature = None;\n",
+        mod_content: "println(\"awesome new feature here\")\n",
+        patch: "--- original\n+++ modified\n@@ -1 +1 @@\n-let new_feature = None;\n+println(\"awesome new feature here\")\n", diff_type: Modified }} })
+$[executable_path] diff SHA3 SHA4
+    -> Ok(RevDiff { files: {"new_feature.rs": FileDiff {
+        origin_content: "let new_feature = None;\n",
+        mod_content: "fn feature() {}\n", patch: "--- original\n+++ modified\n@@ -1 +1 @@\n-let new_feature = None;\n+fn feature() {}\n", diff_type: Modified }} })
+
+$[executable_path] remove new_feature.rs
+    -> Ok("remove success")
+$[executable_path] commit "bad feature, deleted"
+    -> SHA5
+$ rm -r new_test
