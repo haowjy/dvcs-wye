@@ -286,15 +286,25 @@ pub fn load(wd:&str) -> Result<Repo, Errors> { // Result<Repo, ()>
     load_repo.paths = paths;
     Ok(load_repo)
 }
+//buggy fn, commented out
+// pub fn get_wd_root() -> Result<String, Errors> { 
+//     let wd = get_wd_path();
+//     match check_wd(&wd) {
+//         Some(path) => Ok(path),
+//         None => Err(Errors::Errstatic("Directory untracked, fail to locate repository"))
+//     }
+// }
 
-pub fn get_wd_root() -> Result<String, Errors> {
-    let wd = get_wd_path();
-    match check_wd(&wd) {
-        Some(path) => Ok(path),
-        None => Err(Errors::Errstatic("Directory untracked, fail to locate repository"))
+pub fn check_wd(wd_path: &str) -> Option<String> {
+    if is_path_valid(&path_compose(wd_path, ".dvcs")) {
+        return Some(wd_path.to_string());
+    } else {
+        match get_parent_name(wd_path) {
+            Some(parent) => check_wd(&parent),
+            None => None
+        }
     }
 }
-
 
 // ------ private Repo fns ------
 impl Repo {
@@ -327,16 +337,6 @@ impl Repo {
 }
 
 // ------ private mod fns ------
-pub fn check_wd(wd_path: &str) -> Option<String> {
-    if is_path_valid(&path_compose(wd_path, ".dvcs")) {
-        return Some(wd_path.to_string());
-    } else {
-        match get_parent_name(wd_path) {
-            Some(parent) => check_wd(&parent),
-            None => None
-        }
-    }
-}
 
 pub (super) fn get_rel_path(abs_path: &str) -> Option<String> {
     let wd = get_name(&check_wd(abs_path)?)?; // search for the shallowest parent dir name that has .dvcs in it
@@ -487,7 +487,7 @@ mod tests {
             assert!(fs::read_dir(paths.revs).is_ok());
 
             assert!(load(&paths.wd).is_ok());
-            create_dir(&path_compose(&paths.wd, "test_dir"));
+            // create_dir(&path_compose(&paths.wd, "test_dir"));
 
             assert!(load(&path_compose(&paths.wd, "test_dir")).is_ok());
 
@@ -605,33 +605,32 @@ mod tests {
         }
 
         // 6
-        // #[test]
-        // fn test_fetch() -> Result<(), Errors> {
+        #[test]
+        fn test_fetch() -> Result<(), Errors> {
 
-        //     let remote_paths = make_rwd()?;
-        //     let mut remote_repo = load(&remote_paths.wd)?;
+            let remote_paths = make_rwd()?;
+            let mut remote_repo = load(&remote_paths.wd)?;
+            let remote_wd_f_path = path_compose(&remote_paths.wd, "remote_file.txt");
+            remote_repo.add_file(&remote_wd_f_path)?;
 
-        //     remote_repo.add_file(&remote_wd_f_path)?;
+            let paths = get_test_paths();
+            let mut repo = load(&paths.wd)?;
+            repo.fetch(&remote_paths.wd)?;
+            Ok(())
+            // let new_file = path_compose(&paths.wd, "cwd file.txt");
+            // write_file(&new_file, &format!("cwd file content\n{:?}", SystemTime::now()))?;
+        }
 
-        //     let current_rem
+        fn make_rwd() -> Result<RepoPaths, Errors> {
+            let remote_dir = path_compose(&get_wd_path(), "vc_test_remote");
+            if !is_path_valid(&remote_dir) {
+                create_dir(&remote_dir)?;
+            }
+            let remote_paths = RepoPaths::new(&remote_dir);
+            init(Some(&remote_paths.wd))?;
 
-        // }
-
-        // fn make_rwd() -> Result<RepoPaths, Errors> {
-        //     let remote_dir = path_compose(&get_wd_path(), "vc_test_remote");
-        //     if !is_path_valid(&remote_dir) {
-        //         create_dir(&remote_dir)?;
-        //     }
-        //     let remote_paths = RepoPaths::new(&remote_dir);
-        //     init(Some(&remote_paths.wd))?;
-        //     let mut remote_repo = load(&remote_paths.wd)?;
-
-        //     let paths = get_test_paths();
-        //     let mut repo = load(&paths.wd)?;
-
-
-        //     let remote_wd_f_path = path_compose(&remote_paths.wd, "remote_file.txt");
-        //     write_file(&remote_wd_f_path, &format!("remote content\n{:?}", SystemTime::now()))?;
-        //     Ok(remote_paths)
-        // }
+            let remote_wd_f_path = path_compose(&remote_paths.wd, "remote_file.txt");
+            write_file(&remote_wd_f_path, &format!("remote content\n{:?}", SystemTime::now()))?;
+            Ok(remote_paths)
+        }
     }
