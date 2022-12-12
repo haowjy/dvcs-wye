@@ -150,6 +150,7 @@ fn get_all_rev_ancestors<'a>(repo: &'a Repo, rev: Rev) -> Result<Vec<Rev>, Error
     let mut revs:Vec<Rev> = Vec::new();
 
     let mut q = VecDeque::new();
+    revs.push(rev.clone());
     q.push_back(rev);
 
     while !q.is_empty() {
@@ -171,6 +172,10 @@ fn get_all_rev_ancestors<'a>(repo: &'a Repo, rev: Rev) -> Result<Vec<Rev>, Error
 fn count_indegrees<'a>(repo: &'a Repo, rev: Rev, revs_anc:Vec<Rev>) -> Result<HashMap<String, i32>, Errors> {
 
     let mut indegrees:HashMap<String, i32> = HashMap::new();
+
+    for rev in revs_anc.clone() {
+        indegrees.insert(rev.get_id().unwrap().to_string(), 0);
+    }
     
     for rev in revs_anc {
         let p1 = rev.get_parent_id();
@@ -225,7 +230,6 @@ fn get_rev_topo(repo: &Repo, rev: Rev) -> Result<Vec<String>, Errors> {
     
 }
 
-// TODO: test
 // LCA of two nodes in a DAG
 pub fn find_rev_lca<'a>(repo: &'a Repo, rev1: Rev, rev2: Rev) -> Result<Rev, Errors> {
     // Creates 2 topo sortings of the DAGs that are somewhat connected
@@ -258,6 +262,7 @@ pub fn find_rev_lca<'a>(repo: &'a Repo, rev1: Rev, rev2: Rev) -> Result<Rev, Err
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{test_help::*, vc::repository};
     
     #[test]
     fn test_file_diff() {
@@ -361,6 +366,18 @@ mod tests {
 
     #[test]
     fn test_find_rev_lca() {
-        // TODO: test find_rev_lca
+        let cwd = "./a_test_repo/";
+
+        remove_git_and_init(cwd);
+
+        let rev1_id = create_files_and_commit_ab1(cwd);
+        let rev2_id = write_create_files_and_commit_abc2(cwd);
+
+        let repo = repository::load(cwd).unwrap();
+        let rev1 = repo.get_rev(rev1_id.as_str()).unwrap();
+        let rev2 = repo.get_rev(rev2_id.as_str()).unwrap();
+
+        let lca = find_rev_lca(&repo, rev1, rev2).unwrap();
+        assert_eq!(lca.get_id(), Some(rev1_id.as_str())); // lca is rev1
     }
 }
