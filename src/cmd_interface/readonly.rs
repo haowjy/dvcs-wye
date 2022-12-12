@@ -228,6 +228,7 @@ pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Error
 #[cfg(test)]
 mod test {
     use crate::dsr;
+    use crate::dsr::{create_dir, create_file};
     use crate::readwrite::{add, commit};
     use crate::vc::repository::init;
     use super::*;
@@ -251,15 +252,35 @@ mod test {
     }
 
     #[test]
-    fn test_logs() {
+    fn test_logs_3() {
         let wd = dsr::get_wd_path();
         let res = log(&wd);
         assert_eq!(res.is_ok(), false);
     }
 
     #[test]
-    fn test_status() {
+    fn test_logs_4() {
         let wd = dsr::get_wd_path();
+        create_dir("test_logs_4");
+        create_file("a.txt");
+        add(&wd,"a.txt");
+        commit(&wd,"test_log");
+        let res = log(&wd);
+        assert_eq!(res.is_ok(), true);
+    }
+    #[test]
+    fn test_status_5() {
+        let wd = dsr::get_wd_path();
+        let res = status(&wd);
+        assert_eq!(res.is_ok(), true);
+        //assert_eq!(res.unwrap(),"ok");
+    }
+    #[test]
+    fn test_status_6() {
+        let wd = dsr::get_wd_path();
+        create_dir("test_status_6");
+        create_file("a.txt");
+        add(&wd,"a.txt");
         let res = status(&wd);
         assert_eq!(res.is_ok(), true);
         //assert_eq!(res.unwrap(),"ok");
