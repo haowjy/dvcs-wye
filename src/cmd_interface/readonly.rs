@@ -3,7 +3,6 @@ use crate::cmd_function::{file_diff};
 use crate::dsr;
 use crate::dsr::get_files;
 use crate::vc::{file, repository, revision};
-use crate::vc::revision::Rev;
 use crate::ui::Errors;
 
 pub fn heads(wd: &str) -> Result<Vec<String>, Errors> {
@@ -85,7 +84,7 @@ pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Error
     let mut untrack:Vec<String>=vec![];
     let mut changes_to_be_committed:Vec<String>=vec![];
     let mut changes_not_staged_for_commit:Vec<String>=vec![];
-    let a =list_files.iter().fold(0,|acc,x1| {
+    let a =list_files.iter().fold(0,|_acc,x1| {
         let wd_item=dsr::read_file_as_string(x1).unwrap();
         let mut stage_status =false;
         let name=dsr::get_name(x1).unwrap();
@@ -184,7 +183,7 @@ pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Error
                 }
         }
         0});
-    for(key, value)in stage_inside_remove{
+    for(key, _value)in stage_inside_remove{
         let contain_delete=list_files.contains(key);
         if  contain_delete==false{
             let last_commit_again= load.get_current_head();//Rev
@@ -211,7 +210,7 @@ pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Error
 
     }
     let mut name_list:Vec<String>=vec![];
-    list_files.iter().fold(0,|a,x1|{ name_list.push(dsr::get_name(x1).unwrap());
+    list_files.iter().fold(0,|_a,x1|{ name_list.push(dsr::get_name(x1).unwrap());
         0});
     let last_commit_again= load.get_current_head();//Rev
     if  last_commit_again.is_err(){ //println!("no head, means last commit is empty");
@@ -220,7 +219,7 @@ pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Error
     {
         let last_commit_file_again=last_commit_again.unwrap();
         let last_commit_hashmap=last_commit_file_again.get_manifest();//iteminfo
-        for(key,value)in last_commit_hashmap{
+        for(key,_value)in last_commit_hashmap{
             if !name_list.contains(key) &&!stage_inside_remove.contains_key(key){
                 changes_not_staged_for_commit.push("Delete file: ".to_owned()+key);
             }

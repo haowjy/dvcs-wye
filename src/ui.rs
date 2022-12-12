@@ -22,8 +22,8 @@ fn parse_error(res: Errors) -> String {
         ErrSerde(e) => {println!("{}", e);e.to_string()},
         ErrIo(e) => {println!("{}", e);e.to_string()},
         ErrSys(e) => {println!("{}", e);e.to_string()},
-        ErrStr(String) => {println!("{}", String);String},
-        Errstatic(Str) => {println!("{}", Str);Str.to_string()},
+        ErrStr(s) => {println!("{}", s);s},
+        Errstatic(str) => {println!("{}", str);str.to_string()},
         ErrUnknown => {println!("ErrUnknown");"ErrUnknown".to_string()},
     }
 }
