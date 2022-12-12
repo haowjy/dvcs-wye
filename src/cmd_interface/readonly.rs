@@ -202,6 +202,22 @@ pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Error
 
 
     }
+    let mut name_list:Vec<String>=vec![];
+    list_files.iter().fold(0,|a,x1|{ name_list.push(dsr::get_name(x1).unwrap());
+        0});
+    let last_commit_again= load.get_current_head();//Rev
+    if  last_commit_again.is_err(){ //println!("no head, means last commit is empty");
+    }
+    else
+    {
+        let last_commit_file_again=last_commit_again.unwrap();
+        let last_commit_hashmap=last_commit_file_again.get_manifest();//iteminfo
+        for(key,value)in last_commit_hashmap{
+            if !name_list.contains(key) {
+                Changes_not_staged_for_commit.push("Delete file: ".to_owned()+key);
+            }
+        }
+    }
 
     println!("Changes to be committed:");
     if  Changes_to_be_committed.capacity()==0{ println!("nothing to change");}
