@@ -1,7 +1,3 @@
-#![allow(unused_variables)]
-#![allow(dead_code)]
-//TODO: remove this
-
 use std::collections::{VecDeque, HashMap, HashSet};
 
 use crate::ui::{Errors, Errors::*};

@@ -9,4 +9,4 @@ vc_test_remote/
 Cargo.lock
 a.txt
 a_test_repo/
-a_test_remote/
+a_remote/
