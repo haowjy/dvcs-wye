@@ -151,7 +151,8 @@ pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Error
                             if flag==true {
                                 Changes_to_be_committed.push("Modified file: ".to_owned()+&name);
                             }
-                            else { println!("No difference, same"); }
+                            else { //println!("No difference, same");
+                            }
                         }
                 }
                 if  contain_add==false && contain_last_commit==true&&stage_status==false{
@@ -178,8 +179,25 @@ pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Error
             Changes_to_be_committed.push("Remove file: ".to_owned()+&name);
             //Changes to be committed:
         }
-        else if contain_remove==true && contain_last_commit==true { println!("Remove/Modified file{}",name);
-            //compare inside content see modify
+        else if contain_remove==true && contain_last_commit==true {
+            let last_commit_again= load.get_current_head();//Rev
+            if  last_commit_again.is_err(){ //println!("no head, means last commit is empty");
+            }
+            else {
+                let last_commit_file_again = last_commit_again.unwrap();
+                let last_commit_hashmap = last_commit_file_again.get_manifest();//iteminfo
+                let it1= last_commit_hashmap.get(&name).unwrap();
+                let it2= stage_inside_remove.get(&name).unwrap();
+                let a=load.get_file_content(it1).unwrap();
+                let b=load.get_file_content(it2).unwrap();
+                if a !=b{
+                    Changes_to_be_committed.push("Remove/Modified file: ".to_owned()+&name);
+                }
+                else {
+                    Changes_to_be_committed.push("File need to commit although same in stage and last commit: ".to_owned()+&name);
+                }
+                //compare inside content see modify
+                }
         }
         0});
     //wd has not，stage and commit？//stage has, last  delete
@@ -226,7 +244,7 @@ pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Error
         }
     }
 
-    println!("Changes to be committed:");
+    /*println!("Changes to be committed:");
     if  Changes_to_be_committed.capacity()==0{ println!("nothing to change");}
     else{
         Changes_to_be_committed.iter().fold(0,|acc,x|{
@@ -253,7 +271,7 @@ pub fn status(wd: &str) -> Result<(Vec<String>, Vec<String>, Vec<String>), Error
             println!("{:?}",x);
             0});
         //println!("{:?}",untrack);
-    }
+    }*/
     Ok((Changes_to_be_committed,Changes_not_staged_for_commit,untrack))
 }
 
