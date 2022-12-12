@@ -57,6 +57,10 @@ impl ItemInfo {
         match &self.entry {
             File(id) => {
                 let repo_storage_file = path_compose(&repo_storage_dir, &id);
+                let parent_dir = get_parent_name(&wd_file_path).ok_or(Errors::Errstatic("unable to locate parent"))?;
+                if !is_path_valid(&parent_dir) {
+                    create_dir(&parent_dir)?
+                }
                 copy_file(&repo_storage_file, &wd_file_path)
             },
             Dir => {

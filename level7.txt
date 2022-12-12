@@ -3,11 +3,11 @@ level7
     cwd
         level7-remote
 
-# acceptance 1
-mkdir level7
-cd level7
-$[executable] init level7-remote
-cd level7-remote
+# acceptance 7a
+mkdir level7a
+cd level7a
+$[executable] init level7a-remote
+cd level7a-remote
 echo "Hello World" > a.txt
 $[executable] add .
 $[executable] commit "hello world"
@@ -15,8 +15,8 @@ $[executable] commit "hello world"
 cd ..
 mkdir cwd
 cd cwd
-$[executable] clone ../level7-remote level7-remote
-cd level7-remote
+$[executable] clone ../level7a-remote level7a-remote
+cd level7a-remote
 
 $[executable] log
 $[executable] checkout SHA a newbranch .
@@ -24,28 +24,28 @@ $[executable] checkout SHA a newbranch .
 echo "B File" > b.txt
 $[executable] add .
 $[executable] commit "B"
-$[executable] push ../../level7-remote
+$[executable] push ../../level7a-remote
 
 echo "C File" > c.txt
 $[executable] add .
 $[executable] commit "C"
 
-cd ../../level7-remote
-$[executable] pull ../cwd/level7-remote
+cd ../../level7a-remote
+$[executable] pull ../cwd/level7a-remote
 $[executable] checkout remote/newbranch a newbranch .
 $[executable] checkout remote/newbranch a newbranch .
-$[executable] pull ../cwd/level7-remote
+$[executable] pull ../cwd/level7a-remote
 
 # PASS: everything works as expected, B is in both remote and cwd repos, C is both as well because it has been pulled
 
 
 
 
-# acceptance 2
-mkdir level72
-cd level72
-$[executable] init level7-remote
-cd level7-remote
+# acceptance 7b
+mkdir level7b
+cd level7b
+$[executable] init level7b-remote
+cd level7b-remote
 echo "Hello World" > a.txt
 $[executable] add .
 $[executable] commit "hello world"
@@ -53,9 +53,9 @@ $[executable] commit "hello world"
 cd ..
 mkdir cwd
 cd cwd
-mkdir level7-remote
-cd level7-remote
-$[executable] clone ../../level7-remote
+mkdir level7b-remote
+cd level7b-remote
+$[executable] clone ../../level7b-remote
 
 $[executable] log
 $[executable] checkout SHA a newbranch .
@@ -63,9 +63,9 @@ $[executable] heads
 
 echo "B File" > b.txt
 $[executable] add .
-$[executable] push ../../level7-remote
+$[executable] push ../../level7b-remote
 # should fail because b.txt is not commited
 
 # PASS: shouldn't have B because its not commited
-cd ../../level7-remote
-$[executable] pull ../cwd/level7-remote
+cd ../../level7b-remote
+$[executable] pull ../cwd/level7b-remote
