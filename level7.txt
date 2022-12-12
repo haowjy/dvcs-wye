@@ -6,35 +6,35 @@ level7
 # acceptance 7a
 mkdir level7a
 cd level7a
-$[executable] init level7a-remote
+dvcs-wye init level7a-remote
 cd level7a-remote
 echo "Hello World" > a.txt
-$[executable] add .
-$[executable] commit "hello world"
+dvcs-wye add .
+dvcs-wye commit "hello world"
 
 cd ..
 mkdir cwd
 cd cwd
-$[executable] clone ../level7a-remote level7a-remote
+dvcs-wye clone ../level7a-remote level7a-remote
 cd level7a-remote
 
-$[executable] log
-$[executable] checkout SHA a newbranch .
+dvcs-wye log
+dvcs-wye checkout SHA a newbranch .
 
 echo "B File" > b.txt
-$[executable] add .
-$[executable] commit "B"
-$[executable] push ../../level7a-remote
+dvcs-wye add .
+dvcs-wye commit "B"
+dvcs-wye push ../../level7a-remote
 
 echo "C File" > c.txt
-$[executable] add .
-$[executable] commit "C"
+dvcs-wye add .
+dvcs-wye commit "C"
 
 cd ../../level7a-remote
-$[executable] pull ../cwd/level7a-remote
-$[executable] checkout remote/newbranch a newbranch .
-$[executable] checkout remote/newbranch a newbranch .
-$[executable] pull ../cwd/level7a-remote
+dvcs-wye pull ../cwd/level7a-remote
+dvcs-wye checkout remote/newbranch a newbranch .
+dvcs-wye checkout remote/newbranch a newbranch .
+dvcs-wye pull ../cwd/level7a-remote
 
 # PASS: everything works as expected, B is in both remote and cwd repos, C is both as well because it has been pulled
 
@@ -44,28 +44,28 @@ $[executable] pull ../cwd/level7a-remote
 # acceptance 7b
 mkdir level7b
 cd level7b
-$[executable] init level7b-remote
+dvcs-wye init level7b-remote
 cd level7b-remote
 echo "Hello World" > a.txt
-$[executable] add .
-$[executable] commit "hello world"
+dvcs-wye add .
+dvcs-wye commit "hello world"
 
 cd ..
 mkdir cwd
 cd cwd
 mkdir level7b-remote
 cd level7b-remote
-$[executable] clone ../../level7b-remote
+dvcs-wye clone ../../level7b-remote
 
-$[executable] log
-$[executable] checkout SHA a newbranch .
-$[executable] heads
+dvcs-wye log
+dvcs-wye checkout SHA a newbranch .
+dvcs-wye heads
 
 echo "B File" > b.txt
-$[executable] add .
-$[executable] push ../../level7b-remote
+dvcs-wye add .
+dvcs-wye push ../../level7b-remote
 # should fail because b.txt is not commited
 
 # PASS: shouldn't have B because its not commited
 cd ../../level7b-remote
-$[executable] pull ../cwd/level7b-remote
+dvcs-wye pull ../cwd/level7b-remote

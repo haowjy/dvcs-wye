@@ -164,12 +164,12 @@ pub fn merge<'a>(wd: &'a str, rev_id_src:String,
     let rev_dst = repo.get_current_head()?; // is current head
 
     // Check if there are uncommitted changes (checks only stage instead)
-    if !repo.get_stage().is_empty(){ return Err(Errstatic("pull failed: uncommitted changes in working directory, commit changes first"));}
+    // if !repo.get_stage().is_empty(){ return Err(Errstatic("pull failed: uncommitted changes in working directory, commit changes first"));}
     // TODO: status doesn't work???
-    // let (staged, unstaged, untracked) = status(wd)?; // print status
-    // if !(staged.is_empty() && unstaged.is_empty() && untracked.is_empty()){ // not empty
-    //     return Err(Errstatic("merge failed: uncommitted changes"));
-    // }
+    let (staged, unstaged, untracked) = status(wd)?; // print status
+    if !(staged.is_empty() && unstaged.is_empty() && untracked.is_empty()){ // not empty
+        return Err(Errstatic("merge failed: uncommitted changes"));
+    }
 
     let cur_head_rev = rev_dst.clone(); // Will only create conflict files if dst is the current head, otherwise will simply just return the errors
     let rev2 = repo.get_rev(&rev_id_src)?;
