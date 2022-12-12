@@ -473,7 +473,13 @@ impl Wye {
 
     fn input_handling_special(return_result:Result<RevDiff,Errors>){
         //waiting structure inside RevDiff, similar with FileDiff
-        println!("{:?}",return_result);
+        if return_result.is_err() {
+            parse_error(return_result.unwrap_err());
+        }
+        else {
+            let rev_diff = return_result.unwrap();
+            println!("{:}",rev_diff);
+        }
     }
     /*fn input_handling_special_file(return_result:Result<FileDiff,&str>){
         let fd = return_result.unwrap();
