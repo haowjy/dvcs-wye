@@ -1,3 +1,6 @@
+#[allow(dead_code)]
+#[allow(unused_imports)]
+#[allow(unused_variables)]
 
 use crate::dsr::{self, path_compose};
 use crate::readwrite::{add, commit};

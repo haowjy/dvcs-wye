@@ -40,8 +40,6 @@ pub fn checkout<'a>(wd:&'a str, rev:&'a str, new_branch_alias: Option<String>) -
     let branch_heads = repo.get_heads();
     let rev_head_id = branch_heads.get_key_value(rev);
 
-    clear_dir_adv(wd, vec![".dvcs", "src"])?; // NOTE: this is potentially dangerous when using it in default directory
-
     if rev_head_id.is_some() {
         let (rev_alias, rev_id) = rev_head_id.unwrap();
         if new_branch_alias.is_some() { // we will create a new branch
@@ -49,6 +47,7 @@ pub fn checkout<'a>(wd:&'a str, rev:&'a str, new_branch_alias: Option<String>) -
             if branch_heads.contains_key(&new_branch_alias) {
                 return Err(Errstatic("checkout failed: branch already exists"));
             }
+            clear_dir_adv(wd, vec![".dvcs", "src"])?; // NOTE: this is potentially dangerous when using it in default directory
             let rev1 = repo.get_rev(rev_id)?;
             make_wd(&rev1, wd)?;
 
@@ -56,6 +55,7 @@ pub fn checkout<'a>(wd:&'a str, rev:&'a str, new_branch_alias: Option<String>) -
             repo_mut.set_current_head(&new_branch_alias)?; // set current head to new branch
             Ok(format!("checkout successful: currently on `{}`", new_branch_alias))
         } else { // we are not creating a new branch, just switching to an existing one
+            clear_dir_adv(wd, vec![".dvcs", "src"])?; // NOTE: this is potentially dangerous when using it in default directory
             let rev1 = repo.get_rev(rev_id)?;
             make_wd(&rev1, wd)?;
 
@@ -68,6 +68,7 @@ pub fn checkout<'a>(wd:&'a str, rev:&'a str, new_branch_alias: Option<String>) -
             if branch_heads.contains_key(&new_branch_alias) {
                 return Err(Errstatic("checkout failed: branch already exists"));
             }
+            clear_dir_adv(wd, vec![".dvcs", "src"])?; // NOTE: this is potentially dangerous when using it in default directory
             let rev1 = repo.get_rev(rev)?;
             make_wd(&rev1, wd)?;
 
@@ -75,6 +76,7 @@ pub fn checkout<'a>(wd:&'a str, rev:&'a str, new_branch_alias: Option<String>) -
             repo_mut.set_current_head(&new_branch_alias)?; // set current head to new branch
             Ok(format!("checkout successful: currently on `{}`", new_branch_alias))
         } else { // no branch alias, no new branch, just make a detached head
+            clear_dir_adv(wd, vec![".dvcs", "src"])?; // NOTE: this is potentially dangerous when using it in default directory
             let rev1 = repo.get_rev(rev)?;
             make_wd(&rev1, wd)?;
 
@@ -134,10 +136,10 @@ pub fn push<'a>(wd:&'a str, remote:&'a str) -> Result<String, Errors> {
 
     let mut cur_repo_mut = repository::load(wd)?;
     let cur_repo = repository::load(wd)?;
-    
+
     let (staged, unstaged, untracked) = status(wd)?; // print status
     if !(staged.is_empty() && unstaged.is_empty() && untracked.is_empty()){ // not empty
-        return Err(Errstatic("pull failed: uncommitted changes in working directory, commit changes first"));
+        return Err(Errstatic("push failed: uncommitted changes in working directory, commit changes first"));
     }
 
     let cur_head_alias = cur_repo.get_current_head_alias();
