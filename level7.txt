@@ -32,8 +32,8 @@ $[executable] add .
 $[executable] commit "C"
 
 cd ../../level7a-remote
-$[executable] pull ../cwd/level7a-remote
 $[executable] checkout remote/newbranch a newbranch .
+$[executable] pull ../cwd/level7a-remote
 $[executable] checkout remote/newbranch a newbranch .
 $[executable] pull ../cwd/level7a-remote
 
