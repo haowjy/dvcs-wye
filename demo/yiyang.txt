@@ -1,0 +1,91 @@
+level 1: init
+
+mkdir new_test
+cd new_test
+
+(#1a)
+dvcs-wye init 
+dvcs-wye init ../new_test2 
+
+(don't cd)
+
+(#1b)
+dvcs-wye init << our system forbids reinitializing the repo for the wd and let the user know a repo already exists
+
+-------------
+level 2: add, commit, checkout
+
+preparing directory (copy triple-quoted section to terminal): 
+(cwd: new_test)
+"""
+touch 1.txt
+touch 2.txt
+touch 3.txt
+touch 4.txt
+mkdir new_dir
+cd new_dir
+touch 2.txt
+touch 3.txt
+touch 4.txt
+touch nested.txt
+mkdir new_nested_dir
+cd new_nested_dir
+touch 3.txt
+touch 4.txt
+touch 5.txt
+cd ..
+cd ..
+"""
+
+[demonstrating add/commit workflow]
+dvcs-wye add 1.txt 
+dvcs-wye commit "first commit" << for record, will revisit later
+    -> get [SHA_1]
+dvcs-wye commit again << won't work, because there's no change,
+dvcs-wye add 1.txt 
+dvcs-wye commit again << still won't work bc 1.txt is still the same
+echo "adding something" > 1.txt
+dvcs-wye add 1.txt
+dvcs-wye commit again << this time works
+
+
+[demonstrating flexibility of add]
+dvcs-wye add 2.txt,3.txt 
+dvcs-wye add [abs/path/to/4.txt] << for add, our system can add individual files, multiple files, either in relative or absolute path
+
+cd new_dir 
+dvcs-wye add 4.txt 
+    << still works even if the current working directory is inside a subdirectory from where the .dvcs repository is
+dvcs-wye add new_nested_dir 
+cd ..
+dvcs-wye add .  
+    << it can also recursively add all the files in a directory, and works with the . shorthand form for current directory. Note it won't add .dvcs because it is automatically excluded
+
+(go to .dvcs/repos to check for stage status)
+
+dvcs-wye commit "add all"
+
+[demonstrating checkout]
+dvcs-checkout [SHA_1] p new_branch << checkout by sha id. This automatically makes a branch. If a branch name is not given, it will be a detached head.
+dvcs-checkout heads << shows the new branch
+ls << also notice that there is only one file in our wd, which we added to the first commit
+dvcs-checkout main b << checkout can also take the exising branch name, or branch alias, instead of a revision id. This will take us back to the head of that branch.
+ls << notice all files are back 
+
+[demonstrating remove]
+    << (pre-implementation talk) our remove does remove the file from the wd in addition to remove it from the tracking list, I'll explain the reasons in a minute. Behavior-wise, the same as add, you can remove single files, multiple files, and a whole directory whole directory with just a .
+    << To save time, I'll only show a wild-card removal
+dvcs-wye remove . 
+ls 
+    << notice all files are gone, except for the empty directories which we don't really track
+    << this may seem scary, since you might remove a file by accident and cannot bring it back. But since they are tracked previously, you can always bring them back by checking out previous revisions. 
+dvcs-wye checkout main b
+    << to further safeguard this, you cannot remove a file that is untracked with our system. of course you can remove it with the system command rm, or remove it manually though.
+touch to_remove.txt
+dvcs-wye remove . 
+    << there is only this untracked file left
+dvcs-wye remove to_remove.txt
+    << will fail
+
+[end of demo] << This is the basic add/remove/commit/checkout workflow of our dvcs system. My colleagues will continue to show you some more advanced uses.
+    
