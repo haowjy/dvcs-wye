@@ -1,0 +1,20 @@
+status heads log diff
+
+dvcs-wye
+mkdir status
+cd status
+dvcs-wye init
+touch a.txt
+echo "1" > a.txt
+dvcs-wye status    #untrack
+dvcs-wye add a.txt
+dvcs-wye status   #track, stage for commit
+echo "2" > a.txt
+dvcs-wye status   #unstage modify + Changes to be committed(because old "1" is in stage, but "2" is not re add yet)
+dvcs-wye add a.txt
+dvcs-wye status
+dvcs-wye commit "test status after commit"
+dvcs-wye status   #no changes
+dvcs-wye log
+dvcs-wye diff b080f9aa12dbae69033505440705f967d04b490ac117072823f0f849e72c5cc1 f2ff587c320d1f052e8b42c06f9048617f5db4341620599657a25858a03dc606
+dvcs-wye heads
