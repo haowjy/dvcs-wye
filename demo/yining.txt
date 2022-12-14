@@ -36,3 +36,20 @@ dvcs-wye status   #a.txt Changes not staged for commit
 dvcs-wye commit "remove a.txt"
 dvcs-wye status   #a.txt gone!
 dvcs-wye log
+
+
+yvzhang@xiaohaitundeMBP status % mkdir test4a
+yvzhang@xiaohaitundeMBP status % cd test4a
+yvzhang@xiaohaitundeMBP test4a % dvcs-wye init
+Successfully created new repository at /Users/yvzhang/IdeaProjects/dvcs-wye/status/test4a
+yvzhang@xiaohaitundeMBP test4a % touch file.txt
+yvzhang@xiaohaitundeMBP test4a % dvcs-wye add file.txt
+add success
+yvzhang@xiaohaitundeMBP test4a % dvcs-wye status
+Changes to be committed:
+"Modified/Add new file: file.txt"
+Changes not staged for commit:
+nothing to change
+Untracked files:
+nothing to change
+yvzhang@xiaohaitundeMBP test4a %
