@@ -285,7 +285,13 @@ pub fn check_wd(wd_path: &str) -> Option<String> {
         return Some(wd_path.to_string());
     } else {
         match get_parent_name(wd_path) {
-            Some(parent) => check_wd(&parent),
+            Some(parent) => {
+                if parent == "" || parent == "/" {
+                    None
+                } else {
+                    check_wd(&parent)
+                }
+            },
             None => None
         }
     }
@@ -564,4 +570,5 @@ mod tests {
         write_file(&remote_wd_f_path, &format!("remote content\n{:?}", SystemTime::now()))?;
         Ok(remote_paths)
     }
+
 }
