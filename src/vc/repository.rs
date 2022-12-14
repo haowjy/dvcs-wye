@@ -110,6 +110,11 @@ impl Repo {
         self.save()
     }
 
+    pub fn remove_head(&mut self, head_alias:&str) -> Result<(), Errors> {
+        self.branch_heads.remove(head_alias);
+        self.save()
+    }
+
     
     pub fn fetch(&self, rwd:&str) -> Result<(), Errors> { // fetch from remote
         let rwd_paths = RepoPaths::new(rwd);

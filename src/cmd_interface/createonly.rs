@@ -25,7 +25,9 @@ pub fn clone<'a>(wd: &'a str, remote:&'a str) -> Result<String, Errors> {
     copy_dir(&dvcs_remote, &dvcs_cwd)?;
 
     // create remote tracking branch
-    checkout(wd, head_alias.unwrap(), Some("remote/".to_owned()+head_alias.unwrap()))?;
+    let mut repo_mut = repository::load(wd)?;
+    repo_mut.remove_head(&format!("remote/{}",head_alias.unwrap()))?; // remove the remote if it exists
+    checkout(wd, head_alias.unwrap(), Some(format!("remote/{}",head_alias.unwrap())))?;
     // checkout the on cwd 
     checkout(wd, head_alias.unwrap(), None)?;
     Ok(format!("clone success: {} -> {} on branch {}", remote, wd, head_alias.unwrap()))
