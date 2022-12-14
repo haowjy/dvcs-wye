@@ -113,7 +113,7 @@ dvcs-wye cat newbranch a.txt
 ```
 dvcs-wye log
 
-dvcs-wye merge remote/main
+dvcs-wye merge remote/newbranch
 ```
 # we could've also manually gotten the remote changes that we pushed from AAA 
     # by merging the remote tracking branch into our main branch
