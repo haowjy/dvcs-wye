@@ -1,4 +1,4 @@
-status heads log diff
+Level 3: status heads log diff
 
 cargo install --path .
 
@@ -33,3 +33,4 @@ dvcs-wye remove a.txt
 dvcs-wye status   #a.txt Changes not staged for commit
 dvcs-wye commit "remove a.txt"
 dvcs-wye status   #a.txt gone!
+dvcs-wye log
