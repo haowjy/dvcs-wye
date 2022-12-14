@@ -1,4 +1,4 @@
-Level 3: status heads log diff
+Level 3: status heads log cat
 
 cargo install --path .
 
@@ -27,6 +27,8 @@ dvcs-wye add a.txt
 dvcs-wye commit "only commit a.txt"
 dvcs-wye diff fe678ffb5ef2bf6f3c107781f25e8d9c8826810b17a3248433aa39963ee6002a 79aa0a5a62bf408301fb1d8564b0e5d3e8ba886da4fd470d64ca49bcdad6722d
 dvcs-wye heads
+dvcs-wye cat fe678ffb5ef2bf6f3c107781f25e8d9c8826810b17a3248433aa39963ee6002a a.txt
+dvcs-wye cat fe678ffb5ef2bf6f3c107781f25e8d9c8826810b17a3248433aa39963ee6002a b.txt
 dvcs-wye status   #b.txt still untrack
 dvcs-wye remove b.txt # Unable to remove untracked file
 dvcs-wye remove a.txt
