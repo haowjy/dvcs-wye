@@ -16,6 +16,7 @@ dvcs-wye add new_feature.rs
 dvcs-wye add new_feature2.rs
 dvcs-wye add new_feature3.rs
 dvcs-wye commit "added testing features"
+dvcs-wye diff SHA1 SHA2
 dvcs-wye checkout SHA1 b
 echo "changes" > new_feature2.rs
 echo "also changes" > new_feature3.rs
