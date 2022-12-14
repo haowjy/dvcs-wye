@@ -1,4 +1,4 @@
-Thanks to the beta testing Result of Arain, Baris, Boyang, Kayla, Owen, Xu
+Thanks to the beta testing Result of Arain, Baris, Boyang, Jinchen, Kayla, Owen, Xu, Ziqi
 
 Q: 1b. N/A we handled the test differently, for a given file path that doesn't exist. It creates a path there instead of saying the path doesn't exist
 A: We only chack path in init, not create. Although we have the function of create directory in dsr module

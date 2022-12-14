@@ -1,14 +1,14 @@
 Level 3: status heads log cat
 
 cargo install --path .
-
+executable
 start here
 dvcs-wye
 mkdir status
 cd status
 dvcs-wye init
 touch a.txt
-echo "1" > a.txt
+touch a.txt
 dvcs-wye status    #untrack
 dvcs-wye add a.txt
 dvcs-wye status   #track, stage for commit
