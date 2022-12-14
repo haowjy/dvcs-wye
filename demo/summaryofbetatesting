@@ -1,0 +1,42 @@
+Thanks to the beta testing Result of Arain, Baris, Boyang, Kayla, Owen, Xu
+
+Q: 1b. N/A we handled the test differently, for a given file path that doesn't exist. It creates a path there instead of saying the path doesn't exist
+A: We only chack path in init, not create. Although we have the function of create directory in dsr module
+Similar: 1b and 3b, different design or parameters
+
+Q:Test 3b : it is not a fail but is it the command "cat a.txt" should be "cat [revID] a.txt"?
+A: Yes, it is "cat [revID] a.txt"
+
+Q:4a: testing remove
+test case:
+mkdir test4a
+cd test4a
+./dvcs_wye init
+touch file.txt
+./dvcs_wye add file.txt
+./dvcs_wye status ----- Error here
+Error Message:
+./dvcs-wye status
+thread 'main' panicked at 'called `Result::unwrap()` on an `Err` value: ErrIo(Custom { kind: UnexpectedEof, error: "read_file_as_string: unknown error when reading file" })', src/cmd_interface/readonly.rs:104:50
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+A: not sure, recurrent but works will maybe because I use dvcs-wye add file.txt?
+
+Q: 3b. status on non repo directory gives a core dump:
+thread 'main' has overflowed its stack
+fatal runtime error: stack overflow
+Aborted (core dumped)
+A: Have been fixed.
+
+Q:4a. remove, removes the file from tracking. also gives this message:
+Null current head
+A: maybe because we only have head after commit? And no matter one file is track or untrack?
+
+Q:5b. file deleted after checking out the merged branch
+A:??fix or it is a bug
+
+Q:7a. push gives error: push failed: wd and remote do not have the same working directory name, either rename working directory or use a different directory
+after renaming the directory and changing directory to another directory it is still not resolved
+
+7b. push gives error: push failed: wd and remote do not have the same working directory name, either rename working directory or use a different directory
+after renaming the directory and changing directory to another directory it is still not resolved
+A: idk
