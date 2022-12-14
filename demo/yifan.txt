@@ -1,26 +1,38 @@
 mkdir new_test
 cd new_test
-dvcs-wye init
+../dvcs-wye init
+    -> init success
 touch new_feature.rs
 touch new_feature2.rs
 touch new_feature3.rs
-dvcs-wye add new_feature.rs
-dvcs-wye add new_feature2.rs
-dvcs-wye add new_feature3.rs
-dvcs-wye commit "added some features"
-dvcs-wye checkout SHA1 b
+../dvcs-wye add new_feature.rs
+../dvcs-wye add new_feature2.rs
+../dvcs-wye add new_feature3.rs
+    -> "add success"
+../dvcs-wye commit "added some features"
+    -> SHA1
+../dvcs-wye checkout SHA1 b
+    -> Ok("checkout successful: currently on `DETACHED-HEAD`")
 echo "blahhhh" > new_feature.rs
 echo "something..." > new_feature2.rs
 echo "okay" > new_feature3.rs
-dvcs-wye add new_feature.rs
-dvcs-wye add new_feature2.rs
-dvcs-wye add new_feature3.rs
-dvcs-wye commit "added testing features"
-dvcs-wye diff SHA1 SHA2
-dvcs-wye checkout SHA1 b
+../dvcs-wye add new_feature.rs
+../dvcs-wye add new_feature2.rs
+../dvcs-wye add new_feature3.rs
+    -> "add success"
+../dvcs-wye commit "added testing features"
+    -> SHA2
+../dvcs-wye diff SHA1 SHA2
+../dvcs-wye checkout SHA1 b
+    -> Ok("checkout successful: currently on `DETACHED-HEAD`")
 echo "changes" > new_feature2.rs
 echo "also changes" > new_feature3.rs
-dvcs-wye add new_feature2.rs
-dvcs-wye add new_feature3.rs
-dvcs-wye commit "make some super-stable changes to main"
-dvcs-wye merge SHA2
+../dvcs-wye add new_feature2.rs
+../dvcs-wye add new_feature3.rs
+    -> "add success"
+../dvcs-wye commit "make some super-stable changes to main"
+    -> SHA3
+../dvcs-wye diff SHA2 SHA3
+../dvcs-wye merge SHA2
+    -> PASS: Err(ErrStr("Conflicts found, please resolve the conflicts and try to commit again"))
+    -> FAIL: Ok()
