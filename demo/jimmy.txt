@@ -1,0 +1,162 @@
+```sh
+mkdir demo4
+mkdir demo4/AAA
+mkdir demo4/BBB
+
+cd demo4/AAA
+```
+
+```sh
+dvcs-wye init repo
+cd repo
+echo "Hello World" > a.txt
+dvcs-wye add .
+dvcs-wye commit "Initial"
+```
+
+```sh
+dvcs-wye log
+dvcs-wye status
+dvcs-wye heads
+```
+
+```sh
+dvcs-wye checkout main p newbranch
+```
+
+```sh
+cd ../../BBB
+dvcs-wye clone ../AAA/repo repo
+cd repo
+```
+
+```sh
+dvcs-wye log
+dvcs-wye heads
+```
+# we cloned and are actually on the newbranch, the same as AAA's current branch
+
+# We have a remote tracking branch called remote/newbranch. 
+# Ideally we would've had it be some kind of unique indentifier for each machine, 
+# but that wasn't really in the scope of this project
+
+```
+echo "File B" > b.txt
+dvcs-wye add .
+dvcs-wye commit "BBB"
+```
+
+pwd
+# we are at BBB
+
+```
+ls
+cd ../../AAA/repo
+ls
+
+dvcs-wye log
+dvcs-wye heads
+
+echo "AAA CHange" > a.txt
+dvcs-wye add a.txt
+dvcs-wye commit "AAA-2"
+
+dvcs-wye heads
+
+dvcs-wye push ../../BBB/repo
+```
+
+# The push fails because the remote tracking branch is different from the local branch on the remote,
+# although we will definitely need to update the message
+
+# we don't actullay have remote tracking branch for the newbranch
+
+```sh
+dvcs-wye heads
+dvcs-wye pull ../../BBB/repo
+dvcs-wye heads
+```
+
+# now we have remote tracking on AAA
+
+```sh
+dvcs-wye push ../../BBB/repo
+```
+
+# if we push again, it succeeds
+
+cat a.txt -> "AAA CHange" was the change
+
+cd ../../BBB/repo
+
+cat a.txt -> "a.txt" it hasn't yet updated for BBB because we haven't pulled.
+# The changes can actually also be found on the remote tracking branch
+
+```sh
+dvcs-wye heads
+
+dvcs-wye cat remote/newbranch a.txt
+dvcs-wye cat newbranch a.txt
+```
+
+# The contents of a.txt is different on remote tracking and the actual branch
+
+```sh
+dvcs-wye pull ../../AAA/repo
+cat a.txt
+
+dvcs-wye cat remote/newbranch a.txt
+dvcs-wye cat newbranch a.txt
+```
+# now we officially have the changes
+
+```
+dvcs-wye log
+
+dvcs-wye merge remote/main
+```
+# we could've also manually gotten the remote changes that we pushed from AAA 
+    # by merging the remote tracking branch into our main branch
+
+# But we've already pulled so we don't need to do that at the moment
+
+
+
+
+
+
+
+
+
+
+
+
+
+```
+dvcs-wye checkout <BBB-REVID> p br3
+
+echo "3rd commit" > 3.txt
+dvcs-wye add .
+dvcs-wye commit "3rd commit (newbranch)"
+
+dvcs-wye push ../../AAA/repo
+dvcs-wye heads
+```
+
+# we focus on pushing changes of br3
+
+```
+cd ../../AAA/repo
+dvcs-wye heads
+```
+
+# we have a new branch called remote/br3
+
+```
+dvcs-wye checkout remote/br3 b
+ls
+
+dvcs-wye checkout remote/br3 p br3
+```
+
+# checkout remote without having to pull, using just the fetched changes
