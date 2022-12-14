@@ -1,0 +1,25 @@
+mkdir new_test
+cd new_test
+dvcs-wye init
+touch new_feature.rs
+touch new_feature2.rs
+touch new_feature3.rs
+dvcs-wye add new_feature.rs
+dvcs-wye add new_feature2.rs
+dvcs-wye add new_feature3.rs
+dvcs-wye commit "added some features"
+dvcs-wye checkout SHA1 b
+echo "blahhhh" > new_feature.rs
+echo "something..." > new_feature2.rs
+echo "okay" > new_feature3.rs
+dvcs-wye add new_feature.rs
+dvcs-wye add new_feature2.rs
+dvcs-wye add new_feature3.rs
+dvcs-wye commit "added testing features"
+dvcs-wye checkout SHA1 b
+echo "changes" > new_feature2.rs
+echo "also changes" > new_feature3.rs
+dvcs-wye add new_feature2.rs
+dvcs-wye add new_feature3.rs
+dvcs-wye commit "make some super-stable changes to main"
+dvcs-wye merge SHA2
