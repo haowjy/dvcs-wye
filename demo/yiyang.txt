@@ -39,38 +39,52 @@ cd ..
 
 [demonstrating add/commit workflow]
 dvcs-wye add 1.txt 
-dvcs-wye commit "first commit" << for record, will revisit later
+dvcs-wye commit "first commit" 
+    << for record, will revisit later
     -> get [SHA_1]
-dvcs-wye commit again << won't work, because there's no change,
+dvcs-wye commit again 
+    << won't work, because there's no change,
 dvcs-wye add 1.txt 
-dvcs-wye commit again << still won't work bc 1.txt is still the same
+dvcs-wye commit again 
+    << still won't work bc 1.txt is still the same
+
+"""
 echo "adding something" > 1.txt
 dvcs-wye add 1.txt
-dvcs-wye commit again << this time works
+dvcs-wye commit again
+"""
+    << this time works
 
 
 [demonstrating flexibility of add]
+    << for add, our system can add individual files, multiple files, either in relative or absolute path
 dvcs-wye add 2.txt,3.txt 
-dvcs-wye add [abs/path/to/4.txt] << for add, our system can add individual files, multiple files, either in relative or absolute path
+dvcs-wye add [abs/path/to/4.txt] 
 
+    << still works even if the current working directory is inside a subdirectory from where the .dvcs repository is
 cd new_dir 
 dvcs-wye add 4.txt 
-    << still works even if the current working directory is inside a subdirectory from where the .dvcs repository is
+
+    << it can also recursively add all the files in a directory, and works with the . shorthand form for current directory. Note it won't add .dvcs because it is automatically excluded
 dvcs-wye add new_nested_dir 
 cd ..
 dvcs-wye add .  
-    << it can also recursively add all the files in a directory, and works with the . shorthand form for current directory. Note it won't add .dvcs because it is automatically excluded
 
 (go to .dvcs/repos to check for stage status)
 
 dvcs-wye commit "add all"
 
 [demonstrating checkout]
-dvcs-checkout [SHA_1] p new_branch << checkout by sha id. This automatically makes a branch. If a branch name is not given, it will be a detached head.
-dvcs-checkout heads << shows the new branch
-ls << also notice that there is only one file in our wd, which we added to the first commit
-dvcs-checkout main b << checkout can also take the exising branch name, or branch alias, instead of a revision id. This will take us back to the head of that branch.
-ls << notice all files are back 
+dvcs-checkout [SHA_1] p new_branch 
+    << checkout by sha id. This automatically makes a branch. If a branch name is not given, it will be a detached head.
+dvcs-checkout heads 
+    << shows the new branch
+ls 
+    << also notice that there is only one file in our wd, which we added to the first commit
+dvcs-checkout main b 
+    << checkout can also take the exising branch name, or branch alias, instead of a revision id. This will take us back to the head of that branch.
+ls 
+    << notice all files are back 
 
 [demonstrating remove]
     << (pre-implementation talk) our remove does remove the file from the wd in addition to remove it from the tracking list, I'll explain the reasons in a minute. Behavior-wise, the same as add, you can remove single files, multiple files, and a whole directory whole directory with just a .
