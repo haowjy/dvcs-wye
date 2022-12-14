@@ -1,5 +1,8 @@
-status heads log diff
+Level 3: status heads log cat
 
+cargo install --path .
+
+start here
 dvcs-wye
 mkdir status
 cd status
@@ -16,5 +19,20 @@ dvcs-wye status
 dvcs-wye commit "test status after commit"
 dvcs-wye status   #no changes
 dvcs-wye log
-dvcs-wye diff b080f9aa12dbae69033505440705f967d04b490ac117072823f0f849e72c5cc1 f2ff587c320d1f052e8b42c06f9048617f5db4341620599657a25858a03dc606
+echo "3" > a.txt
+touch b.txt
+echo "4" > b.txt
+dvcs-wye status   # a.txt, unstage, b.txt, untrack
+dvcs-wye add a.txt
+dvcs-wye commit "only commit a.txt"
+dvcs-wye diff fe678ffb5ef2bf6f3c107781f25e8d9c8826810b17a3248433aa39963ee6002a 79aa0a5a62bf408301fb1d8564b0e5d3e8ba886da4fd470d64ca49bcdad6722d
 dvcs-wye heads
+dvcs-wye cat fe678ffb5ef2bf6f3c107781f25e8d9c8826810b17a3248433aa39963ee6002a a.txt
+dvcs-wye cat fe678ffb5ef2bf6f3c107781f25e8d9c8826810b17a3248433aa39963ee6002a b.txt
+dvcs-wye status   #b.txt still untrack
+dvcs-wye remove b.txt # Unable to remove untracked file
+dvcs-wye remove a.txt
+dvcs-wye status   #a.txt Changes not staged for commit
+dvcs-wye commit "remove a.txt"
+dvcs-wye status   #a.txt gone!
+dvcs-wye log
